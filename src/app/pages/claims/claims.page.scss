@@ -1,0 +1,195 @@
+.hero-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  padding: 1rem 1rem 0.7rem;
+
+  strong {
+    color: var(--brand-ink);
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  span {
+    color: var(--brand-muted);
+    font-size: 0.8rem;
+  }
+}
+
+.claims-card {
+  border-radius: 18px !important;
+  margin: 0 1rem 0.75rem !important;
+  padding: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.95rem;
+
+  ion-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--brand-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.unit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.unit-chip,
+.selected-unit-pill {
+  border: 1.5px solid var(--brand-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--brand-blue);
+  padding: 0.42rem 0.82rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.unit-chip.active {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+  color: #fff;
+}
+
+ion-segment {
+  --background: rgba(22, 92, 160, 0.06);
+  border-radius: 14px;
+  padding: 0.2rem;
+}
+
+ion-segment-button {
+  --border-radius: 12px;
+  --indicator-color: transparent;
+  --background-checked: var(--brand-blue);
+  --color: #6b7f92;
+  --color-checked: #fff;
+  min-height: 40px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+ion-segment-button::part(native) {
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+ion-segment-button.segment-button-checked::part(native) {
+  background: var(--brand-blue);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(22, 92, 160, 0.18);
+}
+
+ion-segment-button.segment-button-checked ion-label {
+  color: #fff !important;
+}
+
+ion-textarea {
+  --border-radius: 14px;
+  --border-color: var(--brand-border);
+  --border-width: 1.5px;
+}
+
+.error-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  background: rgba(201,77,63,0.08);
+  border: 1px solid rgba(201,77,63,0.2);
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  color: #c94d3f;
+  font-size: 0.82rem;
+  margin-bottom: 0.85rem;
+}
+
+.submit-btn {
+  --background: var(--brand-gradient);
+  --border-radius: 12px;
+  font-weight: 700;
+  height: 46px;
+}
+
+.claims-list {
+  padding: 0 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.claim-history-card {
+  border-radius: 16px !important;
+}
+
+.claim-row {
+  padding: 0.95rem 1rem;
+}
+
+.claim-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+
+  strong {
+    font-size: 0.95rem;
+    color: var(--brand-ink);
+  }
+
+  p {
+    margin: 0.25rem 0 0.1rem;
+    color: var(--brand-ink);
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  small {
+    color: var(--brand-muted);
+    font-size: 0.75rem;
+  }
+}
+
+.claim-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.claim-unit {
+  color: var(--brand-blue);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.status-badge {
+  border-radius: 999px;
+  padding: 0.24rem 0.58rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge.pending {
+  background: rgba(180, 83, 9, 0.12);
+  color: #b45309;
+}
+
+.status-badge.progress {
+  background: rgba(22, 92, 160, 0.1);
+  color: var(--brand-blue);
+}
+
+.status-badge.resolved {
+  background: rgba(61, 125, 45, 0.12);
+  color: #3d7d2d;
+}

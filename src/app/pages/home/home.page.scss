@@ -1,0 +1,128 @@
+.toolbar-brand {
+  display: flex; align-items: center; gap: 0.5rem; font-weight: 800;
+  ion-icon { font-size: 1.2rem; }
+}
+
+/* ── Contenedor que ocupa exactamente el viewport ── */
+.page-fill {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Greeting banner ── */
+.greeting-banner {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--brand-gradient);
+  padding: 1.4rem 1.25rem 1.6rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.greeting-label { margin: 0; font-size: 0.78rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.05em; }
+.greeting-name  { margin: 0.2rem 0 0.15rem; font-size: 1.35rem; font-weight: 800; }
+.greeting-role  { margin: 0; font-size: 0.84rem; opacity: 0.85; }
+.greeting-avatar {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+
+/* ── Zona de cards: crece para llenar el espacio restante ── */
+.areas-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem 1rem 1rem;
+  min-height: 0;
+}
+
+/* ── Grid columna única, llena el alto disponible ── */
+.areas-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+/* ── Card base — ocupa mitad del espacio disponible ── */
+.area-card {
+  flex: 1;
+  min-height: 0;
+  border-radius: 26px;
+  background: linear-gradient(145deg, var(--brand-teal) 0%, var(--brand-blue) 100%);
+  box-shadow: 0 8px 28px rgba(19,133,182,0.28);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:active { transform: scale(0.97); box-shadow: 0 4px 14px rgba(19,133,182,0.2); }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -30%; right: -20%;
+    width: 60%; height: 60%;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    pointer-events: none;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    text-align: center;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.78);
+    text-align: center;
+    line-height: 1.35;
+    padding: 0 1.5rem;
+  }
+}
+
+.area-card--soon {
+  cursor: default;
+  opacity: 0.72;
+  &:active { transform: none; box-shadow: 0 8px 28px rgba(19,133,182,0.28); }
+}
+
+/* ── Ícono circular blanco traslúcido ── */
+.area-icon-wrap {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  border: 2px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+
+  svg { width: 40px; height: 40px; }
+}
+
+/* ── Badge "Próximamente" ── */
+.area-badge-coming {
+  position: absolute;
+  top: 0.75rem; right: 0.85rem;
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+}

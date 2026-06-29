@@ -1,0 +1,254 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goHome()">
+        <ion-icon name="home-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Expensas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="consolidated-banner" *ngIf="consolidatedMode">
+    <div class="consolidated-banner-info">
+      <strong>Resumen consolidado</strong>
+      <span>{{ units.length }} unidades · deuda total {{ consolidatedTotalDebt > 0 ? fmt(consolidatedTotalDebt) : 'sin deuda' }}</span>
+    </div>
+    <button class="consolidated-back-btn" (click)="exitConsolidatedMode()">Ver por unidad</button>
+  </div>
+
+  <div class="unit-selector" *ngIf="!consolidatedMode && units.length > 1">
+    <p class="section-title" style="padding-top: 0.75rem">Unidad</p>
+    <div class="unit-chips">
+      <button
+        class="unit-chip"
+        *ngFor="let u of units"
+        [class.active]="selectedUnit?.unitId === u.unitId"
+        (click)="selectUnit(u)">
+        {{ u.unitCode }} · {{ u.buildingName }}
+      </button>
+    </div>
+  </div>
+
+  <div class="unit-banner" *ngIf="selectedUnit && !consolidatedMode">
+    <div class="unit-banner-info">
+      <strong>Unidad {{ selectedUnit.unitCode }}</strong>
+      <span>{{ selectedUnit.buildingName }} · {{ selectedUnit.condominiumName }}</span>
+    </div>
+  </div>
+
+  <div class="view-toggle" *ngIf="selectedUnit && !consolidatedMode">
+    <button class="view-toggle-btn" [class.active]="activeView === 'periods'" (click)="setView('periods')">
+      Períodos
+    </button>
+    <button class="view-toggle-btn" [class.active]="activeView === 'payments'" (click)="setView('payments')">
+      Mis pagos
+    </button>
+  </div>
+
+  <div class="empty-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>{{ consolidatedMode ? 'Consolidando liquidaciones...' : 'Cargando períodos...' }}</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !consolidatedMode && !selectedUnit">
+    <ion-icon name="home-outline"></ion-icon>
+    <p>No tenés unidades asignadas.</p>
+  </div>
+
+  <ng-container *ngIf="!loading && consolidatedMode">
+    <div class="empty-state" *ngIf="consolidatedPeriods.length === 0">
+      <ion-icon name="documents-outline"></ion-icon>
+      <p>No hay liquidaciones registradas.</p>
+    </div>
+
+    <div *ngIf="consolidatedPeriods.length > 0">
+      <p class="section-title">Todas las liquidaciones</p>
+
+      <div class="periods-list">
+        <ion-card class="period-card" *ngFor="let p of consolidatedPeriods" (click)="openConsolidatedDetail(p)">
+          <div class="period-inner">
+            <div class="period-left">
+              <div class="period-month">{{ monthLabel(p.month) }}</div>
+              <div class="period-year">{{ p.year }}</div>
+            </div>
+
+            <div class="period-center">
+              <span class="period-name">{{ p.expensePeriodName }}</span>
+              <span class="period-unit">Unidad {{ p.unitCode }} · {{ p.buildingName }}</span>
+              <div class="period-amounts">
+                <span>Total: <strong>{{ fmt(p.totalCharges) }}</strong></span>
+                <span>Pagado: <strong>{{ fmt(p.totalPayments) }}</strong></span>
+              </div>
+            </div>
+
+            <div class="period-right">
+              <div class="balance-amount" [class.balance-ok]="p.balance <= 0" [class.balance-due]="p.balance > 0">
+                {{ fmt(p.balance > 0 ? p.balance : 0) }}
+              </div>
+              <span class="balance-label" [class.balance-ok]="p.balance <= 0" [class.balance-due]="p.balance > 0">
+                {{ p.balance <= 0 ? 'Al día' : 'Pendiente' }}
+              </span>
+              <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+            </div>
+          </div>
+        </ion-card>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && selectedUnit && !consolidatedMode && activeView === 'periods'">
+    <div class="empty-state" *ngIf="periods.length === 0">
+      <ion-icon name="receipt-outline"></ion-icon>
+      <p>No hay períodos registrados.</p>
+    </div>
+
+    <div *ngIf="periods.length > 0">
+      <p class="section-title">Períodos de expensas</p>
+
+      <div class="periods-list">
+        <ion-card class="period-card" *ngFor="let p of periods" (click)="openDetail(p)">
+          <div class="period-inner">
+            <div class="period-left">
+              <div class="period-month">{{ monthLabel(p.month) }}</div>
+              <div class="period-year">{{ p.year }}</div>
+            </div>
+
+            <div class="period-center">
+              <span class="period-name">{{ p.expensePeriodName }}</span>
+              <div class="period-amounts">
+                <span>Total: <strong>{{ fmt(p.totalCharges) }}</strong></span>
+                <span>Pagado: <strong>{{ fmt(p.totalPayments) }}</strong></span>
+              </div>
+            </div>
+
+            <div class="period-right">
+              <div class="balance-amount" [class.balance-ok]="p.balance <= 0" [class.balance-due]="p.balance > 0">
+                {{ fmt(p.balance > 0 ? p.balance : 0) }}
+              </div>
+              <span class="balance-label" [class.balance-ok]="p.balance <= 0" [class.balance-due]="p.balance > 0">
+                {{ p.balance <= 0 ? 'Al día' : 'Pendiente' }}
+              </span>
+              <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+            </div>
+          </div>
+        </ion-card>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && selectedUnit && !consolidatedMode && activeView === 'payments'">
+    <div class="empty-state" *ngIf="loadingPayments">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Consolidando pagos...</p>
+    </div>
+
+    <div class="empty-state" *ngIf="!loadingPayments && paymentHistory.length === 0">
+      <ion-icon name="wallet-outline"></ion-icon>
+      <p>No hay pagos registrados todavía.</p>
+    </div>
+
+    <div *ngIf="!loadingPayments && paymentHistory.length > 0">
+      <p class="section-title">Historial unificado de pagos</p>
+
+      <div class="payments-list">
+        <ion-card class="payment-history-card" *ngFor="let payment of paymentHistory">
+          <div class="payment-history-row" [class.reversed]="payment.isReversed">
+            <div class="payment-history-left">
+              <div class="payment-history-top">
+                <strong>{{ fmt(payment.amount) }}</strong>
+                <span class="payment-method">{{ methodLabel(payment.method) }}</span>
+              </div>
+              <span class="payment-period">{{ payment.expensePeriodName }}</span>
+              <small>{{ dateLabel(payment.paymentDate) }}</small>
+              <small *ngIf="payment.reference">Ref: {{ payment.reference }}</small>
+            </div>
+
+            <div class="payment-history-right">
+              <span class="payment-status" [class.payment-status-reversed]="payment.isReversed">
+                {{ payment.isReversed ? 'Revertido' : 'Aplicado' }}
+              </span>
+            </div>
+          </div>
+        </ion-card>
+      </div>
+    </div>
+  </ng-container>
+
+  <ion-modal [isOpen]="!!selectedPeriod" (didDismiss)="selectedPeriod = null">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ selectedPeriod?.expensePeriodName }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button
+              *ngIf="!consolidatedMode && selectedUnit"
+              (click)="openDetail(selectedPeriod!)"
+              title="Actualizar">
+              <ion-icon name="refresh-outline"></ion-icon>
+            </ion-button>
+            <ion-button (click)="selectedPeriod = null">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding" *ngIf="detail">
+        <div class="detail-context" *ngIf="detailUnit">
+          <span>Unidad {{ detailUnit.unitCode }} · {{ detailUnit.buildingName }}</span>
+        </div>
+
+        <div class="detail-hero" [class.hero-ok]="detail.balance <= 0" [class.hero-due]="detail.balance > 0">
+          <span class="detail-hero-label">{{ detail.balance <= 0 ? 'Saldo al día' : 'Saldo pendiente' }}</span>
+          <span class="detail-hero-amount">{{ fmt(detail.balance > 0 ? detail.balance : 0) }}</span>
+          <div class="detail-hero-sub">
+            <span>Cargos: {{ fmt(detail.totalCharges) }}</span>
+            <span>Pagado: {{ fmt(detail.totalPayments) }}</span>
+          </div>
+        </div>
+
+        <div class="pdf-actions">
+          <a [href]="receiptUrl" target="_blank" class="pdf-btn" *ngIf="detailUnit">
+            <ion-icon name="document-text-outline"></ion-icon>
+            Comprobante PDF
+          </a>
+          <a [href]="settlementUrl" target="_blank" class="pdf-btn pdf-btn-secondary">
+            <ion-icon name="document-outline"></ion-icon>
+            Liquidación PDF
+          </a>
+        </div>
+
+        <p class="section-title">Cargos del período</p>
+        <ion-card class="detail-card">
+          <div class="charge-row" *ngFor="let c of detail.charges">
+            <div class="charge-info">
+              <span [class.reversal]="c.isReversal">{{ c.concept }}</span>
+              <small>{{ chargeTypeLabel(c.chargeType) }}<span *ngIf="c.isReversal"> · Reversión</span></small>
+            </div>
+            <strong [class.reversal]="c.isReversal">{{ fmt(c.amount) }}</strong>
+          </div>
+        </ion-card>
+
+        <p class="section-title" *ngIf="detail.payments.length > 0">Pagos registrados</p>
+        <ion-card class="detail-card" *ngIf="detail.payments.length > 0">
+          <div class="payment-row" *ngFor="let p of detail.payments" [class.reversed]="p.isReversed">
+            <div class="payment-info">
+              <span>{{ dateLabel(p.paymentDate) }} · {{ methodLabel(p.method) }}</span>
+              <small *ngIf="p.reference">Ref: {{ p.reference }}</small>
+              <small *ngIf="p.isReversed" class="reversed-tag">REVERTIDO</small>
+            </div>
+            <strong>{{ fmt(p.amount) }}</strong>
+          </div>
+        </ion-card>
+      </ion-content>
+      <div class="detail-loading" *ngIf="!detail">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+      </div>
+    </ng-template>
+  </ion-modal>
+</ion-content>

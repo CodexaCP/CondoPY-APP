@@ -1,0 +1,110 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Mis reclamos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="loadData($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="hero-banner">
+    <strong>Contacto con administración</strong>
+    <span>Enviá reclamos y seguí su estado sin salir de la app.</span>
+  </div>
+
+  <p class="section-title">Nuevo reclamo</p>
+  <ion-card class="claims-card">
+    <div class="field" *ngIf="units.length > 1">
+      <ion-label>Unidad</ion-label>
+      <div class="unit-chips">
+        <button
+          class="unit-chip"
+          *ngFor="let unit of units"
+          [class.active]="selectedUnitId === unit.unitId"
+          (click)="selectedUnitId = unit.unitId">
+          {{ unit.unitCode }} · {{ unit.buildingName }}
+        </button>
+      </div>
+    </div>
+
+    <div class="field" *ngIf="units.length === 1 && selectedUnit">
+      <ion-label>Unidad</ion-label>
+      <div class="selected-unit-pill">{{ selectedUnit.unitCode }} · {{ selectedUnit.buildingName }}</div>
+    </div>
+
+    <div class="field">
+      <ion-label>Categoría</ion-label>
+      <ion-segment [(ngModel)]="category" mode="md" scrollable="true">
+        <ion-segment-button *ngFor="let item of categories" [value]="item">
+          <ion-label>{{ item }}</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <div class="field">
+      <ion-label>Descripción</ion-label>
+      <ion-textarea
+        [(ngModel)]="description"
+        rows="5"
+        fill="outline"
+        maxlength="2000"
+        placeholder="Contanos qué pasó y en qué unidad ocurre.">
+      </ion-textarea>
+    </div>
+
+    <div class="error-msg" *ngIf="error">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <span>{{ error }}</span>
+    </div>
+
+    <ion-button expand="block" class="submit-btn" (click)="submit()" [disabled]="saving || loading || units.length === 0">
+      <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+      Enviar reclamo
+    </ion-button>
+  </ion-card>
+
+  <div class="empty-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando reclamos...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && claims.length === 0">
+    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+    <p>Todavía no registraste reclamos.</p>
+  </div>
+
+  <ng-container *ngIf="!loading && claims.length > 0">
+    <p class="section-title">Historial</p>
+    <div class="claims-list">
+      <ion-card class="claim-history-card" *ngFor="let claim of claims">
+        <div class="claim-row">
+          <div class="claim-main">
+            <div class="claim-top">
+              <strong>{{ claim.category }}</strong>
+              <span class="status-badge" [class.pending]="claim.status === 'Pendiente'"
+                    [class.progress]="claim.status === 'EnProceso'"
+                    [class.resolved]="claim.status === 'Resuelto'">
+                {{ statusLabel(claim.status) }}
+              </span>
+            </div>
+
+            <span class="claim-unit">Unidad {{ claim.unitCode }} · {{ claim.buildingName }}</span>
+            <p>{{ claim.description }}</p>
+            <small>{{ dateLabel(claim.createdAtUtc) }}</small>
+            <small *ngIf="claim.resolvedAtUtc">
+              Resuelto {{ dateLabel(claim.resolvedAtUtc) }}
+              <span *ngIf="claim.resolvedByUserName">· {{ claim.resolvedByUserName }}</span>
+            </small>
+          </div>
+        </div>
+      </ion-card>
+    </div>
+  </ng-container>
+</ion-content>

@@ -1,0 +1,66 @@
+<ion-content class="login-content">
+  <div class="login-wrap">
+
+    <!-- Logo -->
+    <div class="login-logo">
+      <div class="logo-icon">
+        <ion-icon name="business"></ion-icon>
+      </div>
+      <h1>CondoPY</h1>
+      <p>Portal de propietarios y residentes</p>
+    </div>
+
+    <!-- Form -->
+    <div class="login-card">
+      <form (ngSubmit)="submit()" #f="ngForm">
+
+        <div class="field">
+          <ion-label>Usuario o correo</ion-label>
+          <ion-input
+            [(ngModel)]="form.email"
+            name="email"
+            type="text"
+            placeholder="usuario o email"
+            autocomplete="username"
+            required
+            fill="outline"
+            [class.ion-invalid]="submitted && !form.email">
+          </ion-input>
+        </div>
+
+        <div class="field">
+          <ion-label>Contraseña</ion-label>
+          <ion-input
+            [(ngModel)]="form.password"
+            name="password"
+            [type]="showPass ? 'text' : 'password'"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+            fill="outline">
+            <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+          </ion-input>
+        </div>
+
+        <div class="remember-row">
+          <label class="remember-label">
+            <ion-checkbox [(ngModel)]="rememberMe" name="rememberMe" color="primary"></ion-checkbox>
+            Recordarme
+          </label>
+        </div>
+
+        <div class="error-msg" *ngIf="errorMsg">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          {{ errorMsg }}
+        </div>
+
+        <ion-button expand="block" type="submit" [disabled]="loading" class="login-btn">
+          <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
+          {{ loading ? 'Ingresando...' : 'Ingresar' }}
+        </ion-button>
+
+      </form>
+    </div>
+
+  </div>
+</ion-content>

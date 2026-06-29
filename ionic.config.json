@@ -1,0 +1,7 @@
+{
+  "name": "CondoPY-APP",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

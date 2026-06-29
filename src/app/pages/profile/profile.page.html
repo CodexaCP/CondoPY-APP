@@ -1,0 +1,79 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goHome()">
+        <ion-icon name="home-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Mi perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <!-- Avatar hero -->
+  <div class="profile-hero">
+    <div class="profile-avatar">{{ initials }}</div>
+    <h2>{{ user?.fullName }}</h2>
+    <p>{{ user?.email }}</p>
+    <span class="role-badge">{{ roleLabel }}</span>
+  </div>
+
+  <!-- Change password -->
+  <p class="section-title">Seguridad</p>
+  <ion-card class="profile-card">
+    <form (ngSubmit)="changePass()" #f="ngForm" *ngIf="!passDone">
+      <div class="field">
+        <ion-label>Contraseña actual</ion-label>
+        <ion-input [(ngModel)]="cp.current" name="current" type="password" fill="outline" required></ion-input>
+      </div>
+      <div class="field">
+        <ion-label>Nueva contraseña</ion-label>
+        <ion-input [(ngModel)]="cp.newPass" name="newPass" type="password" fill="outline" required></ion-input>
+      </div>
+      <div class="field">
+        <ion-label>Confirmar</ion-label>
+        <ion-input [(ngModel)]="cp.confirm" name="confirm" type="password" fill="outline" required></ion-input>
+      </div>
+      <div class="error-msg" *ngIf="passError">
+        <ion-icon name="alert-circle-outline"></ion-icon> {{ passError }}
+      </div>
+      <ion-button expand="block" type="submit" [disabled]="passLoading" class="save-btn">
+        <ion-spinner *ngIf="passLoading" name="crescent" slot="start"></ion-spinner>
+        Cambiar contraseña
+      </ion-button>
+    </form>
+    <div class="pass-ok" *ngIf="passDone">
+      <ion-icon name="checkmark-circle" color="success"></ion-icon>
+      Contraseña actualizada correctamente.
+      <ion-button fill="clear" size="small" (click)="passDone = false">Cambiar de nuevo</ion-button>
+    </div>
+  </ion-card>
+
+  <p class="section-title">Área individual</p>
+  <ion-card class="profile-card nav-card" (click)="goClaims()">
+    <div class="nav-row">
+      <div class="nav-row-main">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        <div>
+          <strong>Mis reclamos</strong>
+          <small>Consultas y reclamos al administrador</small>
+        </div>
+      </div>
+      <ion-icon name="chevron-forward"></ion-icon>
+    </div>
+  </ion-card>
+
+  <!-- Logout -->
+  <p class="section-title">Sesión</p>
+  <ion-card class="profile-card logout-card" (click)="logout()">
+    <div class="logout-row">
+      <ion-icon name="log-out-outline"></ion-icon>
+      <span>Cerrar sesión</span>
+      <ion-icon name="chevron-forward"></ion-icon>
+    </div>
+  </ion-card>
+
+  <div class="app-version">CondoPY v1.0</div>
+
+</ion-content>

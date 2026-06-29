@@ -1,0 +1,111 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button routerLink="/home">
+        <ion-icon name="home-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Mis unidades</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="empty-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando tus unidades...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && units.length === 0">
+    <ion-icon name="home-outline"></ion-icon>
+    <p>No tenés unidades asignadas.</p>
+  </div>
+
+  <div *ngIf="!loading && units.length > 0">
+    <div class="summary-wrap" *ngIf="hasMultipleUnits">
+      <p class="section-title">Resumen general</p>
+
+      <ion-card class="summary-card" *ngIf="summaryReady; else summaryLoading">
+        <div class="summary-hero">
+          <span class="summary-label">Total adeudado</span>
+          <strong>{{ totalDebtAllUnits > 0 ? fmt(totalDebtAllUnits) : 'Sin deuda' }}</strong>
+        </div>
+
+        <div class="summary-stats">
+          <div class="summary-stat">
+            <span class="summary-stat-value">{{ unitsUpToDateCount }}</span>
+            <span class="summary-stat-label">Al día</span>
+          </div>
+          <div class="summary-stat">
+            <span class="summary-stat-value debt">{{ unitsWithDebtCount }}</span>
+            <span class="summary-stat-label">Con deuda</span>
+          </div>
+        </div>
+
+        <ion-button expand="block" class="summary-btn" (click)="goToConsolidatedAccount()">
+          <ion-icon name="documents-outline" slot="start"></ion-icon>
+          Ver todas las liquidaciones
+        </ion-button>
+      </ion-card>
+
+      <ng-template #summaryLoading>
+        <ion-card class="summary-card summary-card-loading">
+          <ion-spinner name="dots" color="primary"></ion-spinner>
+          <span>Consolidando resumen de todas tus unidades...</span>
+        </ion-card>
+      </ng-template>
+    </div>
+
+    <p class="section-title">Mis unidades</p>
+    <div class="units-list">
+      <ion-card class="unit-card" *ngFor="let u of units" (click)="goToAccount(u)">
+        <div class="unit-card-inner">
+          <div
+            class="semaforo"
+            [class.semaforo-ok]="debtInfo[u.unitId]?.status === 'ok'"
+            [class.semaforo-warn]="debtInfo[u.unitId]?.status === 'warn'"
+            [class.semaforo-danger]="debtInfo[u.unitId]?.status === 'danger'">
+          </div>
+
+          <div class="unit-icon">
+            <ion-icon name="home"></ion-icon>
+          </div>
+
+          <div class="unit-info">
+            <strong>Unidad {{ u.unitCode }}</strong>
+            <span>{{ u.buildingName }}</span>
+            <span class="unit-sub">{{ u.condominiumName }} · Piso {{ u.floor || '—' }}</span>
+            <span class="last-period" *ngIf="debtInfo[u.unitId]?.lastPeriodLabel">
+              Último período: {{ debtInfo[u.unitId].lastPeriodLabel }}
+            </span>
+          </div>
+
+          <div class="unit-debt">
+            <ng-container *ngIf="debtInfo[u.unitId] as info">
+              <span
+                class="debt-amount"
+                [class.debt-ok]="info.status === 'ok'"
+                [class.debt-warn]="info.status === 'warn'"
+                [class.debt-danger]="info.status === 'danger'">
+                {{ info.totalDebt > 0 ? fmt(info.totalDebt) : '—' }}
+              </span>
+              <span
+                class="debt-label"
+                [class.debt-ok]="info.status === 'ok'"
+                [class.debt-warn]="info.status === 'warn'"
+                [class.debt-danger]="info.status === 'danger'">
+                {{ info.status === 'ok' ? 'Al día' : info.status === 'warn' ? 'Pendiente' : 'Atrasado' }}
+              </span>
+            </ng-container>
+            <ion-spinner *ngIf="!debtInfo[u.unitId]" name="dots" class="debt-spinner"></ion-spinner>
+          </div>
+
+          <ion-icon name="chevron-forward" class="unit-arrow"></ion-icon>
+        </div>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>

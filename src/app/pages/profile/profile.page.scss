@@ -1,0 +1,90 @@
+.profile-hero {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--brand-gradient); padding: 2rem 1.5rem 2.5rem;
+  color: #fff; text-align: center;
+  h2 { margin: 0.75rem 0 0.2rem; font-size: 1.3rem; font-weight: 800; }
+  p  { margin: 0 0 0.75rem; font-size: 0.85rem; opacity: 0.85; }
+}
+
+.profile-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(255,255,255,0.25); border: 3px solid rgba(255,255,255,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; font-weight: 800; color: #fff;
+}
+
+.role-badge {
+  background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 20px; padding: 0.2rem 0.9rem;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em;
+}
+
+.profile-card {
+  border-radius: 18px !important; margin: 0 1rem 0.75rem !important; padding: 1.1rem;
+}
+
+.field {
+  margin-bottom: 0.85rem;
+  ion-label {
+    display: block; font-size: 0.8rem; font-weight: 600;
+    color: var(--brand-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.3rem;
+  }
+  ion-input { --border-radius: 12px; --border-color: var(--brand-border); --border-width: 1.5px; }
+}
+
+.error-msg {
+  display: flex; align-items: center; gap: 0.4rem;
+  background: rgba(201,77,63,0.08); border: 1px solid rgba(201,77,63,0.2);
+  border-radius: 10px; padding: 0.55rem 0.8rem;
+  color: #c94d3f; font-size: 0.82rem; margin-bottom: 0.85rem;
+  ion-icon { flex-shrink: 0; }
+}
+
+.save-btn {
+  --background: var(--brand-gradient); --border-radius: 12px; font-weight: 700; height: 46px;
+}
+
+.pass-ok {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  padding: 0.5rem; text-align: center; font-size: 0.9rem; color: var(--brand-ink);
+  ion-icon { font-size: 2rem; }
+}
+
+.nav-card { cursor: pointer; &:active { transform: scale(0.98); } }
+.nav-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.1rem 0;
+  ion-icon:last-child { color: var(--brand-muted); font-size: 0.9rem; }
+}
+
+.nav-row-main {
+  display: flex; align-items: center; gap: 0.75rem;
+  ion-icon {
+    font-size: 1.25rem;
+    color: var(--brand-blue);
+    flex-shrink: 0;
+  }
+  strong {
+    display: block;
+    font-size: 0.93rem;
+    color: var(--brand-ink);
+  }
+  small {
+    display: block;
+    margin-top: 0.08rem;
+    font-size: 0.76rem;
+    color: var(--brand-muted);
+  }
+}
+
+.logout-card { cursor: pointer; &:active { transform: scale(0.98); } }
+.logout-row {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.25rem 0;
+  ion-icon:first-child { font-size: 1.3rem; color: #c94d3f; }
+  span { flex: 1; font-size: 0.95rem; font-weight: 600; color: #c94d3f; }
+  ion-icon:last-child { color: var(--brand-muted); font-size: 0.9rem; }
+}
+
+.app-version {
+  text-align: center; font-size: 0.75rem; color: var(--brand-muted);
+  padding: 1rem 0 2rem;
+}
