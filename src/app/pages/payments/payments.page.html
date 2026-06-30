@@ -1,0 +1,102 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Mis Pagos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Saldo a favor -->
+  <div *ngIf="creditAmount > 0" class="credit-banner ion-padding-horizontal ion-padding-top">
+    <ion-icon name="checkmark-circle" color="success"></ion-icon>
+    <div class="credit-info">
+      <p class="credit-label">Saldo a favor</p>
+      <p class="credit-amount">{{ fmt(creditAmount) }}</p>
+    </div>
+    <ion-button
+      size="small"
+      fill="outline"
+      color="success"
+      class="apply-btn"
+      [disabled]="applyingCredit"
+      (click)="doApplyCredit()">
+      <ion-spinner *ngIf="applyingCredit" name="crescent" slot="start"></ion-spinner>
+      {{ applyingCredit ? '' : 'Aplicar' }}
+    </ion-button>
+  </div>
+
+  <!-- Subtitle -->
+  <div class="page-intro ion-padding-horizontal" [class.ion-padding-top]="creditAmount === 0">
+    <p class="page-subtitle">Comprobantes enviados para revisión. Los pagos aprobados se aplican a tu deuda.</p>
+  </div>
+
+  <!-- Filter chips -->
+  <div class="filter-chips ion-padding-horizontal">
+    <button
+      *ngFor="let f of filters"
+      class="chip"
+      [class.chip-active]="selectedFilter === f.value"
+      (click)="selectFilter(f.value)">
+      {{ f.label }}
+      <span *ngIf="countFor(f.value) > 0" class="chip-badge">{{ countFor(f.value) }}</span>
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="ion-padding">
+    <ion-text color="danger">{{ error }}</ion-text>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-msg">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Cargando...</p>
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="!loading && !error && filtered.length === 0" class="state-msg">
+    <ion-icon name="wallet-outline" class="empty-icon"></ion-icon>
+    <p>No hay pagos {{ selectedFilter ? 'con este estado' : 'registrados' }}.</p>
+    <ion-button fill="outline" size="small" (click)="goToSubmit()">Enviar primer pago</ion-button>
+  </div>
+
+  <!-- List -->
+  <ion-list *ngIf="!loading && filtered.length > 0" lines="none" class="payment-list">
+    <ion-item
+      *ngFor="let item of filtered"
+      detail="true"
+      button="true"
+      (click)="goToDetail(item.id)"
+      class="payment-item">
+
+      <div class="item-content" slot="start">
+        <div class="item-ref">{{ item.reference }}</div>
+        <div class="item-date">Pago del {{ dateLabel(item.paymentDate) }}</div>
+        <div class="item-amount">{{ fmt(item.declaredAmount) }}</div>
+      </div>
+
+      <div slot="end" class="item-end">
+        <ion-badge [color]="statusColor(item.status)">{{ statusLabel(item.status) }}</ion-badge>
+        <div class="item-actions">
+          <div class="item-sent">{{ dateLabel(item.createdAtUtc) }}</div>
+          <ion-button fill="clear" size="small" color="medium" class="pdf-btn"
+            (click)="openPdf(item.id, $event)" title="Descargar PDF">
+            <ion-icon slot="icon-only" name="document-text-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </div>
+
+    </ion-item>
+  </ion-list>
+
+  <!-- FAB -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" (click)="goToSubmit()" title="Enviar comprobante">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>

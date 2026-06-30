@@ -25,6 +25,22 @@ const routes: Routes = [
         path: 'claims',
         loadChildren: () => import('../claims/claims.module').then(m => m.ClaimsPageModule)
       },
+      {
+        path: 'payments',
+        loadChildren: () => import('../payments/payments.module').then(m => m.PaymentsPageModule)
+      },
+      {
+        path: 'payments/:id',
+        loadChildren: () => import('../payment-detail/payment-detail.module').then(m => m.PaymentDetailPageModule)
+      },
+      {
+        path: 'submit-payment',
+        loadChildren: () => import('../submit-payment/submit-payment.module').then(m => m.SubmitPaymentPageModule)
+      },
+      {
+        path: 'notifications',
+        loadChildren: () => import('../notifications/notifications.module').then(m => m.NotificationsPageModule)
+      },
       { path: '', redirectTo: 'units', pathMatch: 'full' }
     ]
   }

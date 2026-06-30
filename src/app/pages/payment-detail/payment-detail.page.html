@@ -1,0 +1,96 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/area/payments" text="Pagos"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detalle de Pago</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-msg">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="state-msg">
+    <ion-icon name="alert-circle-outline" class="err-icon"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="back()">Volver</ion-button>
+  </div>
+
+  <!-- Detail -->
+  <div *ngIf="payment && !loading">
+
+    <!-- Status header -->
+    <div class="status-header">
+      <div class="ref-row">
+        <span class="ref-label">{{ payment.reference }}</span>
+        <ion-badge [color]="statusColor">{{ statusLabel }}</ion-badge>
+      </div>
+      <p class="sent-label">Enviado el {{ dateTimeLabel(payment.createdAtUtc) }}</p>
+    </div>
+
+    <!-- Main card -->
+    <ion-card class="detail-card">
+      <ion-card-content>
+        <div class="detail-row">
+          <span class="detail-lbl">Fecha del pago</span>
+          <span class="detail-val">{{ dateLabel(payment.paymentDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-lbl">Monto declarado</span>
+          <span class="detail-val amount">{{ fmt(payment.declaredAmount) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="payment.reviewedAmount != null">
+          <span class="detail-lbl">Monto revisado</span>
+          <span class="detail-val amount">{{ fmt(payment.reviewedAmount) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="payment.resolvedAt">
+          <span class="detail-lbl">Resuelto el</span>
+          <span class="detail-val">{{ dateTimeLabel(payment.resolvedAt) }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Comprobante -->
+    <ion-card class="detail-card" *ngIf="payment.comprobanteUrl">
+      <ion-card-header>
+        <ion-card-subtitle>Comprobante</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <a [href]="payment.comprobanteUrl" target="_blank" rel="noopener" class="comprobante-link">
+          <ion-icon name="document-attach-outline"></ion-icon>
+          Ver comprobante
+        </a>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Units allocated -->
+    <ion-card class="detail-card" *ngIf="payment.units && payment.units.length > 0">
+      <ion-card-header>
+        <ion-card-subtitle>Unidades incluidas</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="unit-row" *ngFor="let u of payment.units">
+          <span class="unit-code">{{ u.unitCode }}</span>
+          <span *ngIf="payment.status === 'Approved'" class="unit-amount">{{ fmt(u.allocatedAmount) }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Rejection reason -->
+    <ion-card class="detail-card rejection-card" *ngIf="payment.status === 'Rejected' && payment.rejectionReason">
+      <ion-card-header>
+        <ion-card-subtitle color="danger">Motivo de rechazo</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <p class="rejection-text">{{ payment.rejectionReason }}</p>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+</ion-content>

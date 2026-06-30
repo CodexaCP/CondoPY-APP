@@ -1,0 +1,63 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Notificaciones</ion-title>
+    <ion-buttons slot="end" *ngIf="unreadCount > 0">
+      <ion-button [disabled]="markingAll" (click)="markAllAsRead()">
+        <ion-icon slot="icon-only" name="checkmark-done-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar color="primary" *ngIf="unreadCount > 0">
+    <ion-note class="unread-note">{{ unreadCount }} sin leer · Toca ✓ para marcar todas</ion-note>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-msg">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="state-msg">
+    <ion-icon name="alert-circle-outline" class="state-icon"></ion-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="!loading && !error && items.length === 0" class="state-msg">
+    <ion-icon name="notifications-off-outline" class="state-icon"></ion-icon>
+    <p>No tienes notificaciones.</p>
+  </div>
+
+  <!-- List -->
+  <ion-list *ngIf="!loading && items.length > 0" lines="none" class="notif-list">
+    <div
+      *ngFor="let n of items"
+      class="notif-item"
+      [class.notif-unread]="!n.isRead"
+      (click)="handleTap(n)">
+
+      <!-- Colored icon -->
+      <div class="notif-icon-wrap" [style.background]="typeColor(n.type)">
+        <ion-icon [name]="typeIcon(n.type)"></ion-icon>
+      </div>
+
+      <!-- Body -->
+      <div class="notif-body">
+        <p class="notif-title">{{ n.title }}</p>
+        <p class="notif-text">{{ n.body }}</p>
+        <p class="notif-date">{{ dateTimeLabel(n.createdAtUtc) }}</p>
+      </div>
+
+      <!-- Unread dot -->
+      <div class="notif-dot" *ngIf="!n.isRead"></div>
+
+    </div>
+  </ion-list>
+
+</ion-content>

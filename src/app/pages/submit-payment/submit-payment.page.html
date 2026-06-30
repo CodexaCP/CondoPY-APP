@@ -1,0 +1,137 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/area/payments" text="Pagos"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Enviar Pago</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-msg">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+
+    <!-- Fecha del día (no editable) -->
+    <div class="date-banner">
+      <ion-icon name="calendar-outline"></ion-icon>
+      <div>
+        <p class="date-label">Fecha de envío</p>
+        <p class="date-value">{{ todayDisplay }}</p>
+      </div>
+    </div>
+
+    <!-- Units section -->
+    <p class="section-label">Unidades a incluir</p>
+    <p class="section-hint">Seleccioná las unidades por las cuales estás realizando el pago.</p>
+
+    <div class="unit-list">
+      <div
+        *ngFor="let opt of options"
+        class="unit-card"
+        [class.unit-selected]="opt.selected"
+        (click)="toggle(opt)">
+
+        <div class="unit-check">
+          <ion-icon [name]="opt.selected ? 'checkbox' : 'square-outline'" [color]="opt.selected ? 'primary' : 'medium'"></ion-icon>
+        </div>
+
+        <div class="unit-info">
+          <div class="unit-code">{{ opt.unit.unitCode }}</div>
+          <div class="unit-building">{{ opt.unit.buildingName }}</div>
+        </div>
+
+        <div class="unit-debt" *ngIf="opt.debt">
+          <span class="debt-label">Deuda</span>
+          <span class="debt-amount" [class.debt-zero]="opt.debt.totalDebt <= 0">
+            {{ fmt(opt.debt.totalDebt) }}
+          </span>
+        </div>
+        <div class="unit-debt" *ngIf="!opt.debt">
+          <span class="no-debt">Sin deuda</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Debt summary -->
+    <div class="debt-summary" *ngIf="selectedUnitIds.length > 0 && totalDebtSelected > 0">
+      <ion-icon name="information-circle-outline" color="primary"></ion-icon>
+      <span>Deuda total seleccionada: <strong>{{ fmt(totalDebtSelected) }}</strong></span>
+    </div>
+
+    <!-- Monto -->
+    <p class="section-label" style="margin-top:1.25rem">Monto del pago</p>
+
+    <ion-list class="form-list" lines="none">
+      <ion-item class="form-item">
+        <ion-label position="stacked">Monto declarado (Gs.) <span class="required">*</span></ion-label>
+        <ion-input
+          type="text"
+          inputmode="numeric"
+          [value]="amountDisplay"
+          (ionInput)="onAmountInput($event)"
+          placeholder="0"
+          autocomplete="off">
+        </ion-input>
+      </ion-item>
+    </ion-list>
+
+    <!-- Comprobante -->
+    <p class="section-label" style="margin-top:0.75rem">Comprobante de pago</p>
+    <p class="section-hint">Adjuntá la captura de pantalla del pago realizado desde tu banco.</p>
+
+    <!-- Hidden file input -->
+    <input
+      #fileInput
+      type="file"
+      accept="image/*"
+      style="display:none"
+      (change)="onFileSelected($event)">
+
+    <!-- No image selected -->
+    <div *ngIf="!comprobantePreview" class="attach-area" (click)="fileInput.click()">
+      <ion-icon name="image-outline" class="attach-icon"></ion-icon>
+      <p class="attach-label">Tocar para adjuntar imagen</p>
+      <p class="attach-hint">JPG, PNG · máximo 10 MB</p>
+    </div>
+
+    <!-- Image preview -->
+    <div *ngIf="comprobantePreview" class="preview-wrap">
+      <img [src]="comprobantePreview" alt="Comprobante" class="preview-img">
+      <div class="preview-actions">
+        <ion-button fill="outline" size="small" color="medium" (click)="fileInput.click()">
+          <ion-icon slot="start" name="refresh-outline"></ion-icon>
+          Cambiar
+        </ion-button>
+        <ion-button fill="outline" size="small" color="danger" (click)="removeComprobante()">
+          <ion-icon slot="start" name="trash-outline"></ion-icon>
+          Quitar
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="error-msg">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      {{ error }}
+    </div>
+
+    <!-- Submit -->
+    <ion-button
+      expand="block"
+      color="primary"
+      class="submit-btn"
+      [disabled]="saving"
+      (click)="submit()">
+      <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+      {{ saving ? 'Enviando...' : 'Enviar comprobante' }}
+    </ion-button>
+
+  </div>
+
+</ion-content>

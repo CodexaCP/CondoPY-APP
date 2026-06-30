@@ -4,7 +4,9 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5071/api'
+  apiUrl: 'https://ophthalmometrical-zainab-irredeemable.ngrok-free.dev/api'
+  
+  
 };
 
 /*

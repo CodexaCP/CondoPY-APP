@@ -111,3 +111,74 @@ export interface CreateClaimRequest {
   category: ClaimCategory;
   description: string;
 }
+
+// ── Owner Payments ────────────────────────────────────────────────────────────
+
+export type OwnerPaymentStatus = 'Pending' | 'UnderReview' | 'Approved' | 'Rejected';
+
+export interface OwnerPayment {
+  id: string;
+  reference: string;
+  ownerId: string;
+  ownerFullName: string;
+  paymentDate: string;
+  comprobanteUrl: string | null;
+  declaredAmount: number;
+  reviewedAmount: number | null;
+  status: OwnerPaymentStatus;
+  rejectionReason: string | null;
+  reviewedAt: string | null;
+  resolvedAt: string | null;
+  createdAtUtc: string;
+  units: OwnerPaymentUnit[];
+}
+
+export interface OwnerPaymentUnit {
+  unitId: string;
+  unitCode: string;
+  allocatedAmount: number;
+}
+
+export interface OwnerPaymentCreateRequest {
+  unitIds: string[];
+  paymentDate: string;
+  declaredAmount: number;
+  comprobanteUrl: string | null;
+}
+
+export interface OwnerDebtCharge {
+  expenseChargeId: string;
+  concept: string;
+  chargeType: string;
+  periodName: string;
+  year: number;
+  month: number;
+  pendingAmount: number;
+}
+
+export interface OwnerDebtUnit {
+  unitId: string;
+  unitCode: string;
+  buildingName: string;
+  totalDebt: number;
+  charges: OwnerDebtCharge[];
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+
+export type NotificationType =
+  | 'OwnerPaymentSubmitted'
+  | 'PaymentUnderReview'
+  | 'PaymentApproved'
+  | 'PaymentRejected';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  isRead: boolean;
+  entityType: string | null;
+  entityId: string | null;
+  createdAtUtc: string;
+}

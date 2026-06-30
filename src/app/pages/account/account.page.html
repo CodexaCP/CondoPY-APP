@@ -42,15 +42,6 @@
     </div>
   </div>
 
-  <div class="view-toggle" *ngIf="selectedUnit && !consolidatedMode">
-    <button class="view-toggle-btn" [class.active]="activeView === 'periods'" (click)="setView('periods')">
-      Períodos
-    </button>
-    <button class="view-toggle-btn" [class.active]="activeView === 'payments'" (click)="setView('payments')">
-      Mis pagos
-    </button>
-  </div>
-
   <div class="empty-state" *ngIf="loading">
     <ion-spinner name="crescent" color="primary"></ion-spinner>
     <p>{{ consolidatedMode ? 'Consolidando liquidaciones...' : 'Cargando períodos...' }}</p>
@@ -102,7 +93,7 @@
     </div>
   </ng-container>
 
-  <ng-container *ngIf="!loading && selectedUnit && !consolidatedMode && activeView === 'periods'">
+  <ng-container *ngIf="!loading && selectedUnit && !consolidatedMode">
     <div class="empty-state" *ngIf="periods.length === 0">
       <ion-icon name="receipt-outline"></ion-icon>
       <p>No hay períodos registrados.</p>
@@ -135,44 +126,6 @@
                 {{ p.balance <= 0 ? 'Al día' : 'Pendiente' }}
               </span>
               <ion-icon name="chevron-forward" class="chevron"></ion-icon>
-            </div>
-          </div>
-        </ion-card>
-      </div>
-    </div>
-  </ng-container>
-
-  <ng-container *ngIf="!loading && selectedUnit && !consolidatedMode && activeView === 'payments'">
-    <div class="empty-state" *ngIf="loadingPayments">
-      <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p>Consolidando pagos...</p>
-    </div>
-
-    <div class="empty-state" *ngIf="!loadingPayments && paymentHistory.length === 0">
-      <ion-icon name="wallet-outline"></ion-icon>
-      <p>No hay pagos registrados todavía.</p>
-    </div>
-
-    <div *ngIf="!loadingPayments && paymentHistory.length > 0">
-      <p class="section-title">Historial unificado de pagos</p>
-
-      <div class="payments-list">
-        <ion-card class="payment-history-card" *ngFor="let payment of paymentHistory">
-          <div class="payment-history-row" [class.reversed]="payment.isReversed">
-            <div class="payment-history-left">
-              <div class="payment-history-top">
-                <strong>{{ fmt(payment.amount) }}</strong>
-                <span class="payment-method">{{ methodLabel(payment.method) }}</span>
-              </div>
-              <span class="payment-period">{{ payment.expensePeriodName }}</span>
-              <small>{{ dateLabel(payment.paymentDate) }}</small>
-              <small *ngIf="payment.reference">Ref: {{ payment.reference }}</small>
-            </div>
-
-            <div class="payment-history-right">
-              <span class="payment-status" [class.payment-status-reversed]="payment.isReversed">
-                {{ payment.isReversed ? 'Revertido' : 'Aplicado' }}
-              </span>
             </div>
           </div>
         </ion-card>
