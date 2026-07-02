@@ -1,0 +1,118 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title slot="start">
+      <div class="toolbar-brand">
+        <div class="brand-avatar">{{ initials }}</div>
+        <div class="brand-text">
+          <span class="brand-greeting">Buenos días</span>
+          <span class="brand-name">{{ user?.fullName || '—' }}</span>
+        </div>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goNotif()" class="bell-btn">
+        <div class="bell-wrap" slot="icon-only">
+          <ion-icon name="notifications-outline"></ion-icon>
+          <span class="bell-badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+        </div>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="loadBalance(); loadComunicados(); $event.target.complete()">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- ── Card de saldo ── -->
+  <div class="balance-card">
+    <ng-container *ngIf="!balanceLoading && primaryUnit; else balanceSkeleton">
+      <div class="balance-label">Saldo pendiente</div>
+      <div class="balance-amount" [class.balance-credit]="!balancePositive">
+        Gs. {{ formatAmount(latestPeriod?.runningBalance ?? 0) }}
+      </div>
+      <div class="balance-row">
+        <span class="balance-unit">{{ primaryUnit.unitCode }} · {{ primaryUnit.buildingName }}</span>
+        <span class="balance-period" *ngIf="latestPeriod">{{ latestPeriod.expensePeriodName }}</span>
+      </div>
+    </ng-container>
+    <ng-template #balanceSkeleton>
+      <div class="balance-label">Saldo pendiente</div>
+      <div class="balance-skeleton-amount"></div>
+      <div class="balance-skeleton-sub"></div>
+    </ng-template>
+  </div>
+
+  <!-- ── Acciones rápidas ── -->
+  <p class="section-label">Acciones rápidas</p>
+  <div class="chips-row">
+
+    <div class="chip" (click)="goUnits()">
+      <div class="chip-icon ic-teal">
+        <ion-icon name="home-outline"></ion-icon>
+      </div>
+      <span class="chip-lbl">Mis unidades</span>
+    </div>
+
+    <div class="chip" (click)="goExpensas()">
+      <div class="chip-icon ic-blue">
+        <ion-icon name="receipt-outline"></ion-icon>
+      </div>
+      <span class="chip-lbl">Expensas</span>
+    </div>
+
+    <div class="chip" (click)="goPagos()">
+      <div class="chip-icon ic-green">
+        <ion-icon name="wallet-outline"></ion-icon>
+      </div>
+      <span class="chip-lbl">Mis pagos</span>
+    </div>
+
+    <div class="chip" (click)="goReclamos()">
+      <div class="chip-icon ic-danger">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+      </div>
+      <span class="chip-lbl">Reclamos</span>
+    </div>
+
+  </div>
+
+  <!-- ── Comunicados ── -->
+  <div class="section-hd">
+    <span class="section-hd-title">Comunicados</span>
+    <span class="section-hd-link" (click)="goComunicados()">Ver todos →</span>
+  </div>
+
+  <!-- Loading comunicados -->
+  <div class="comun-skeleton" *ngIf="comunicadosLoading">
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+  </div>
+
+  <!-- Sin comunicados -->
+  <div class="comun-empty" *ngIf="!comunicadosLoading && comunicados.length === 0">
+    <ion-icon name="megaphone-outline"></ion-icon>
+    <span>No hay comunicados recientes</span>
+  </div>
+
+  <!-- Lista de comunicados -->
+  <div class="comun-list" *ngIf="!comunicadosLoading && comunicados.length > 0">
+    <div class="comun-card" *ngFor="let c of comunicados" (click)="goComunicados()">
+      <div class="comun-top">
+        <div class="cat-pill" [ngClass]="catClass(c.category)">
+          <ion-icon [name]="catIcon(c.category)"></ion-icon>
+          {{ c.category }}
+        </div>
+        <span class="comun-date">{{ dateLabel(c.publishedAt ?? c.createdAtUtc) }}</span>
+      </div>
+      <p class="comun-title">{{ c.title }}</p>
+      <p class="comun-body">{{ c.body }}</p>
+      <p class="comun-bldg">
+        <ion-icon name="business-outline"></ion-icon>
+        {{ c.buildingName }}
+      </p>
+    </div>
+  </div>
+
+</ion-content>

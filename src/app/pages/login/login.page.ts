@@ -31,7 +31,7 @@ export class LoginPage {
         if (res.mustChangePassword) {
           this.router.navigateByUrl('/change-password');
         } else {
-          this.router.navigateByUrl('/home');
+          this.router.navigateByUrl('/area');
         }
       },
       error: (err) => {

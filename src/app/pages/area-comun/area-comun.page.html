@@ -5,70 +5,58 @@
         <ion-icon name="home-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Área Común</ion-title>
+    <ion-title>Comunicados</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [scrollY]="false">
-  <div class="coming-wrap">
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 
-    <!-- Ícono edificio en blanco sobre gradiente -->
-    <div class="coming-icon">
-      <svg viewBox="0 0 110 120" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="110" width="102" height="7" rx="2" fill="white"/>
-        <path fill-rule="evenodd" fill="white" d="
-          M6,30 L6,110 L52,110 L52,30 Z
-          M13,40 L13,51 L21,51 L21,44 L26,44 L26,40 Z
-          M13,55 L13,66 L21,66 L21,59 L26,59 L26,55 Z
-          M13,70 L13,81 L21,81 L21,74 L26,74 L26,70 Z
-          M13,85 L13,96 L21,96 L21,89 L26,89 L26,85 Z
-          M32,40 L32,51 L44,51 L44,40 Z
-          M32,55 L32,66 L44,66 L44,55 Z
-          M32,70 L32,81 L44,81 L44,70 Z
-          M32,85 L32,96 L44,96 L44,85 Z
-        "/>
-        <path fill-rule="evenodd" fill="white" d="
-          M50,10 L50,110 L76,110 L76,10 Z
-          M56,20 L56,30 L70,30 L70,20 Z
-          M56,35 L56,45 L70,45 L70,35 Z
-          M56,50 L56,60 L70,60 L70,50 Z
-          M56,65 L56,75 L70,75 L70,65 Z
-          M56,80 L56,90 L70,90 L70,80 Z
-        "/>
-        <path fill-rule="evenodd" fill="white" d="
-          M74,68 L74,110 L96,110 L96,68 Z
-          M79,76 L79,86 L91,86 L91,76 Z
-          M79,90 L79,100 L91,100 L91,90 Z
-        "/>
-      </svg>
-    </div>
-
-    <h2>Área Común</h2>
-    <p>Estamos trabajando en las funcionalidades de espacios compartidos, avisos del edificio y más.</p>
-
-    <div class="features-preview">
-      <div class="feature-item">
-        <ion-icon name="megaphone-outline"></ion-icon>
-        <span>Avisos del edificio</span>
-      </div>
-      <div class="feature-item">
-        <ion-icon name="call-outline"></ion-icon>
-        <span>Contactos</span>
-      </div>
-      <div class="feature-item">
-        <ion-icon name="calendar-outline"></ion-icon>
-        <span>Reserva de amenities</span>
-      </div>
-      <div class="feature-item">
-        <ion-icon name="document-text-outline"></ion-icon>
-        <span>Reglamento</span>
-      </div>
-    </div>
-
-    <ion-button (click)="goHome()" fill="outline" class="back-btn">
-      <ion-icon name="arrow-back" slot="start"></ion-icon>
-      Volver al inicio
-    </ion-button>
-
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-msg">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
   </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="state-msg">
+    <ion-icon name="alert-circle-outline" class="state-icon"></ion-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="!loading && !error && items.length === 0" class="state-msg">
+    <ion-icon name="megaphone-outline" class="state-icon"></ion-icon>
+    <p>No hay comunicados publicados.</p>
+  </div>
+
+  <!-- Lista de comunicados -->
+  <div *ngIf="!loading && items.length > 0" class="announcements-list">
+    <div class="announcement-card" *ngFor="let item of items">
+
+      <!-- Encabezado de la card -->
+      <div class="card-header">
+        <div class="cat-chip" [style.background]="categoryColor(item.category)">
+          <ion-icon [name]="categoryIcon(item.category)"></ion-icon>
+          <span>{{ item.category }}</span>
+        </div>
+        <span class="card-building">{{ item.buildingName }}</span>
+      </div>
+
+      <!-- Título -->
+      <h3 class="card-title">{{ item.title }}</h3>
+
+      <!-- Cuerpo -->
+      <p class="card-body">{{ item.body }}</p>
+
+      <!-- Fecha -->
+      <p class="card-date">
+        <ion-icon name="calendar-outline"></ion-icon>
+        {{ dateLabel(item.publishedAt ?? item.createdAtUtc) }}
+      </p>
+
+    </div>
+  </div>
+
 </ion-content>

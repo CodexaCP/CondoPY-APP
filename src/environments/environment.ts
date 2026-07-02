@@ -4,9 +4,11 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'https://ophthalmometrical-zainab-irredeemable.ngrok-free.dev/api'
-  
-  
+  // Navegador (ionic serve):  http://localhost:5071/api
+  // Emulador Android:         http://10.0.2.2:5071/api
+  // Dispositivo físico:       http://<IP-PC>:5071/api
+  // ngrok:                    https://ophthalmometrical-zainab-irredeemable.ngrok-free.dev/api
+  apiUrl: 'http://localhost:5071/api'
 };
 
 /*

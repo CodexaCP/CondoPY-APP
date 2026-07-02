@@ -164,6 +164,26 @@ export interface OwnerDebtUnit {
   charges: OwnerDebtCharge[];
 }
 
+// ── Announcements ─────────────────────────────────────────────────────────────
+
+export type AnnouncementCategory = 'General' | 'Mantenimiento' | 'Seguridad' | 'Financiero' | 'Convocatoria' | 'Otro';
+
+export interface Announcement {
+  id: string;
+  buildingId: string;
+  buildingName: string;
+  title: string;
+  body: string;
+  category: AnnouncementCategory;
+  publishedAt: string | null;
+  expiresAt: string | null;
+  isActive: boolean;
+  createdByUserId: string | null;
+  createdByName: string;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+}
+
 // ── Notifications ─────────────────────────────────────────────────────────────
 
 export type NotificationType =
