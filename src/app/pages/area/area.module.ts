@@ -42,6 +42,10 @@ const routes: Routes = [
         loadChildren: () => import('../notifications/notifications.module').then(m => m.NotificationsPageModule)
       },
       {
+        path: 'amenities',
+        loadChildren: () => import('../amenities/amenities.module').then(m => m.AmenitiesPageModule)
+      },
+      {
         path: 'dashboard',
         loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardPageModule)
       },

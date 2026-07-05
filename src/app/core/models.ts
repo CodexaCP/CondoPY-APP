@@ -88,7 +88,7 @@ export type ClaimStatus = 'Pendiente' | 'EnProceso' | 'Resuelto';
 
 export interface Claim {
   id: string;
-  condominiumId: string;
+  condominiumId: string | null;
   condominiumName: string;
   buildingId: string;
   buildingName: string;
@@ -190,7 +190,9 @@ export type NotificationType =
   | 'OwnerPaymentSubmitted'
   | 'PaymentUnderReview'
   | 'PaymentApproved'
-  | 'PaymentRejected';
+  | 'PaymentRejected'
+  | 'LateFeeConfigChanged'
+  | 'AmenityReservationUpdated';
 
 export interface AppNotification {
   id: string;
@@ -200,5 +202,42 @@ export interface AppNotification {
   isRead: boolean;
   entityType: string | null;
   entityId: string | null;
+  createdAtUtc: string;
+}
+
+// ── Amenities ──────────────────────────────────────────────────────────
+
+export type AmenityReservationStatus = 'PendingPayment' | 'PendingReview' | 'Confirmed' | 'Rejected' | 'Cancelled';
+
+export interface Amenity {
+  id: string;
+  buildingId: string;
+  buildingName: string;
+  name: string;
+  description: string;
+  reservationPrice: number;
+  isActive: boolean;
+}
+
+export interface AmenityScheduleSlot {
+  startsAt: string;
+  endsAt: string;
+  status: AmenityReservationStatus;
+}
+
+export interface AmenityReservation {
+  id: string;
+  amenityId: string;
+  amenityName: string;
+  buildingId: string;
+  buildingName: string;
+  startsAt: string;
+  endsAt: string;
+  price: number;
+  status: AmenityReservationStatus;
+  notes: string;
+  comprobanteUrl: string | null;
+  reservedByName: string;
+  rejectionReason: string | null;
   createdAtUtc: string;
 }

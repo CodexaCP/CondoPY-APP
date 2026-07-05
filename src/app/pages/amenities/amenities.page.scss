@@ -1,0 +1,120 @@
+.hero-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  margin: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1385b6, #1ab7af);
+  color: #fff;
+
+  strong { font-size: 1.05rem; }
+  span   { font-size: 0.85rem; opacity: 0.9; }
+}
+
+ion-segment { margin: 0 1rem 0.5rem; }
+
+.state-msg {
+  text-align: center;
+  color: #64748b;
+  padding: 1rem;
+  &.error { color: #ef4444; }
+}
+
+.amenity-card, .reservation-card { padding: 1rem; }
+
+.amenity-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  strong { display: block; font-size: 1rem; color: #0f172a; }
+  small  { color: #64748b; }
+}
+
+.price {
+  font-weight: 700;
+  color: #1385b6;
+  white-space: nowrap;
+}
+
+.amenity-desc { color: #475569; font-size: 0.85rem; margin: 0 0 0.75rem; }
+
+.reserve-form {
+  margin-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.6rem;
+
+    ion-label { font-size: 0.8rem; color: #475569; font-weight: 600; }
+
+    input {
+      padding: 0.55rem 0.7rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #fff;
+    }
+  }
+
+  .time-row { display: flex; gap: 0.6rem; .field { flex: 1; } }
+}
+
+.slots-box {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.6rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.82rem;
+
+  strong { display: block; color: #92400e; margin-bottom: 0.3rem; }
+  .slot  { display: inline-block; background: #fff; border-radius: 6px; padding: 0.15rem 0.5rem; margin: 0.15rem 0.25rem 0 0; color: #92400e; }
+}
+
+.slots-free { font-size: 0.82rem; color: #16a34a; margin-bottom: 0.75rem; }
+
+.status-chip {
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reservation-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: #475569;
+
+  .rejection { color: #ef4444; }
+}
+
+.reservation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.6rem;
+
+  .upload-btn {
+    background: #1385b6;
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.disabled { opacity: 0.6; pointer-events: none; }
+  }
+}

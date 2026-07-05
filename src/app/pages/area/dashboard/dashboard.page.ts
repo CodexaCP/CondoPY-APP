@@ -107,7 +107,9 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   dateLabel(value: string | null): string {
     if (!value) return '';
-    return new Intl.DateTimeFormat('es-PY', { day: '2-digit', month: '2-digit' }).format(new Date(value));
+    return new Intl.DateTimeFormat('es-PY', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+    }).format(new Date(value));
   }
 
   goUnits():      void { this.router.navigateByUrl('/area/units'); }
@@ -116,6 +118,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   goReclamos():   void { this.router.navigateByUrl('/area/claims'); }
   goNotif():      void { this.router.navigateByUrl('/area/notifications'); }
   goComunicados():void { this.router.navigateByUrl('/area-comun'); }
+  goAmenities():   void { this.router.navigateByUrl('/area/amenities'); }
 
   ngOnDestroy(): void { this.pollSub?.unsubscribe(); }
 }

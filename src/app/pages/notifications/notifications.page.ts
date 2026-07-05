@@ -7,14 +7,16 @@ const TYPE_ICON: Record<string, string> = {
   OwnerPaymentSubmitted: 'cloud-upload-outline',
   PaymentUnderReview:    'search-outline',
   PaymentApproved:       'checkmark-circle-outline',
-  PaymentRejected:       'close-circle-outline'
+  PaymentRejected:       'close-circle-outline',
+  LateFeeConfigChanged:  'alert-circle-outline'
 };
 
 const TYPE_COLOR: Record<string, string> = {
   OwnerPaymentSubmitted: '#f59e0b',
   PaymentUnderReview:    '#3b82f6',
   PaymentApproved:       '#22c55e',
-  PaymentRejected:       '#ef4444'
+  PaymentRejected:       '#ef4444',
+  LateFeeConfigChanged:  '#f97316'
 };
 
 @Component({

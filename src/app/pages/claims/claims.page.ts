@@ -104,7 +104,10 @@ export class ClaimsPage implements OnInit {
       },
       error: (err) => {
         const body = err?.error;
-        this.error = (typeof body === 'string' ? body : body?.message) ?? 'No se pudo enviar el reclamo.';
+        const msg = typeof body === 'string'
+          ? body
+          : (body?.message ?? body?.title ?? body?.detail);
+        this.error = msg ?? 'No se pudo enviar el reclamo.';
       }
     });
   }

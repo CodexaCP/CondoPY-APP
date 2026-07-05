@@ -55,6 +55,10 @@
         <ion-icon name="calendar-outline"></ion-icon>
         {{ dateLabel(item.publishedAt ?? item.createdAtUtc) }}
       </p>
+      <p class="card-date" *ngIf="item.expiresAt">
+        <ion-icon name="time-outline"></ion-icon>
+        Vigente hasta {{ dateLabel(item.expiresAt) }}
+      </p>
 
     </div>
   </div>

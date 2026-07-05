@@ -1,0 +1,107 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Amenities</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="loadData($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="hero-banner">
+    <strong>Espacios comunes</strong>
+    <span>Reservá el quincho, la piscina o el salón de tu edificio.</span>
+  </div>
+
+  <ion-segment [(ngModel)]="segment">
+    <ion-segment-button value="reservar">Reservar</ion-segment-button>
+    <ion-segment-button value="mias">Mis reservas</ion-segment-button>
+  </ion-segment>
+
+  <p class="state-msg" *ngIf="loading">Cargando...</p>
+  <p class="state-msg error" *ngIf="error">{{ error }}</p>
+
+  <!-- ── RESERVAR ─────────────────────────────────────────── -->
+  <ng-container *ngIf="segment === 'reservar' && !loading">
+    <p class="state-msg" *ngIf="!amenities.length && !error">Tu edificio todavía no tiene amenities disponibles.</p>
+
+    <ion-card class="amenity-card" *ngFor="let a of amenities">
+      <div class="amenity-head">
+        <div>
+          <strong>{{ a.name }}</strong>
+          <small>{{ a.buildingName }}</small>
+        </div>
+        <span class="price">{{ formatCurrency(a.reservationPrice) }}</span>
+      </div>
+      <p class="amenity-desc" *ngIf="a.description">{{ a.description }}</p>
+      <ion-button size="small" expand="block" (click)="openReserve(a)"
+                  [fill]="selectedAmenity?.id === a.id ? 'outline' : 'solid'">
+        {{ selectedAmenity?.id === a.id ? 'Cerrar' : 'Reservar' }}
+      </ion-button>
+
+      <!-- Formulario inline -->
+      <div class="reserve-form" *ngIf="selectedAmenity?.id === a.id">
+        <div class="field">
+          <ion-label>Fecha</ion-label>
+          <input type="date" [(ngModel)]="reserveDate" (ngModelChange)="loadDaySlots()" />
+        </div>
+        <div class="time-row">
+          <div class="field">
+            <ion-label>Desde</ion-label>
+            <input type="time" [(ngModel)]="startTime" />
+          </div>
+          <div class="field">
+            <ion-label>Hasta</ion-label>
+            <input type="time" [(ngModel)]="endTime" />
+          </div>
+        </div>
+        <div class="field">
+          <ion-label>Nota (opcional)</ion-label>
+          <input type="text" [(ngModel)]="notes" maxlength="500" placeholder="Ej: cumpleaños privado" />
+        </div>
+
+        <div class="slots-box" *ngIf="daySlots.length">
+          <strong>Horarios ya ocupados ese día:</strong>
+          <span class="slot" *ngFor="let s of daySlots">{{ formatSlot(s) }}</span>
+        </div>
+        <p class="slots-free" *ngIf="!daySlots.length">Sin reservas ese día — todo el horario disponible.</p>
+
+        <ion-button expand="block" (click)="submitReserve()" [disabled]="saving">
+          {{ saving ? 'Reservando...' : 'Confirmar reserva — ' + formatCurrency(a.reservationPrice) }}
+        </ion-button>
+      </div>
+    </ion-card>
+  </ng-container>
+
+  <!-- ── MIS RESERVAS ─────────────────────────────────────── -->
+  <ng-container *ngIf="segment === 'mias'">
+    <p class="state-msg" *ngIf="!reservations.length">Todavía no hiciste ninguna reserva.</p>
+
+    <ion-card class="reservation-card" *ngFor="let r of reservations">
+      <div class="amenity-head">
+        <div>
+          <strong>{{ r.amenityName }}</strong>
+          <small>{{ formatRange(r.startsAt, r.endsAt) }}</small>
+        </div>
+        <span class="status-chip" [style.background]="statusColor(r.status)">{{ statusLabel(r.status) }}</span>
+      </div>
+      <div class="reservation-meta">
+        <span>{{ formatCurrency(r.price) }}</span>
+        <span *ngIf="r.rejectionReason" class="rejection">Motivo: {{ r.rejectionReason }}</span>
+      </div>
+      <div class="reservation-actions" *ngIf="canAct(r)">
+        <label class="upload-btn" [class.disabled]="uploadingId === r.id">
+          {{ uploadingId === r.id ? 'Subiendo...' : (r.comprobanteUrl ? 'Reemplazar comprobante' : 'Subir comprobante') }}
+          <input type="file" accept="image/*" (change)="onComprobanteSelected($event, r)" hidden />
+        </label>
+        <ion-button size="small" fill="clear" color="danger" (click)="cancelReservation(r)">Cancelar</ion-button>
+      </div>
+    </ion-card>
+  </ng-container>
+</ion-content>
