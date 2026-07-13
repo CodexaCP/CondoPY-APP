@@ -8,7 +8,7 @@ export const environment = {
   // Emulador Android:         http://10.0.2.2:5071/api
   // Dispositivo físico:       http://<IP-PC>:5071/api
   // ngrok:                    https://ophthalmometrical-zainab-irredeemable.ngrok-free.dev/api
-  apiUrl: 'http://localhost:5071/api'
+  apiUrl: 'http://2.25.187.20:5071/api'
 };
 
 /*
