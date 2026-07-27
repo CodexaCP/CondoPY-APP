@@ -197,7 +197,8 @@ export type NotificationType =
   | 'ClaimCreated'
   | 'ClaimStatusUpdated'
   | 'AmenityReservationCreated'
-  | 'VoteOpened';
+  | 'VoteOpened'
+  | 'ExpensePeriodPublished';
 
 export interface AppNotification {
   id: string;

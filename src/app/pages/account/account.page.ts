@@ -75,6 +75,7 @@ export class AccountPage {
   ionViewWillEnter(): void {
     const navUnit = history.state?.unit as MyUnit | undefined;
     const consolidated = !!history.state?.consolidated;
+    const targetPeriodId = history.state?.expensePeriodId as string | undefined;
 
     if (this.units.length === 0) {
       this.auth.getMyUnits().subscribe({
@@ -87,7 +88,7 @@ export class AccountPage {
           }
 
           this.consolidatedMode = false;
-          this.selectUnit(navUnit ?? units[0]);
+          this.selectUnit(navUnit ?? units[0], targetPeriodId);
         }
       });
       return;
@@ -100,7 +101,9 @@ export class AccountPage {
 
     if (navUnit && navUnit.unitId !== this.selectedUnit?.unitId) {
       this.consolidatedMode = false;
-      this.selectUnit(navUnit);
+      this.selectUnit(navUnit, targetPeriodId);
+    } else if (targetPeriodId) {
+      this.refreshCurrentUnit(targetPeriodId);
     } else if (this.consolidatedMode) {
       this.refreshConsolidatedPeriods();
     } else if (this.selectedUnit) {
@@ -108,7 +111,7 @@ export class AccountPage {
     }
   }
 
-  selectUnit(unit: MyUnit): void {
+  selectUnit(unit: MyUnit, targetPeriodId?: string): void {
     if (!unit) return;
 
     this.consolidatedMode = false;
@@ -127,7 +130,10 @@ export class AccountPage {
         this.periods = periods.sort((a, b) => b.year - a.year || b.month - a.month);
         this.loading = false;
 
-        if (this.activeView === 'payments') {
+        if (targetPeriodId) {
+          const match = this.periods.find(p => p.expensePeriodId === targetPeriodId);
+          if (match) this.openDetail(match);
+        } else if (this.activeView === 'payments') {
           this.loadPaymentHistory();
         }
       },
@@ -250,7 +256,7 @@ export class AccountPage {
     }).format(date);
   }
 
-  private refreshCurrentUnit(): void {
+  private refreshCurrentUnit(targetPeriodId?: string): void {
     if (!this.selectedUnit) return;
 
     this.loading = true;
@@ -259,7 +265,10 @@ export class AccountPage {
         this.periods = periods.sort((a, b) => b.year - a.year || b.month - a.month);
         this.loading = false;
 
-        if (this.activeView === 'payments') {
+        if (targetPeriodId) {
+          const match = this.periods.find(p => p.expensePeriodId === targetPeriodId);
+          if (match) this.openDetail(match);
+        } else if (this.activeView === 'payments') {
           this.loadPaymentHistory();
         }
       },
