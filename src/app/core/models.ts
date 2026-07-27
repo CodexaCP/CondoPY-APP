@@ -192,7 +192,12 @@ export type NotificationType =
   | 'PaymentApproved'
   | 'PaymentRejected'
   | 'LateFeeConfigChanged'
-  | 'AmenityReservationUpdated';
+  | 'AmenityReservationUpdated'
+  | 'AnnouncementPublished'
+  | 'ClaimCreated'
+  | 'ClaimStatusUpdated'
+  | 'AmenityReservationCreated'
+  | 'VoteOpened';
 
 export interface AppNotification {
   id: string;
