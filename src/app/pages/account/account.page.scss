@@ -255,6 +255,37 @@
   .reversed-tag { color: #b45309; font-weight: 700; font-size: 0.7rem; }
 }
 
+.collapse-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.65rem 1rem;
+  background: rgba(19, 133, 182, 0.05);
+  border-top: 1px solid var(--brand-border);
+  cursor: pointer;
+  user-select: none;
+  &:active { background: rgba(19, 133, 182, 0.1); }
+}
+.collapse-header-left {
+  display: flex; flex-direction: column; gap: 0.1rem;
+  span { font-size: 0.88rem; font-weight: 700; color: var(--brand-blue); }
+  small { font-size: 0.73rem; color: var(--brand-muted); }
+}
+.collapse-header-right {
+  display: flex; align-items: center; gap: 0.5rem;
+  strong { font-size: 0.9rem; font-weight: 700; color: var(--brand-ink); }
+  ion-icon { font-size: 0.85rem; color: var(--brand-blue); }
+}
+.charge-adj {
+  background: rgba(255,255,255,0.7);
+  span { color: var(--brand-muted); font-style: italic; }
+}
+
+.collapse-section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 0 0.4rem;
+  cursor: pointer; user-select: none;
+  .section-chevron { font-size: 1rem; color: var(--brand-muted); }
+}
+
 .detail-loading {
   display: flex; justify-content: center; align-items: center; padding: 3rem;
 }

@@ -178,17 +178,40 @@
 
         <p class="section-title">Cargos del período</p>
         <ion-card class="detail-card">
-          <div class="charge-row" *ngFor="let c of detail.charges">
+          <div class="charge-row" *ngFor="let c of detailNonAdjCharges">
             <div class="charge-info">
               <span [class.reversal]="c.isReversal">{{ c.concept }}</span>
               <small>{{ chargeTypeLabel(c.chargeType) }}<span *ngIf="c.isReversal"> · Reversión</span></small>
             </div>
             <strong [class.reversal]="c.isReversal">{{ fmt(c.amount) }}</strong>
           </div>
+
+          <div class="collapse-header" *ngIf="detailAdjCharges.length > 0" (click)="detailAdjExpanded = !detailAdjExpanded">
+            <div class="collapse-header-left">
+              <span>Recargos / Ajustes</span>
+              <small>{{ detailAdjCharges.length }} cargo{{ detailAdjCharges.length !== 1 ? 's' : '' }}</small>
+            </div>
+            <div class="collapse-header-right">
+              <strong>{{ fmt(detailAdjTotal) }}</strong>
+              <ion-icon [name]="detailAdjExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
+            </div>
+          </div>
+          <ng-container *ngIf="detailAdjExpanded">
+            <div class="charge-row charge-adj" *ngFor="let c of detailAdjCharges">
+              <div class="charge-info">
+                <span>{{ c.concept }}</span>
+                <small>{{ chargeTypeLabel(c.chargeType) }}</small>
+              </div>
+              <strong>{{ fmt(c.amount) }}</strong>
+            </div>
+          </ng-container>
         </ion-card>
 
-        <p class="section-title" *ngIf="detail.payments.length > 0">Pagos registrados</p>
-        <ion-card class="detail-card" *ngIf="detail.payments.length > 0">
+        <div class="collapse-section-header" *ngIf="detail.payments.length > 0" (click)="detailPaymentsExpanded = !detailPaymentsExpanded">
+          <p class="section-title" style="margin:0">Pagos registrados ({{ detail.payments.length }})</p>
+          <ion-icon [name]="detailPaymentsExpanded ? 'chevron-up' : 'chevron-down'" class="section-chevron"></ion-icon>
+        </div>
+        <ion-card class="detail-card" *ngIf="detail.payments.length > 0 && detailPaymentsExpanded">
           <div class="payment-row" *ngFor="let p of detail.payments" [class.reversed]="p.isReversed">
             <div class="payment-info">
               <span>{{ dateLabel(p.paymentDate) }} · {{ methodLabel(p.method) }}</span>

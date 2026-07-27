@@ -46,6 +46,12 @@ export class AccountPage {
   loading = false;
   loadingPayments = false;
   paymentHistory: UnifiedPaymentHistoryItem[] = [];
+  detailAdjExpanded = false;
+  detailPaymentsExpanded = true;
+
+  get detailNonAdjCharges() { return this.detail?.charges.filter(c => c.chargeType !== 'Adjustment') ?? []; }
+  get detailAdjCharges()    { return this.detail?.charges.filter(c => c.chargeType === 'Adjustment') ?? []; }
+  get detailAdjTotal()      { return this.detailAdjCharges.reduce((s, c) => s + c.amount, 0); }
 
   get receiptUrl(): string {
     if (!this.detailUnit || !this.selectedPeriod) return '';
@@ -176,6 +182,8 @@ export class AccountPage {
     this.detailUnit = this.selectedUnit;
     this.selectedPeriod = period;
     this.detail = null;
+    this.detailAdjExpanded = false;
+    this.detailPaymentsExpanded = true;
     this.accountSvc.getPeriodDetail(this.selectedUnit.unitId, period.expensePeriodId).subscribe({
       next: (detail) => {
         this.detail = detail;
@@ -190,6 +198,8 @@ export class AccountPage {
     this.detailUnit = unit;
     this.selectedPeriod = period;
     this.detail = null;
+    this.detailAdjExpanded = false;
+    this.detailPaymentsExpanded = true;
     this.accountSvc.getPeriodDetail(unit.unitId, period.expensePeriodId).subscribe({
       next: (detail) => {
         this.detail = detail;
