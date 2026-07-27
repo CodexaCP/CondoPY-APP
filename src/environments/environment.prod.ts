@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.condopy.com/api'
+  apiUrl: 'http://2.25.187.20:5071/api'
 };

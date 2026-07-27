@@ -65,6 +65,10 @@ yarn-error.log
 testem.log
 /typings
 
+# Signing keystores (never commit)
+*.keystore
+*.jks
+
 # System files
 .DS_Store
 Thumbs.db
