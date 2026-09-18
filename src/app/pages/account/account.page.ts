@@ -65,6 +65,10 @@ export class AccountPage {
     return this.accountSvc.getSettlementPdfUrl(this.selectedPeriod.expensePeriodId, this.auth.getToken() ?? '');
   }
 
+  get unitTotalDebt(): number {
+    return Math.max(this.periods[0]?.runningBalance ?? 0, 0);
+  }
+
   get consolidatedTotalDebt(): number {
     return this.units.reduce((sum, unit) => {
       const latest = this.findLatestPeriodForUnit(unit.unitId);

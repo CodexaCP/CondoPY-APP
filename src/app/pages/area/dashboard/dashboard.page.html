@@ -30,11 +30,12 @@
     <ng-container *ngIf="!balanceLoading && primaryUnit; else balanceSkeleton">
       <div class="balance-label">Saldo pendiente</div>
       <div class="balance-amount" [class.balance-credit]="!balancePositive">
-        Gs. {{ formatAmount(latestPeriod?.runningBalance ?? 0) }}
+        Gs. {{ formatAmount(unitsCount > 1 ? totalBalance : (latestPeriod?.runningBalance ?? 0)) }}
       </div>
       <div class="balance-row">
-        <span class="balance-unit">{{ primaryUnit.unitCode }} · {{ primaryUnit.buildingName }}</span>
-        <span class="balance-period" *ngIf="latestPeriod">{{ latestPeriod.expensePeriodName }}</span>
+        <span class="balance-unit" *ngIf="unitsCount > 1">{{ unitsCount }} unidades · deuda total</span>
+        <span class="balance-unit" *ngIf="unitsCount <= 1">{{ primaryUnit.unitCode }} · {{ primaryUnit.buildingName }}</span>
+        <span class="balance-period" *ngIf="latestPeriod && unitsCount <= 1">{{ latestPeriod.expensePeriodName }}</span>
       </div>
     </ng-container>
     <ng-template #balanceSkeleton>

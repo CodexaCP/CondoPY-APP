@@ -40,6 +40,12 @@
       <strong>Unidad {{ selectedUnit.unitCode }}</strong>
       <span>{{ selectedUnit.buildingName }} · {{ selectedUnit.condominiumName }}</span>
     </div>
+    <div class="unit-total" *ngIf="periods.length > 0">
+      <span class="unit-total-label">Deuda total acumulada</span>
+      <strong class="unit-total-amount" [class.balance-ok]="unitTotalDebt <= 0" [class.balance-due]="unitTotalDebt > 0">
+        {{ unitTotalDebt > 0 ? fmt(unitTotalDebt) : 'Al día' }}
+      </strong>
+    </div>
   </div>
 
   <div class="empty-state" *ngIf="loading">
@@ -101,6 +107,7 @@
 
     <div *ngIf="periods.length > 0">
       <p class="section-title">Períodos de expensas</p>
+      <p class="period-hint">Cada tarjeta muestra solo lo pendiente de ese período. La deuda acumulada de la unidad está arriba.</p>
 
       <div class="periods-list">
         <ion-card class="period-card" *ngFor="let p of periods" (click)="openDetail(p)">

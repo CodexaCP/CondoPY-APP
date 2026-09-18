@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription, interval, of } from 'rxjs';
+import { Subscription, forkJoin, interval, of } from 'rxjs';
 import { startWith, switchMap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth.service';
 import { NotificationsService } from '../../../core/notifications.service';
@@ -30,6 +30,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   balanceLoading = true;
   primaryUnit: MyUnit | null = null;
   latestPeriod: AccountStatementPeriod | null = null;
+  unitsCount = 0;
+  totalBalance = 0;
 
   comunicados: Announcement[] = [];
   comunicadosLoading = true;
@@ -46,7 +48,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   get balancePositive(): boolean {
-    return (this.latestPeriod?.runningBalance ?? 0) >= 0;
+    return this.unitsCount > 1 ? true : (this.latestPeriod?.runningBalance ?? 0) >= 0;
   }
 
   constructor(
@@ -73,14 +75,17 @@ export class DashboardPage implements OnInit, OnDestroy {
   loadBalance(): void {
     this.balanceLoading = true;
     this.auth.getMyUnits().pipe(catchError(() => of([]))).subscribe(units => {
+      this.unitsCount = units.length;
       this.primaryUnit = units.find(u => u.isPrimary) ?? units[0] ?? null;
       if (!this.primaryUnit) { this.balanceLoading = false; return; }
-      this.accountSvc.getPeriods(this.primaryUnit.unitId)
-        .pipe(catchError(() => of([])))
-        .subscribe(periods => {
-          this.latestPeriod = periods[0] ?? null;
-          this.balanceLoading = false;
-        });
+      forkJoin(units.map(u =>
+        this.accountSvc.getPeriods(u.unitId).pipe(catchError(() => of([] as AccountStatementPeriod[])))
+      )).subscribe(periodsPerUnit => {
+        const primaryIdx = units.findIndex(u => u.unitId === this.primaryUnit!.unitId);
+        this.latestPeriod = periodsPerUnit[primaryIdx]?.[0] ?? null;
+        this.totalBalance = periodsPerUnit.reduce((sum, periods) => sum + Math.max(periods[0]?.runningBalance ?? 0, 0), 0);
+        this.balanceLoading = false;
+      });
     });
   }
 
