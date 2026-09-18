@@ -81,6 +81,19 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- A qué se aplicó -->
+    <ion-card class="detail-card" *ngIf="payment.status === 'Approved' && payment.applications && payment.applications.length > 0">
+      <ion-card-header>
+        <ion-card-subtitle>Se aplicó a</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="unit-row" *ngFor="let a of payment.applications">
+          <span class="unit-code">{{ a.concept }}<small> · {{ a.unitCode }} · {{ a.periodMonth < 10 ? '0' : '' }}{{ a.periodMonth }}/{{ a.periodYear }}</small></span>
+          <span class="unit-amount">{{ fmt(a.amount) }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
     <!-- Rejection reason -->
     <ion-card class="detail-card rejection-card" *ngIf="payment.status === 'Rejected' && payment.rejectionReason">
       <ion-card-header>

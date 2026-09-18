@@ -131,6 +131,15 @@ export interface OwnerPayment {
   resolvedAt: string | null;
   createdAtUtc: string;
   units: OwnerPaymentUnit[];
+  applications?: OwnerPaymentApplication[];
+}
+
+export interface OwnerPaymentApplication {
+  unitCode: string;
+  concept: string;
+  periodYear: number;
+  periodMonth: number;
+  amount: number;
 }
 
 export interface OwnerPaymentUnit {
@@ -147,12 +156,12 @@ export interface OwnerPaymentCreateRequest {
 }
 
 export interface OwnerDebtCharge {
-  expenseChargeId: string;
+  chargeId: string;
   concept: string;
   chargeType: string;
-  periodName: string;
-  year: number;
-  month: number;
+  periodYear: number;
+  periodMonth: number;
+  amount: number;
   pendingAmount: number;
 }
 

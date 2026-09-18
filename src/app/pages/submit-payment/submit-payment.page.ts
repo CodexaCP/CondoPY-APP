@@ -5,7 +5,16 @@ import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
 import { UploadService } from '../../core/upload.service';
-import { MyUnit, OwnerDebtUnit } from '../../core/models';
+import { MyUnit, OwnerDebtCharge, OwnerDebtUnit } from '../../core/models';
+
+interface AllocationRow {
+  unitCode: string;
+  concept: string;
+  period: string;
+  amount: number;
+  covered: boolean;
+  selected: boolean;
+}
 
 interface UnitOption {
   unit: MyUnit;
@@ -24,6 +33,7 @@ export class SubmitPaymentPage {
   options: UnitOption[] = [];
   declaredAmount: number | null = null;
   amountDisplay = '';
+  existingCredit = 0;
 
   // Comprobante — imagen seleccionada localmente
   comprobanteFile: File | null = null;
@@ -75,9 +85,11 @@ export class SubmitPaymentPage {
 
     forkJoin({
       units: this.auth.getMyUnits(),
-      debts: this.svc.getMyDebts().pipe(catchError(() => of([] as OwnerDebtUnit[])))
+      debts: this.svc.getMyDebts().pipe(catchError(() => of([] as OwnerDebtUnit[]))),
+      credit: this.svc.getMyCredit().pipe(catchError(() => of({ amount: 0 })))
     }).subscribe({
-      next: ({ units, debts }) => {
+      next: ({ units, debts, credit }) => {
+        this.existingCredit = credit.amount ?? 0;
         this.options = units.map(unit => ({
           unit,
           debt: debts.find(d => d.unitId === unit.unitId) ?? null,
@@ -104,6 +116,39 @@ export class SubmitPaymentPage {
 
   toggle(opt: UnitOption): void {
     opt.selected = !opt.selected;
+  }
+
+  // Lista de todas las deudas (más antigua primero). Si hay monto, simula la regla
+  // del servidor al aprobar: solo cargos completos y el sobrante queda como crédito.
+  get allocationPreview(): { rows: AllocationRow[]; leftover: number } {
+    const hasAmount = !!this.declaredAmount;
+    let available = hasAmount ? (this.declaredAmount ?? 0) + this.existingCredit : 0;
+
+    const all = this.options
+      .filter(o => o.debt)
+      .reduce((acc, o) => acc.concat(o.debt!.charges.map(c => ({ c, unitCode: o.unit.unitCode, selected: o.selected }))),
+        [] as { c: OwnerDebtCharge; unitCode: string; selected: boolean }[])
+      .sort((a, b) =>
+        a.c.periodYear - b.c.periodYear ||
+        a.c.periodMonth - b.c.periodMonth ||
+        b.c.amount - a.c.amount);
+
+    const rows: AllocationRow[] = all.map(({ c, unitCode, selected }) => {
+      let covered = false;
+      if (hasAmount && selected && available >= c.pendingAmount) {
+        covered = true;
+        available -= c.pendingAmount;
+      }
+      return {
+        unitCode,
+        concept: c.concept,
+        period: `${String(c.periodMonth).padStart(2, '0')}/${c.periodYear}`,
+        amount: c.pendingAmount,
+        covered,
+        selected
+      };
+    });
+    return { rows, leftover: hasAmount ? available : 0 };
   }
 
   onFileSelected(event: Event): void {

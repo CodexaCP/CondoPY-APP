@@ -81,6 +81,24 @@
       </ion-item>
     </ion-list>
 
+    <!-- A qué deudas se aplicará (informativo) -->
+    <div class="alloc-preview" *ngIf="allocationPreview.rows.length > 0">
+      <p class="section-label" style="margin-top:0.75rem">Mis deudas</p>
+      <p class="section-hint">Tu pago se aplica solo a cargos completos, empezando siempre por el período más antiguo. Es una estimación: el administrador la confirma al aprobar.</p>
+      <div class="alloc-row" *ngFor="let r of allocationPreview.rows"
+           [class.alloc-covered]="r.covered" [class.alloc-dim]="!r.selected">
+        <ion-icon [name]="r.covered ? 'checkmark-circle' : 'ellipse-outline'" [color]="r.covered ? 'success' : 'medium'"></ion-icon>
+        <div class="alloc-info">
+          <span class="alloc-concept">{{ r.concept }}</span>
+          <span class="alloc-sub">{{ r.unitCode }} · Período {{ r.period }}<ng-container *ngIf="!r.selected"> · unidad no incluida</ng-container></span>
+        </div>
+        <span class="alloc-amount">{{ fmt(r.amount) }}</span>
+      </div>
+      <div class="alloc-leftover" *ngIf="allocationPreview.leftover > 0">
+        Quedaría un saldo a favor de <strong>{{ fmt(allocationPreview.leftover) }}</strong> para tus próximas deudas.
+      </div>
+    </div>
+
     <!-- Comprobante -->
     <p class="section-label" style="margin-top:0.75rem">Comprobante de pago</p>
     <p class="section-hint">Adjuntá la captura de pantalla del pago realizado desde tu banco.</p>

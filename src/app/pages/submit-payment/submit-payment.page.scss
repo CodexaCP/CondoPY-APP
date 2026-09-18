@@ -237,3 +237,20 @@
   margin-top: 1.25rem;
   --border-radius: 10px;
 }
+
+.alloc-preview { margin-bottom: 0.5rem; }
+.alloc-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 0.75rem; margin-bottom: 0.35rem;
+  background: #fff; border: 1px solid rgba(20,54,61,0.1); border-radius: 12px;
+}
+.alloc-row.alloc-dim { opacity: 0.45; }
+.alloc-row.alloc-covered { opacity: 1; border-color: rgba(26,140,91,0.35); background: rgba(240,252,246,0.7); }
+.alloc-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.alloc-concept { font-size: 0.88rem; font-weight: 600; }
+.alloc-sub { font-size: 0.75rem; color: var(--ion-color-medium); }
+.alloc-amount { font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+.alloc-leftover {
+  margin-top: 0.4rem; padding: 0.55rem 0.75rem; font-size: 0.82rem;
+  background: rgba(19,133,182,0.08); border-radius: 12px;
+}
