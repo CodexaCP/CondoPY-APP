@@ -26,19 +26,13 @@
     </div>
 
     <!-- Units section -->
-    <p class="section-label">Unidades a incluir</p>
-    <p class="section-hint">Seleccioná las unidades por las cuales estás realizando el pago.</p>
+    <p class="section-label">Mis unidades</p>
+    <p class="section-hint">El pago se aplica automáticamente a la deuda más antigua de todas tus unidades.</p>
 
     <div class="unit-list">
       <div
         *ngFor="let opt of options"
-        class="unit-card"
-        [class.unit-selected]="opt.selected"
-        (click)="toggle(opt)">
-
-        <div class="unit-check">
-          <ion-icon [name]="opt.selected ? 'checkbox' : 'square-outline'" [color]="opt.selected ? 'primary' : 'medium'"></ion-icon>
-        </div>
+        class="unit-card unit-selected">
 
         <div class="unit-info">
           <div class="unit-code">{{ opt.unit.unitCode }}</div>
@@ -59,9 +53,9 @@
     </div>
 
     <!-- Debt summary -->
-    <div class="debt-summary" *ngIf="selectedUnitIds.length > 0 && totalDebtSelected > 0">
+    <div class="debt-summary" *ngIf="totalDebtSelected > 0">
       <ion-icon name="information-circle-outline" color="primary"></ion-icon>
-      <span>Deuda total seleccionada: <strong>{{ fmt(totalDebtSelected) }}</strong></span>
+      <span>Deuda total: <strong>{{ fmt(totalDebtSelected) }}</strong></span>
     </div>
 
     <!-- Monto -->
@@ -86,11 +80,11 @@
       <p class="section-label" style="margin-top:0.75rem">Mis deudas</p>
       <p class="section-hint">Tu pago se aplica solo a cargos completos, empezando siempre por el período más antiguo. Es una estimación: el administrador la confirma al aprobar.</p>
       <div class="alloc-row" *ngFor="let r of allocationPreview.rows"
-           [class.alloc-covered]="r.covered" [class.alloc-dim]="!r.selected">
+           [class.alloc-covered]="r.covered">
         <ion-icon [name]="r.covered ? 'checkmark-circle' : 'ellipse-outline'" [color]="r.covered ? 'success' : 'medium'"></ion-icon>
         <div class="alloc-info">
           <span class="alloc-concept">{{ r.concept }}</span>
-          <span class="alloc-sub">{{ r.unitCode }} · Período {{ r.period }}<ng-container *ngIf="!r.selected"> · unidad no incluida</ng-container></span>
+          <span class="alloc-sub">{{ r.unitCode }} · Período {{ r.period }}</span>
         </div>
         <span class="alloc-amount">{{ fmt(r.amount) }}</span>
       </div>

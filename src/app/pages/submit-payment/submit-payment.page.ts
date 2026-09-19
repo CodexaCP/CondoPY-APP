@@ -105,12 +105,12 @@ export class SubmitPaymentPage {
   }
 
   get selectedUnitIds(): string[] {
-    return this.options.filter(o => o.selected).map(o => o.unit.unitId);
+    return this.options.map(o => o.unit.unitId);
   }
 
   get totalDebtSelected(): number {
     return this.options
-      .filter(o => o.selected && o.debt)
+      .filter(o => o.debt)
       .reduce((sum, o) => sum + (o.debt?.totalDebt ?? 0), 0);
   }
 
@@ -135,7 +135,7 @@ export class SubmitPaymentPage {
 
     const rows: AllocationRow[] = all.map(({ c, unitCode, selected }) => {
       let covered = false;
-      if (hasAmount && selected && available >= c.pendingAmount) {
+      if (hasAmount && available >= c.pendingAmount) {
         covered = true;
         available -= c.pendingAmount;
       }
