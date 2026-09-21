@@ -181,6 +181,10 @@
             <ion-icon name="document-outline"></ion-icon>
             Liquidación PDF
           </a>
+          <a *ngFor="let inv of invoices" [href]="invoiceUrl(inv)" target="_blank" class="pdf-btn">
+            <ion-icon name="receipt-outline"></ion-icon>
+            Factura {{ inv.numeroFormateado }}
+          </a>
         </div>
 
         <p class="section-title">Cargos del período</p>

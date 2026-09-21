@@ -8,7 +8,8 @@ import {
   MyUnit,
   AccountStatementPeriod,
   AccountStatementDetail,
-  AccountStatementPayment
+  AccountStatementPayment,
+  OwnerPaymentInvoice
 } from '../../core/models';
 
 type AccountView = 'periods' | 'payments';
@@ -43,6 +44,7 @@ export class AccountPage {
   consolidatedMode = false;
   selectedPeriod: AccountStatementPeriod | null = null;
   detail: AccountStatementDetail | null = null;
+  invoices: OwnerPaymentInvoice[] = [];
   loading = false;
   loadingPayments = false;
   paymentHistory: UnifiedPaymentHistoryItem[] = [];
@@ -58,6 +60,18 @@ export class AccountPage {
     return this.accountSvc.getReceiptPdfUrl(
       this.detailUnit.unitId, this.selectedPeriod.expensePeriodId, this.auth.getToken() ?? ''
     );
+  }
+
+  invoiceUrl(invoice: OwnerPaymentInvoice): string {
+    return this.accountSvc.getInvoicePdfUrl(invoice.id, this.auth.getToken() ?? '');
+  }
+
+  // Facturas emitidas de los pagos de esta unidad en el periodo abierto (si hay).
+  private loadInvoices(unitId: string, periodId: string): void {
+    this.invoices = [];
+    this.accountSvc.getPeriodInvoices(unitId, periodId)
+      .pipe(catchError(() => of([] as OwnerPaymentInvoice[])))
+      .subscribe(list => { this.invoices = list; });
   }
 
   get settlementUrl(): string {
@@ -188,6 +202,7 @@ export class AccountPage {
     this.detail = null;
     this.detailAdjExpanded = false;
     this.detailPaymentsExpanded = true;
+    this.loadInvoices(this.selectedUnit.unitId, period.expensePeriodId);
     this.accountSvc.getPeriodDetail(this.selectedUnit.unitId, period.expensePeriodId).subscribe({
       next: (detail) => {
         this.detail = detail;
@@ -204,6 +219,7 @@ export class AccountPage {
     this.detail = null;
     this.detailAdjExpanded = false;
     this.detailPaymentsExpanded = true;
+    this.loadInvoices(unit.unitId, period.expensePeriodId);
     this.accountSvc.getPeriodDetail(unit.unitId, period.expensePeriodId).subscribe({
       next: (detail) => {
         this.detail = detail;
