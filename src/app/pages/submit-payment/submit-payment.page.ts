@@ -5,20 +5,26 @@ import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
 import { UploadService } from '../../core/upload.service';
-import { MyUnit, OwnerDebtCharge, OwnerDebtUnit } from '../../core/models';
+import { MyUnit, OwnerDebtUnit } from '../../core/models';
 
-interface AllocationRow {
-  unitCode: string;
+interface ComprobanteLine {
   concept: string;
-  period: string;
   amount: number;
-  covered: boolean;
-  selected: boolean;
 }
 
-type DebtDisplayItem =
-  | { kind: 'row'; row: AllocationRow }
-  | { kind: 'group'; key: string; unitCode: string; period: string; rows: AllocationRow[]; total: number; covered: boolean; partial: boolean };
+// Comprobante = todo lo pendiente de una unidad en un periodo. Se paga completo o no se paga.
+interface ComprobanteRow {
+  key: string;
+  unitCode: string;
+  buildingName: string;
+  year: number;
+  month: number;
+  period: string;
+  lines: ComprobanteLine[];
+  total: number;
+  cumulative: number;
+  covered: boolean;
+}
 
 interface UnitOption {
   unit: MyUnit;
@@ -118,79 +124,103 @@ export class SubmitPaymentPage {
     opt.selected = !opt.selected;
   }
 
-  // Lista de todas las deudas (más antigua primero). Si hay monto, simula la regla
-  // del servidor al aprobar: solo cargos completos y el sobrante queda como crédito.
-  get allocationPreview(): { rows: AllocationRow[]; leftover: number } {
-    const hasAmount = !!this.declaredAmount;
-    let available = hasAmount ? (this.declaredAmount ?? 0) + this.existingCredit : 0;
+  private expandedComprobantes = new Set<string>();
 
-    const all = this.options
-      .filter(o => o.debt)
-      .reduce((acc, o) => acc.concat(o.debt!.charges.map(c => ({ c, unitCode: o.unit.unitCode, buildingName: o.unit.buildingName ?? '', selected: o.selected }))),
-        [] as { c: OwnerDebtCharge; unitCode: string; buildingName: string; selected: boolean }[])
-      .sort((a, b) =>
-        a.c.periodYear - b.c.periodYear ||
-        a.c.periodMonth - b.c.periodMonth ||
-        b.c.amount - a.c.amount ||
-        a.buildingName.localeCompare(b.buildingName, undefined, { sensitivity: 'base' }) ||
-        a.unitCode.localeCompare(b.unitCode, undefined, { sensitivity: 'base' }));
+  // Comprobantes pendientes de todas las unidades, del más antiguo al más nuevo. Cada uno se paga
+  // completo: los únicos montos válidos son los acumulados (1º, 1º+2º, ...). Sin pagos parciales.
+  get comprobantes(): ComprobanteRow[] {
+    const map = new Map<string, ComprobanteRow>();
 
-    const rows: AllocationRow[] = all.map(({ c, unitCode, selected }) => {
-      let covered = false;
-      if (hasAmount && available >= c.pendingAmount) {
-        covered = true;
-        available -= c.pendingAmount;
+    for (const option of this.options) {
+      for (const charge of option.debt?.charges ?? []) {
+        const key = `${option.unit.unitId}|${charge.periodYear}-${charge.periodMonth}`;
+        let row = map.get(key);
+        if (!row) {
+          row = {
+            key,
+            unitCode: option.unit.unitCode,
+            buildingName: option.unit.buildingName ?? '',
+            year: charge.periodYear,
+            month: charge.periodMonth,
+            period: `${String(charge.periodMonth).padStart(2, '0')}/${charge.periodYear}`,
+            lines: [],
+            total: 0,
+            cumulative: 0,
+            covered: false
+          };
+          map.set(key, row);
+        }
+        row.lines.push({ concept: charge.concept, amount: charge.pendingAmount });
+        row.total += charge.pendingAmount;
       }
-      return {
-        unitCode,
-        concept: c.concept,
-        period: `${String(c.periodMonth).padStart(2, '0')}/${c.periodYear}`,
-        amount: c.pendingAmount,
-        covered,
-        selected
-      };
-    });
-    return { rows, leftover: hasAmount ? available : 0 };
-  }
-
-  private expandedGroups = new Set<string>();
-
-  // Las moras de un mismo periodo y unidad se agrupan en un desplegable (cerrado por defecto).
-  // Es solo visual: el orden de aplicacion del pago sigue siendo el de allocationPreview.
-  get debtItems(): DebtDisplayItem[] {
-    const items: DebtDisplayItem[] = [];
-    const groups = new Map<string, Extract<DebtDisplayItem, { kind: 'group' }>>();
-
-    for (const row of this.allocationPreview.rows) {
-      if (!/^mora\b/i.test(row.concept.trim())) {
-        items.push({ kind: 'row', row });
-        continue;
-      }
-      const key = `${row.unitCode}|${row.period}`;
-      let group = groups.get(key);
-      if (!group) {
-        group = { kind: 'group', key, unitCode: row.unitCode, period: row.period, rows: [], total: 0, covered: true, partial: false };
-        groups.set(key, group);
-        items.push(group);
-      }
-      group.rows.push(row);
-      group.total += row.amount;
     }
 
+    const rows = [...map.values()].sort((a, b) =>
+      a.year - b.year ||
+      a.month - b.month ||
+      a.buildingName.localeCompare(b.buildingName, undefined, { sensitivity: 'base' }) ||
+      a.unitCode.localeCompare(b.unitCode, undefined, { sensitivity: 'base' }));
+
+    const paying = this.declaredAmount ?? 0;
+    let running = 0;
+    for (const row of rows) {
+      row.lines = this.collapseLateFees(row.lines);
+      running += row.total;
+      row.cumulative = running;
+      row.covered = paying > 0 && running <= paying + 0.5;
+    }
+    return rows;
+  }
+
+  // Las moras diarias se muestran en una sola línea: "Mora 0.66% (diario) por un total de N días".
+  private collapseLateFees(lines: ComprobanteLine[]): ComprobanteLine[] {
+    const result: ComprobanteLine[] = [];
+    const groups = new Map<string, { line: ComprobanteLine; count: number; rate: string; freq: string }>();
+
+    for (const line of lines) {
+      const match = /^Mora\s+([\d.,]+%)\s*\(([^)]+)\)/i.exec(line.concept ?? '');
+      if (!match) { result.push({ ...line }); continue; }
+
+      const key = `${match[1]}|${match[2].trim()}`.toLowerCase();
+      const group = groups.get(key);
+      if (group) {
+        group.line.amount += line.amount;
+        group.count++;
+      } else {
+        const merged = { concept: '', amount: line.amount };
+        groups.set(key, { line: merged, count: 1, rate: match[1], freq: match[2].trim() });
+        result.push(merged);
+      }
+    }
+
+    const units: Record<string, string[]> = { diario: ['día', 'días'], semanal: ['semana', 'semanas'], quincenal: ['quincena', 'quincenas'] };
     groups.forEach(g => {
-      const coveredCount = g.rows.filter(r => r.covered).length;
-      g.covered = coveredCount === g.rows.length;
-      g.partial = coveredCount > 0 && !g.covered;
+      const unit = units[g.freq.toLowerCase()] ?? ['intervalo', 'intervalos'];
+      g.line.concept = `Mora ${g.rate} (${g.freq}) por un total de ${g.count} ${g.count === 1 ? unit[0] : unit[1]}`;
     });
-    return items;
+    return result;
   }
 
-  isGroupExpanded(key: string): boolean {
-    return this.expandedGroups.has(key);
+  // El monto es válido solo si es exactamente la suma de comprobantes completos (del más antiguo en adelante).
+  get coverage(): { exact: boolean; count: number } {
+    const amount = this.declaredAmount ?? 0;
+    const index = amount > 0 ? this.comprobantes.findIndex(c => Math.abs(c.cumulative - amount) < 0.5) : -1;
+    return { exact: index >= 0, count: index + 1 };
   }
 
-  toggleGroup(key: string): void {
-    if (!this.expandedGroups.delete(key)) this.expandedGroups.add(key);
+  isComprobanteExpanded(key: string): boolean {
+    return this.expandedComprobantes.has(key);
+  }
+
+  toggleComprobante(key: string): void {
+    if (!this.expandedComprobantes.delete(key)) this.expandedComprobantes.add(key);
+  }
+
+  // Completa el monto con el total acumulado hasta este comprobante.
+  payUpTo(row: ComprobanteRow): void {
+    this.declaredAmount = Math.round(row.cumulative);
+    this.amountDisplay = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(this.declaredAmount);
+    this.error = '';
   }
 
   onFileSelected(event: Event): void {
@@ -240,6 +270,10 @@ export class SubmitPaymentPage {
     }
     if (!this.declaredAmount || this.declaredAmount <= 0) {
       this.error = 'El monto debe ser mayor a cero.';
+      return;
+    }
+    if (!this.coverage.exact) {
+      this.error = 'El pago debe cubrir comprobantes completos. Usá "Pagar hasta aquí" para completar el monto exacto.';
       return;
     }
 

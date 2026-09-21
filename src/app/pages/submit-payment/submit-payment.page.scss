@@ -258,3 +258,7 @@
 .alloc-group-head { cursor: pointer; }
 .alloc-group-body { margin: -0.15rem 0 0.35rem 1.1rem; }
 .alloc-row.alloc-child { padding: 0.4rem 0.65rem; }
+
+.pay-upto { display: flex; justify-content: flex-end; margin: 0 0 0.6rem 0; }
+.alloc-leftover.alloc-ok { background: rgba(26,140,91,0.1); }
+.alloc-leftover.alloc-bad { background: rgba(200,60,60,0.1); color: #a02828; }

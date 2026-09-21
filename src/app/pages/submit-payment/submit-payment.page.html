@@ -27,7 +27,7 @@
 
     <!-- Units section -->
     <p class="section-label">Mis unidades</p>
-    <p class="section-hint">El pago se aplica automáticamente a la deuda más antigua de todas tus unidades.</p>
+    <p class="section-hint">El pago cubre comprobantes completos, del más antiguo al más nuevo, de todas tus unidades.</p>
 
     <div class="unit-list">
       <div
@@ -75,48 +75,43 @@
       </ion-item>
     </ion-list>
 
-    <!-- A qué deudas se aplicará (informativo) -->
-    <div class="alloc-preview" *ngIf="allocationPreview.rows.length > 0">
-      <p class="section-label" style="margin-top:0.75rem">Mis deudas</p>
-      <p class="section-hint">Tu pago se aplica solo a cargos completos, empezando siempre por el período más antiguo. Es una estimación: el administrador la confirma al aprobar.</p>
-      <ng-container *ngFor="let item of debtItems">
-        <ng-container *ngIf="item.kind === 'row'">
-        <div class="alloc-row" [class.alloc-covered]="item.row.covered">
-          <ion-icon [name]="item.row.covered ? 'checkmark-circle' : 'ellipse-outline'" [color]="item.row.covered ? 'success' : 'medium'"></ion-icon>
-          <div class="alloc-info">
-            <span class="alloc-concept">{{ item.row.concept }}</span>
-            <span class="alloc-sub">{{ item.row.unitCode }} · Período {{ item.row.period }}</span>
-          </div>
-          <span class="alloc-amount">{{ fmt(item.row.amount) }}</span>
-        </div>
-        </ng-container>
+    <!-- Comprobantes pendientes: cada uno se paga completo -->
+    <div class="alloc-preview" *ngIf="comprobantes.length > 0">
+      <p class="section-label" style="margin-top:0.75rem">Comprobantes pendientes</p>
+      <p class="section-hint">Cada comprobante se paga completo, del más antiguo al más nuevo. No se aceptan pagos parciales: tocá "Pagar hasta aquí" para completar el monto exacto.</p>
 
-        <ng-container *ngIf="item.kind === 'group'">
-          <div class="alloc-row alloc-group-head" [class.alloc-covered]="item.covered" (click)="toggleGroup(item.key)">
-            <ion-icon [name]="item.covered ? 'checkmark-circle' : 'ellipse-outline'" [color]="item.covered ? 'success' : 'medium'"></ion-icon>
-            <div class="alloc-info">
-              <span class="alloc-concept">Moras ({{ item.rows.length }})</span>
-              <span class="alloc-sub">{{ item.unitCode }} · Período {{ item.period }}<span *ngIf="item.partial"> · pago parcial</span></span>
-            </div>
-            <span class="alloc-amount">{{ fmt(item.total) }}</span>
-            <ion-icon [name]="isGroupExpanded(item.key) ? 'chevron-up' : 'chevron-down'" color="medium"></ion-icon>
-          </div>
-          <div class="alloc-group-body" *ngIf="isGroupExpanded(item.key)">
-            <ng-container *ngFor="let r of item.rows">
-        <div class="alloc-row alloc-child" [class.alloc-covered]="r.covered">
-          <ion-icon [name]="r.covered ? 'checkmark-circle' : 'ellipse-outline'" [color]="r.covered ? 'success' : 'medium'"></ion-icon>
+      <ng-container *ngFor="let c of comprobantes">
+        <div class="alloc-row alloc-group-head" [class.alloc-covered]="c.covered" (click)="toggleComprobante(c.key)">
+          <ion-icon [name]="c.covered ? 'checkmark-circle' : 'ellipse-outline'" [color]="c.covered ? 'success' : 'medium'"></ion-icon>
           <div class="alloc-info">
-            <span class="alloc-concept">{{ r.concept }}</span>
-            <span class="alloc-sub">{{ r.unitCode }} · Período {{ r.period }}</span>
+            <span class="alloc-concept">Comprobante {{ c.period }}</span>
+            <span class="alloc-sub">{{ c.unitCode }} · {{ c.lines.length }} {{ c.lines.length === 1 ? 'concepto' : 'conceptos' }}</span>
           </div>
-          <span class="alloc-amount">{{ fmt(r.amount) }}</span>
+          <span class="alloc-amount">{{ fmt(c.total) }}</span>
+          <ion-icon [name]="isComprobanteExpanded(c.key) ? 'chevron-up' : 'chevron-down'" color="medium"></ion-icon>
         </div>
-            </ng-container>
+
+        <div class="alloc-group-body" *ngIf="isComprobanteExpanded(c.key)">
+          <div class="alloc-row alloc-child" *ngFor="let l of c.lines">
+            <div class="alloc-info">
+              <span class="alloc-concept">{{ l.concept }}</span>
+            </div>
+            <span class="alloc-amount">{{ fmt(l.amount) }}</span>
           </div>
-        </ng-container>
+        </div>
+
+        <div class="pay-upto">
+          <ion-button size="small" fill="outline" (click)="payUpTo(c)">
+            Pagar hasta aquí · {{ fmt(c.cumulative) }}
+          </ion-button>
+        </div>
       </ng-container>
-      <div class="alloc-leftover" *ngIf="allocationPreview.leftover > 0">
-        Quedaría un saldo a favor de <strong>{{ fmt(allocationPreview.leftover) }}</strong> para tus próximas deudas.
+
+      <div class="alloc-leftover alloc-ok" *ngIf="coverage.exact">
+        El monto cubre <strong>{{ coverage.count }}</strong> {{ coverage.count === 1 ? 'comprobante completo' : 'comprobantes completos' }}.
+      </div>
+      <div class="alloc-leftover alloc-bad" *ngIf="declaredAmount && !coverage.exact">
+        El monto no coincide con comprobantes completos. Elegí un monto exacto con "Pagar hasta aquí".
       </div>
     </div>
 
@@ -165,7 +160,7 @@
       expand="block"
       color="primary"
       class="submit-btn"
-      [disabled]="saving"
+      [disabled]="saving || !coverage.exact"
       (click)="submit()">
       <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
       {{ saving ? 'Enviando...' : 'Enviar comprobante' }}
