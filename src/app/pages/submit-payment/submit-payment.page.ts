@@ -63,12 +63,8 @@ export class SubmitPaymentPage {
 
   ionViewWillEnter(): void {
     this.resetForm();
-    if (this.options.length === 0) {
-      this.load();
-    } else {
-      // Unidad cargada — solo resetear selección
-      this.options.forEach(o => { o.selected = this.options.length === 1; });
-    }
+    // Siempre se vuelve a consultar: la deuda cambia al publicarse un periodo o aprobarse un pago.
+    this.load();
   }
 
   private resetForm(): void {
