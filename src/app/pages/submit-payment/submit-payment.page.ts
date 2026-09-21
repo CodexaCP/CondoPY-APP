@@ -16,6 +16,10 @@ interface AllocationRow {
   selected: boolean;
 }
 
+type DebtDisplayItem =
+  | { kind: 'row'; row: AllocationRow }
+  | { kind: 'group'; key: string; unitCode: string; period: string; rows: AllocationRow[]; total: number; covered: boolean; partial: boolean };
+
 interface UnitOption {
   unit: MyUnit;
   debt: OwnerDebtUnit | null;
@@ -151,6 +155,46 @@ export class SubmitPaymentPage {
       };
     });
     return { rows, leftover: hasAmount ? available : 0 };
+  }
+
+  private expandedGroups = new Set<string>();
+
+  // Las moras de un mismo periodo y unidad se agrupan en un desplegable (cerrado por defecto).
+  // Es solo visual: el orden de aplicacion del pago sigue siendo el de allocationPreview.
+  get debtItems(): DebtDisplayItem[] {
+    const items: DebtDisplayItem[] = [];
+    const groups = new Map<string, Extract<DebtDisplayItem, { kind: 'group' }>>();
+
+    for (const row of this.allocationPreview.rows) {
+      if (!/^mora\b/i.test(row.concept.trim())) {
+        items.push({ kind: 'row', row });
+        continue;
+      }
+      const key = `${row.unitCode}|${row.period}`;
+      let group = groups.get(key);
+      if (!group) {
+        group = { kind: 'group', key, unitCode: row.unitCode, period: row.period, rows: [], total: 0, covered: true, partial: false };
+        groups.set(key, group);
+        items.push(group);
+      }
+      group.rows.push(row);
+      group.total += row.amount;
+    }
+
+    groups.forEach(g => {
+      const coveredCount = g.rows.filter(r => r.covered).length;
+      g.covered = coveredCount === g.rows.length;
+      g.partial = coveredCount > 0 && !g.covered;
+    });
+    return items;
+  }
+
+  isGroupExpanded(key: string): boolean {
+    return this.expandedGroups.has(key);
+  }
+
+  toggleGroup(key: string): void {
+    if (!this.expandedGroups.delete(key)) this.expandedGroups.add(key);
   }
 
   onFileSelected(event: Event): void {
