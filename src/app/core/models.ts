@@ -134,6 +134,14 @@ export interface OwnerPayment {
   applications?: OwnerPaymentApplication[];
 }
 
+export interface OwnerPaymentInvoice {
+  id: string;
+  numeroFormateado: string | null;
+  unitCode: string;
+  montoTotal: number;
+  fechaEmisionUtc: string | null;
+}
+
 export interface OwnerPaymentApplication {
   unitCode: string;
   concept: string;

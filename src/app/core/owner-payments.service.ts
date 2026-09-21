@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { OwnerPayment, OwnerPaymentCreateRequest, OwnerDebtUnit } from './models';
+import { OwnerPayment, OwnerPaymentCreateRequest, OwnerDebtUnit, OwnerPaymentInvoice } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class OwnerPaymentsService {
@@ -34,6 +34,14 @@ export class OwnerPaymentsService {
     return this.http.post<{ settledAmount: number; remainingCredit: number; chargesSettled: number }>(
       `${this.base}/apply-credit`, {}
     );
+  }
+
+  getInvoices(id: string): Observable<OwnerPaymentInvoice[]> {
+    return this.http.get<OwnerPaymentInvoice[]>(`${this.base}/${id}/invoices`);
+  }
+
+  getInvoicePdfUrl(invoiceId: string, token: string): string {
+    return `${environment.apiUrl}/invoices/${invoiceId}/pdf?access_token=${token}`;
   }
 
   getReceiptPdfUrl(id: string, token: string): string {

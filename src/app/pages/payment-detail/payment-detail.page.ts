@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NavController } from '@ionic/angular';
+import { catchError, of } from 'rxjs';
+import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
-import { OwnerPayment } from '../../core/models';
+import { OwnerPayment, OwnerPaymentInvoice } from '../../core/models';
 
 @Component({
   selector: 'app-payment-detail',
@@ -12,12 +14,14 @@ import { OwnerPayment } from '../../core/models';
 })
 export class PaymentDetailPage {
   payment: OwnerPayment | null = null;
+  invoices: OwnerPaymentInvoice[] = [];
   loading = false;
   error = '';
 
   constructor(
     private route: ActivatedRoute,
     private svc: OwnerPaymentsService,
+    private auth: AuthService,
     private navCtrl: NavController
   ) {}
 
@@ -31,9 +35,26 @@ export class PaymentDetailPage {
     this.loading = true;
     this.error = '';
     this.svc.getById(id).subscribe({
-      next: p => { this.payment = p; this.loading = false; },
+      next: p => {
+        this.payment = p;
+        this.loading = false;
+        this.loadInvoices(p);
+      },
       error: () => { this.error = 'No se pudo cargar el pago.'; this.loading = false; }
     });
+  }
+
+  // Facturas emitidas a partir de este pago (solo existen cuando el pago fue aprobado y facturado).
+  private loadInvoices(p: OwnerPayment): void {
+    this.invoices = [];
+    if (p.status !== 'Approved') return;
+    this.svc.getInvoices(p.id).pipe(catchError(() => of([] as OwnerPaymentInvoice[])))
+      .subscribe(list => { this.invoices = list; });
+  }
+
+  openInvoice(invoice: OwnerPaymentInvoice): void {
+    const url = this.svc.getInvoicePdfUrl(invoice.id, this.auth.getToken() ?? '');
+    window.open(url, '_blank');
   }
 
   back(): void { this.navCtrl.back(); }

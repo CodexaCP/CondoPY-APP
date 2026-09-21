@@ -94,6 +94,22 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- Facturas emitidas -->
+    <ion-card class="detail-card" *ngIf="invoices.length > 0">
+      <ion-card-header>
+        <ion-card-subtitle>Facturas</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="unit-row" *ngFor="let inv of invoices">
+          <span class="unit-code">{{ inv.numeroFormateado }}<small> · {{ inv.unitCode }} · {{ dateLabel(inv.fechaEmisionUtc) }}</small></span>
+          <span class="unit-amount">{{ fmt(inv.montoTotal) }}</span>
+          <ion-button fill="clear" size="small" (click)="openInvoice(inv)" title="Descargar factura">
+            <ion-icon slot="icon-only" name="document-text-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
     <!-- Rejection reason -->
     <ion-card class="detail-card rejection-card" *ngIf="payment.status === 'Rejected' && payment.rejectionReason">
       <ion-card-header>
