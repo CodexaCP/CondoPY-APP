@@ -78,32 +78,35 @@
     <!-- Comprobantes pendientes: cada uno se paga completo -->
     <div class="alloc-preview" *ngIf="comprobantes.length > 0">
       <p class="section-label" style="margin-top:0.75rem">Comprobantes pendientes</p>
-      <p class="section-hint">Cada comprobante se paga completo, del más antiguo al más nuevo. No se aceptan pagos parciales: tocá "Pagar hasta aquí" para completar el monto exacto.</p>
+      <p class="section-hint">Solo podés pagar uno de estos montos: cualquier otro se rechaza. Tocá el monto de la columna "Puede pagar" para completarlo.</p>
+
+      <div class="pay-table-head">
+        <span>Período</span>
+        <span class="pay-num">Monto</span>
+        <span class="pay-num">Puede pagar</span>
+      </div>
 
       <ng-container *ngFor="let c of comprobantes">
-        <div class="alloc-row alloc-group-head" [class.alloc-covered]="c.covered" (click)="toggleComprobante(c.key)">
-          <ion-icon [name]="c.covered ? 'checkmark-circle' : 'ellipse-outline'" [color]="c.covered ? 'success' : 'medium'"></ion-icon>
-          <div class="alloc-info">
-            <span class="alloc-concept">Comprobante {{ c.period }}</span>
-            <span class="alloc-sub">{{ c.unitCode }} · {{ c.lines.length }} {{ c.lines.length === 1 ? 'concepto' : 'conceptos' }}</span>
-          </div>
-          <span class="alloc-amount">{{ fmt(c.total) }}</span>
-          <ion-icon [name]="isComprobanteExpanded(c.key) ? 'chevron-up' : 'chevron-down'" color="medium"></ion-icon>
-        </div>
-
-        <div class="alloc-group-body" *ngIf="isComprobanteExpanded(c.key)">
-          <div class="alloc-row alloc-child" *ngFor="let l of c.lines">
-            <div class="alloc-info">
-              <span class="alloc-concept">{{ l.concept }}</span>
+        <div class="pay-row" [class.pay-covered]="c.covered" (click)="toggleComprobante(c.key)">
+          <div class="pay-period">
+            <ion-icon [name]="isComprobanteExpanded(c.key) ? 'chevron-down' : 'chevron-forward'" color="medium"></ion-icon>
+            <div class="pay-period-text">
+              <strong>{{ c.year }}-{{ c.month < 10 ? '0' : '' }}{{ c.month }}</strong>
+              <small>{{ c.unitCode }}</small>
             </div>
-            <span class="alloc-amount">{{ fmt(l.amount) }}</span>
           </div>
+          <span class="pay-num">{{ fmt(c.total) }}</span>
+          <button type="button" class="pay-pill" [class.pay-pill-active]="isPayTarget(c)"
+                  (click)="payUpTo(c); $event.stopPropagation()">
+            {{ fmt(c.cumulative) }}
+          </button>
         </div>
 
-        <div class="pay-upto">
-          <ion-button size="small" fill="outline" (click)="payUpTo(c)">
-            Pagar hasta aquí · {{ fmt(c.cumulative) }}
-          </ion-button>
+        <div class="pay-lines" *ngIf="isComprobanteExpanded(c.key)">
+          <div class="pay-line" *ngFor="let l of c.lines">
+            <span class="pay-line-concept">{{ l.concept }}</span>
+            <span class="pay-line-amount">{{ fmt(l.amount) }}</span>
+          </div>
         </div>
       </ng-container>
 

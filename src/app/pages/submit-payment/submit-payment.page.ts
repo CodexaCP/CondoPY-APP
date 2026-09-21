@@ -216,6 +216,11 @@ export class SubmitPaymentPage {
     if (!this.expandedComprobantes.delete(key)) this.expandedComprobantes.add(key);
   }
 
+  // El monto escrito coincide con el acumulado de este comprobante.
+  isPayTarget(row: ComprobanteRow): boolean {
+    return this.declaredAmount !== null && Math.abs(row.cumulative - this.declaredAmount) < 0.5;
+  }
+
   // Completa el monto con el total acumulado hasta este comprobante.
   payUpTo(row: ComprobanteRow): void {
     this.declaredAmount = Math.round(row.cumulative);
