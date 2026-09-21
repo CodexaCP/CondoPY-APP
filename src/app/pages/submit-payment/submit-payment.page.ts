@@ -126,12 +126,14 @@ export class SubmitPaymentPage {
 
     const all = this.options
       .filter(o => o.debt)
-      .reduce((acc, o) => acc.concat(o.debt!.charges.map(c => ({ c, unitCode: o.unit.unitCode, selected: o.selected }))),
-        [] as { c: OwnerDebtCharge; unitCode: string; selected: boolean }[])
+      .reduce((acc, o) => acc.concat(o.debt!.charges.map(c => ({ c, unitCode: o.unit.unitCode, buildingName: o.unit.buildingName ?? '', selected: o.selected }))),
+        [] as { c: OwnerDebtCharge; unitCode: string; buildingName: string; selected: boolean }[])
       .sort((a, b) =>
         a.c.periodYear - b.c.periodYear ||
         a.c.periodMonth - b.c.periodMonth ||
-        b.c.amount - a.c.amount);
+        b.c.amount - a.c.amount ||
+        a.buildingName.localeCompare(b.buildingName, undefined, { sensitivity: 'base' }) ||
+        a.unitCode.localeCompare(b.unitCode, undefined, { sensitivity: 'base' }));
 
     const rows: AllocationRow[] = all.map(({ c, unitCode, selected }) => {
       let covered = false;
