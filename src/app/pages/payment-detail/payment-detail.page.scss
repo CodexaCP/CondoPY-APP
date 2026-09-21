@@ -99,3 +99,8 @@
   margin: 0;
   color: var(--ion-color-danger-shade);
 }
+
+.group-head { cursor: pointer; align-items: center; ion-icon { vertical-align: middle; margin-right: 0.15rem; color: var(--ion-color-medium); } }
+.group-body { padding-left: 1.2rem; background: rgba(20,54,61,0.03); border-radius: 8px; }
+.group-child .unit-code { font-weight: 400; font-size: 0.8rem; color: var(--ion-color-medium); }
+.group-child .unit-amount { font-size: 0.8rem; }

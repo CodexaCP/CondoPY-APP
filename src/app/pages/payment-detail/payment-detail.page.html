@@ -87,10 +87,28 @@
         <ion-card-subtitle>Se aplicó a</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <div class="unit-row" *ngFor="let a of payment.applications">
-          <span class="unit-code">{{ a.concept }}<small> · {{ a.unitCode }} · {{ a.periodMonth < 10 ? '0' : '' }}{{ a.periodMonth }}/{{ a.periodYear }}</small></span>
-          <span class="unit-amount">{{ fmt(a.amount) }}</span>
-        </div>
+        <ng-container *ngFor="let item of applicationItems">
+          <div class="unit-row" *ngIf="item.kind === 'row'">
+            <span class="unit-code">{{ item.app.concept }}<small> · {{ item.app.unitCode }} · {{ item.app.periodMonth < 10 ? '0' : '' }}{{ item.app.periodMonth }}/{{ item.app.periodYear }}</small></span>
+            <span class="unit-amount">{{ fmt(item.app.amount) }}</span>
+          </div>
+
+          <ng-container *ngIf="item.kind === 'group'">
+            <div class="unit-row group-head" (click)="toggleGroup(item.key)">
+              <span class="unit-code">
+                <ion-icon [name]="isGroupExpanded(item.key) ? 'chevron-down' : 'chevron-forward'"></ion-icon>
+                {{ item.label }}<small> · {{ item.unitCode }} · {{ item.period }}</small>
+              </span>
+              <span class="unit-amount">{{ fmt(item.total) }}</span>
+            </div>
+            <div class="group-body" *ngIf="isGroupExpanded(item.key)">
+              <div class="unit-row group-child" *ngFor="let a of item.apps">
+                <span class="unit-code">{{ a.concept }}</span>
+                <span class="unit-amount">{{ fmt(a.amount) }}</span>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
       </ion-card-content>
     </ion-card>
 

@@ -4,7 +4,11 @@ import { NavController } from '@ionic/angular';
 import { catchError, of } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
-import { OwnerPayment, OwnerPaymentInvoice } from '../../core/models';
+import { OwnerPayment, OwnerPaymentApplication, OwnerPaymentInvoice } from '../../core/models';
+
+type ApplicationItem =
+  | { kind: 'row'; app: OwnerPaymentApplication }
+  | { kind: 'group'; key: string; unitCode: string; period: string; apps: OwnerPaymentApplication[]; total: number; label: string };
 
 @Component({
   selector: 'app-payment-detail',
@@ -58,6 +62,43 @@ export class PaymentDetailPage {
   }
 
   back(): void { this.navCtrl.back(); }
+
+  private expandedGroups = new Set<string>();
+
+  // "Se aplicó a": las moras de una misma unidad y periodo se muestran en una sola línea comprimida
+  // ("Mora 0.66% (diario) por un total de 12 días") que se puede expandir para ver el detalle.
+  get applicationItems(): ApplicationItem[] {
+    const items: ApplicationItem[] = [];
+    const groups = new Map<string, Extract<ApplicationItem, { kind: 'group' }>>();
+
+    for (const app of this.payment?.applications ?? []) {
+      const match = /^Mora\s+([\d.,]+%)\s*\(([^)]+)\)/i.exec(app.concept ?? '');
+      if (!match) { items.push({ kind: 'row', app }); continue; }
+
+      const period = `${String(app.periodMonth).padStart(2, '0')}/${app.periodYear}`;
+      const key = `${app.unitCode}|${period}|${match[1]}|${match[2].trim()}`.toLowerCase();
+      let group = groups.get(key);
+      if (!group) {
+        group = { kind: 'group', key, unitCode: app.unitCode, period, apps: [], total: 0, label: '' };
+        groups.set(key, group);
+        items.push(group);
+      }
+      group.apps.push(app);
+      group.total += app.amount;
+      const units: Record<string, string[]> = { diario: ['día', 'días'], semanal: ['semana', 'semanas'], quincenal: ['quincena', 'quincenas'] };
+      const unit = units[match[2].trim().toLowerCase()] ?? ['intervalo', 'intervalos'];
+      group.label = `Mora ${match[1]} (${match[2].trim()}) por un total de ${group.apps.length} ${group.apps.length === 1 ? unit[0] : unit[1]}`;
+    }
+    return items;
+  }
+
+  isGroupExpanded(key: string): boolean {
+    return this.expandedGroups.has(key);
+  }
+
+  toggleGroup(key: string): void {
+    if (!this.expandedGroups.delete(key)) this.expandedGroups.add(key);
+  }
 
   get statusLabel(): string {
     const map: Record<string, string> = {
