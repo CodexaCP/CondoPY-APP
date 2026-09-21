@@ -9,27 +9,8 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Saldo a favor -->
-  <div *ngIf="creditAmount > 0" class="credit-banner ion-padding-horizontal ion-padding-top">
-    <ion-icon name="checkmark-circle" color="success"></ion-icon>
-    <div class="credit-info">
-      <p class="credit-label">Saldo a favor</p>
-      <p class="credit-amount">{{ fmt(creditAmount) }}</p>
-    </div>
-    <ion-button
-      size="small"
-      fill="outline"
-      color="success"
-      class="apply-btn"
-      [disabled]="applyingCredit"
-      (click)="doApplyCredit()">
-      <ion-spinner *ngIf="applyingCredit" name="crescent" slot="start"></ion-spinner>
-      {{ applyingCredit ? '' : 'Aplicar' }}
-    </ion-button>
-  </div>
-
   <!-- Subtitle -->
-  <div class="page-intro ion-padding-horizontal" [class.ion-padding-top]="creditAmount === 0">
+  <div class="page-intro ion-padding-horizontal ion-padding-top">
     <p class="page-subtitle">Comprobantes enviados para revisión. Los pagos aprobados se aplican a tu deuda.</p>
   </div>
 

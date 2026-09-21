@@ -26,16 +26,6 @@ export class OwnerPaymentsService {
     return this.http.post<OwnerPayment>(this.base, request);
   }
 
-  getMyCredit(): Observable<{ amount: number }> {
-    return this.http.get<{ amount: number }>(`${this.base}/my-credit`);
-  }
-
-  applyCredit(): Observable<{ settledAmount: number; remainingCredit: number; chargesSettled: number }> {
-    return this.http.post<{ settledAmount: number; remainingCredit: number; chargesSettled: number }>(
-      `${this.base}/apply-credit`, {}
-    );
-  }
-
   getInvoices(id: string): Observable<OwnerPaymentInvoice[]> {
     return this.http.get<OwnerPaymentInvoice[]>(`${this.base}/${id}/invoices`);
   }

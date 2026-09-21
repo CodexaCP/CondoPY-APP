@@ -1,8 +1,5 @@
 import { Component } from '@angular/core';
 import { NavController } from '@ionic/angular';
-import { forkJoin } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
 import { OwnerPayment, OwnerPaymentStatus } from '../../core/models';
@@ -31,7 +28,6 @@ export class PaymentsPage {
   all: OwnerPayment[] = [];
   filtered: OwnerPayment[] = [];
   selectedFilter: FilterKey = '';
-  creditAmount = 0;
   loading = false;
   error = '';
 
@@ -48,39 +44,17 @@ export class PaymentsPage {
   load(): void {
     this.loading = true;
     this.error = '';
-    forkJoin({
-      payments: this.svc.getAll(),
-      credit: this.svc.getMyCredit().pipe(catchError(() => of({ amount: 0 })))
-    }).subscribe({
-      next: ({ payments, credit }) => {
+    this.svc.getAll().subscribe({
+      next: payments => {
         this.all = payments.sort(
           (a, b) => new Date(b.createdAtUtc).getTime() - new Date(a.createdAtUtc).getTime()
         );
-        this.creditAmount = credit.amount;
         this.applyFilter();
         this.loading = false;
       },
       error: () => {
         this.error = 'No se pudieron cargar los pagos.';
         this.loading = false;
-      }
-    });
-  }
-
-  applyingCredit = false;
-
-  doApplyCredit(): void {
-    this.applyingCredit = true;
-    this.error = '';
-    this.svc.applyCredit().subscribe({
-      next: result => {
-        this.applyingCredit = false;
-        this.load();
-      },
-      error: err => {
-        const body = err?.error;
-        this.error = (typeof body === 'string' ? body : body?.message) ?? 'No se pudo aplicar el saldo.';
-        this.applyingCredit = false;
       }
     });
   }

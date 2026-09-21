@@ -43,7 +43,6 @@ export class SubmitPaymentPage {
   options: UnitOption[] = [];
   declaredAmount: number | null = null;
   amountDisplay = '';
-  existingCredit = 0;
 
   // Comprobante — imagen seleccionada localmente
   comprobanteFile: File | null = null;
@@ -91,11 +90,9 @@ export class SubmitPaymentPage {
 
     forkJoin({
       units: this.auth.getMyUnits(),
-      debts: this.svc.getMyDebts().pipe(catchError(() => of([] as OwnerDebtUnit[]))),
-      credit: this.svc.getMyCredit().pipe(catchError(() => of({ amount: 0 })))
+      debts: this.svc.getMyDebts().pipe(catchError(() => of([] as OwnerDebtUnit[])))
     }).subscribe({
-      next: ({ units, debts, credit }) => {
-        this.existingCredit = credit.amount ?? 0;
+      next: ({ units, debts }) => {
         this.options = units.map(unit => ({
           unit,
           debt: debts.find(d => d.unitId === unit.unitId) ?? null,
