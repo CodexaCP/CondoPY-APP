@@ -53,12 +53,10 @@ export class UnitsPage {
     return this.units.filter((unit) => (this.debtInfo[unit.unitId]?.totalDebt ?? 0) > 0).length;
   }
 
+  // Se vuelve a pedir en cada entrada (no solo si units esta vacio): si el vinculo unidad-usuario
+  // cambio mientras la app seguia abierta, la lista en memoria quedaba desactualizada.
   ionViewWillEnter(): void {
-    if (this.units.length === 0) {
-      this.loadUnits();
-    } else {
-      this.loadDebtInfo(this.units);
-    }
+    this.loadUnits();
   }
 
   loadUnits(): void {

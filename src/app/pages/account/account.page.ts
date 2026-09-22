@@ -96,43 +96,65 @@ export class AccountPage {
     private router: Router
   ) {}
 
+  // Se vuelve a pedir la lista de unidades en cada entrada a la pantalla (no solo la primera vez):
+  // si un vinculo unidad-propietario/residente cambio mientras la app seguia abierta, la lista en
+  // memoria quedaba desactualizada y la pantalla intentaba abrir una unidad a la que el usuario ya
+  // no tiene acceso (403 del backend).
   ionViewWillEnter(): void {
     const navUnit = history.state?.unit as MyUnit | undefined;
     const consolidated = !!history.state?.consolidated;
     const targetPeriodId = history.state?.expensePeriodId as string | undefined;
+    const hadUnitsBefore = this.units.length > 0;
+    const previousUnitId = this.selectedUnit?.unitId;
 
-    if (this.units.length === 0) {
-      this.auth.getMyUnits().subscribe({
-        next: (units) => {
-          this.units = units;
+    this.loading = true;
+    this.auth.getMyUnits().subscribe({
+      next: (units) => {
+        this.units = units;
+        this.loading = false;
 
-          if (consolidated && units.length > 1) {
-            this.activateConsolidatedMode();
-            return;
-          }
-
-          this.consolidatedMode = false;
-          this.selectUnit(navUnit ?? units[0], targetPeriodId);
+        if (units.length === 0) {
+          this.selectedUnit = null;
+          this.detailUnit = null;
+          this.periods = [];
+          this.consolidatedPeriods = [];
+          return;
         }
-      });
-      return;
-    }
 
-    if (consolidated && this.units.length > 1) {
-      this.activateConsolidatedMode();
-      return;
-    }
+        if (consolidated && units.length > 1) {
+          this.activateConsolidatedMode();
+          return;
+        }
 
-    if (navUnit && navUnit.unitId !== this.selectedUnit?.unitId) {
-      this.consolidatedMode = false;
-      this.selectUnit(navUnit, targetPeriodId);
-    } else if (targetPeriodId) {
-      this.refreshCurrentUnit(targetPeriodId);
-    } else if (this.consolidatedMode) {
-      this.refreshConsolidatedPeriods();
-    } else if (this.selectedUnit) {
-      this.refreshCurrentUnit();
-    }
+        if (navUnit && navUnit.unitId !== previousUnitId) {
+          this.consolidatedMode = false;
+          this.selectUnit(navUnit, targetPeriodId);
+          return;
+        }
+
+        if (targetPeriodId && hadUnitsBefore && this.consolidatedMode) {
+          this.refreshConsolidatedPeriods();
+          return;
+        }
+
+        if (hadUnitsBefore && previousUnitId && units.some(u => u.unitId === previousUnitId)) {
+          if (targetPeriodId) {
+            this.refreshCurrentUnit(targetPeriodId);
+          } else if (this.consolidatedMode) {
+            this.refreshConsolidatedPeriods();
+          } else {
+            this.refreshCurrentUnit();
+          }
+          return;
+        }
+
+        // Primera carga, o la unidad seleccionada ya no esta en la lista (perdio el vinculo):
+        // volver a la primera unidad disponible.
+        this.consolidatedMode = false;
+        this.selectUnit(navUnit ?? units[0], targetPeriodId);
+      },
+      error: () => { this.loading = false; }
+    });
   }
 
   selectUnit(unit: MyUnit, targetPeriodId?: string): void {
