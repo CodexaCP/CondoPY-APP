@@ -9,7 +9,8 @@ const TYPE_ICON: Record<string, string> = {
   PaymentApproved:          'checkmark-circle-outline',
   PaymentRejected:          'close-circle-outline',
   LateFeeConfigChanged:     'alert-circle-outline',
-  ExpensePeriodPublished:   'receipt-outline'
+  ExpensePeriodPublished:   'receipt-outline',
+  InvoiceIssued:            'document-text-outline'
 };
 
 const TYPE_COLOR: Record<string, string> = {
@@ -18,7 +19,8 @@ const TYPE_COLOR: Record<string, string> = {
   PaymentApproved:          '#22c55e',
   PaymentRejected:          '#ef4444',
   LateFeeConfigChanged:     '#f97316',
-  ExpensePeriodPublished:   '#6366f1'
+  ExpensePeriodPublished:   '#6366f1',
+  InvoiceIssued:            '#0ea5e9'
 };
 
 @Component({
