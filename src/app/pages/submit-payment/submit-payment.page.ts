@@ -23,6 +23,8 @@ interface ComprobanteRow {
   lines: ComprobanteLine[];
   total: number;
   cumulative: number;
+  // Lo que hay que transferir hasta este comprobante, ya descontado el saldo a favor disponible.
+  netCumulative: number;
   covered: boolean;
 }
 
@@ -43,6 +45,8 @@ export class SubmitPaymentPage {
   options: UnitOption[] = [];
   declaredAmount: number | null = null;
   amountDisplay = '';
+  // Se descuenta solo, el propietario nunca lo elige — ver GetMyDebt/CoverWithCredit en el backend.
+  availableCredit = 0;
 
   // Comprobante — imagen seleccionada localmente
   comprobanteFile: File | null = null;
@@ -90,14 +94,16 @@ export class SubmitPaymentPage {
 
     forkJoin({
       units: this.auth.getMyUnits(),
-      debts: this.svc.getMyDebts().pipe(catchError(() => of([] as OwnerDebtUnit[])))
+      debts: this.svc.getMyDebts().pipe(catchError(() => of([] as OwnerDebtUnit[]))),
+      credit: this.svc.getMyCredit().pipe(catchError(() => of({ amount: 0 })))
     }).subscribe({
-      next: ({ units, debts }) => {
+      next: ({ units, debts, credit }) => {
         this.options = units.map(unit => ({
           unit,
           debt: debts.find(d => d.unitId === unit.unitId) ?? null,
           selected: units.length === 1
         }));
+        this.availableCredit = credit.amount;
         this.loading = false;
       },
       error: () => {
@@ -143,6 +149,7 @@ export class SubmitPaymentPage {
             lines: [],
             total: 0,
             cumulative: 0,
+            netCumulative: 0,
             covered: false
           };
           map.set(key, row);
@@ -164,7 +171,9 @@ export class SubmitPaymentPage {
       row.lines = this.collapseLateFees(row.lines);
       running += row.total;
       row.cumulative = running;
-      row.covered = paying > 0 && running <= paying + 0.5;
+      row.netCumulative = Math.max(0, running - this.availableCredit);
+      // "Cubierto" compara contra lo que realmente se transfiere (ya con el credito descontado).
+      row.covered = paying > 0 && paying + this.availableCredit >= running - 0.5;
     }
     return rows;
   }
@@ -198,10 +207,12 @@ export class SubmitPaymentPage {
     return result;
   }
 
-  // El monto es válido solo si es exactamente la suma de comprobantes completos (del más antiguo en adelante).
+  // El monto es válido solo si, sumado al saldo a favor disponible, es exactamente la suma de
+  // comprobantes completos (del más antiguo en adelante).
   get coverage(): { exact: boolean; count: number } {
     const amount = this.declaredAmount ?? 0;
-    const index = amount > 0 ? this.comprobantes.findIndex(c => Math.abs(c.cumulative - amount) < 0.5) : -1;
+    const total = amount + this.availableCredit;
+    const index = amount > 0 ? this.comprobantes.findIndex(c => Math.abs(c.cumulative - total) < 0.5) : -1;
     return { exact: index >= 0, count: index + 1 };
   }
 
@@ -213,9 +224,10 @@ export class SubmitPaymentPage {
     if (!this.expandedComprobantes.delete(key)) this.expandedComprobantes.add(key);
   }
 
-  // Completa el monto con el total acumulado hasta este comprobante.
+  // Completa el monto con lo que hay que transferir hasta este comprobante (ya con el saldo a
+  // favor descontado, si hay — el propietario nunca elige aplicarlo, ya viene restado).
   payUpTo(row: ComprobanteRow): void {
-    this.declaredAmount = Math.round(row.cumulative);
+    this.declaredAmount = Math.round(row.netCumulative);
     this.amountDisplay = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(this.declaredAmount);
     this.error = '';
   }

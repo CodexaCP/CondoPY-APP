@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { OwnerPayment, OwnerPaymentCreateRequest, OwnerDebtUnit, OwnerPaymentInvoice } from './models';
+import { OwnerPayment, OwnerPaymentCreateRequest, OwnerDebtUnit, OwnerCredit, OwnerPaymentInvoice } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class OwnerPaymentsService {
@@ -12,6 +12,10 @@ export class OwnerPaymentsService {
 
   getMyDebts(): Observable<OwnerDebtUnit[]> {
     return this.http.get<OwnerDebtUnit[]>(`${this.base}/my-debt`);
+  }
+
+  getMyCredit(): Observable<OwnerCredit> {
+    return this.http.get<OwnerCredit>(`${this.base}/my-credit`);
   }
 
   getAll(): Observable<OwnerPayment[]> {

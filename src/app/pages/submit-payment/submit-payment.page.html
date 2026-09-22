@@ -58,6 +58,12 @@
       <span>Deuda total: <strong>{{ fmt(totalDebtSelected) }}</strong></span>
     </div>
 
+    <!-- Saldo a favor: se descuenta solo del monto a transferir, nunca lo elige el propietario -->
+    <div class="debt-summary credit-summary" *ngIf="availableCredit > 0">
+      <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+      <span>Tenés {{ fmt(availableCredit) }} de saldo a favor — ya está descontado de los montos de abajo.</span>
+    </div>
+
     <!-- Monto -->
     <p class="section-label" style="margin-top:1.25rem">Monto del pago</p>
 
@@ -102,7 +108,7 @@
 
         <div class="pay-upto">
           <ion-button size="small" fill="outline" (click)="payUpTo(c)">
-            Pagar hasta aquí · {{ fmt(c.cumulative) }}
+            Pagar hasta aquí · {{ fmt(c.netCumulative) }}
           </ion-button>
         </div>
       </ng-container>

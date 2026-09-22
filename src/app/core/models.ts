@@ -181,6 +181,11 @@ export interface OwnerDebtUnit {
   charges: OwnerDebtCharge[];
 }
 
+// Saldo a favor: se genera por notas de credito y se descuenta solo en el proximo pago aprobado.
+export interface OwnerCredit {
+  amount: number;
+}
+
 // ── Announcements ─────────────────────────────────────────────────────────────
 
 export type AnnouncementCategory = 'General' | 'Mantenimiento' | 'Seguridad' | 'Financiero' | 'Convocatoria' | 'Otro';
