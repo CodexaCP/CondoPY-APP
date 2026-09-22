@@ -16,6 +16,11 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, request).pipe(
       tap(res => {
         const storage = rememberMe ? localStorage : sessionStorage;
+        const other = rememberMe ? sessionStorage : localStorage;
+        // Limpiar la otra storage: una sesión vieja (de "Recordarme" o de otra cuenta) ahí
+        // pisaría a esta, porque getToken()/getUser() prefieren localStorage siempre.
+        other.removeItem(TOKEN_KEY);
+        other.removeItem(USER_KEY);
         storage.setItem(TOKEN_KEY, res.token);
         storage.setItem(USER_KEY, JSON.stringify(res));
       })
@@ -25,11 +30,19 @@ export class AuthService {
   changePassword(currentPassword: string, newPassword: string): Observable<void> {
     return this.http.post<void>(`${environment.apiUrl}/auth/change-password`, { currentPassword, newPassword }).pipe(
       tap(() => {
-        const user = this.getUser();
-        if (user) {
-          user.mustChangePassword = false;
-          localStorage.setItem(USER_KEY, JSON.stringify(user));
-        }
+        // Actualizar mustChangePassword en la MISMA storage donde vive la sesión activa
+        // (no siempre localStorage: si el login fue sin "Recordarme", es sessionStorage).
+        // Escribirlo en la storage equivocada dejaba el flag viejo (true) en la sesión real,
+        // así que el guard volvía a mandar a /change-password sin avisar nada.
+        const storage = this.getStorage();
+        if (!storage) return;
+
+        const raw = storage.getItem(USER_KEY);
+        if (!raw) return;
+
+        const user = JSON.parse(raw) as LoginResponse;
+        user.mustChangePassword = false;
+        storage.setItem(USER_KEY, JSON.stringify(user));
       })
     );
   }
@@ -42,12 +55,20 @@ export class AuthService {
     this.router.navigateByUrl('/login');
   }
 
+  // Storage donde vive la sesión activa (token real), no una prioridad fija: evita mezclar el
+  // token de una storage con el usuario de la otra si quedó algo residual de una sesión previa.
+  private getStorage(): Storage | null {
+    if (localStorage.getItem(TOKEN_KEY)) return localStorage;
+    if (sessionStorage.getItem(TOKEN_KEY)) return sessionStorage;
+    return null;
+  }
+
   getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+    return this.getStorage()?.getItem(TOKEN_KEY) ?? null;
   }
 
   getUser(): LoginResponse | null {
-    const raw = localStorage.getItem(USER_KEY) ?? sessionStorage.getItem(USER_KEY);
+    const raw = this.getStorage()?.getItem(USER_KEY);
     return raw ? JSON.parse(raw) : null;
   }
 
