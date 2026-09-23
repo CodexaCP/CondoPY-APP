@@ -61,7 +61,7 @@
         <ion-card-subtitle>Comprobante</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <a [href]="payment.comprobanteUrl" target="_blank" rel="noopener" class="comprobante-link">
+        <a [href]="resolveUploadUrl(payment.comprobanteUrl)" target="_blank" rel="noopener" class="comprobante-link">
           <ion-icon name="document-attach-outline"></ion-icon>
           Ver comprobante
         </a>
@@ -83,10 +83,14 @@
 
     <!-- A qué se aplicó -->
     <ion-card class="detail-card" *ngIf="payment.status === 'Approved' && payment.applications && payment.applications.length > 0">
-      <ion-card-header>
-        <ion-card-subtitle>Se aplicó a</ion-card-subtitle>
+      <ion-card-header class="applied-head" (click)="appliedExpanded = !appliedExpanded">
+        <ion-card-subtitle>
+          <ion-icon [name]="appliedExpanded ? 'chevron-down' : 'chevron-forward'"></ion-icon>
+          Se aplicó a
+        </ion-card-subtitle>
+        <span class="applied-total">{{ fmt(appliedTotal) }}</span>
       </ion-card-header>
-      <ion-card-content>
+      <ion-card-content *ngIf="appliedExpanded">
         <ng-container *ngFor="let item of applicationItems">
           <div class="unit-row" *ngIf="item.kind === 'row'">
             <span class="unit-code">{{ item.app.concept }}<small> · {{ item.app.unitCode }} · {{ item.app.periodMonth < 10 ? '0' : '' }}{{ item.app.periodMonth }}/{{ item.app.periodYear }}</small></span>

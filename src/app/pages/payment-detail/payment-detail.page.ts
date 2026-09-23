@@ -5,6 +5,7 @@ import { catchError, of } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
 import { OwnerPayment, OwnerPaymentApplication, OwnerPaymentInvoice } from '../../core/models';
+import { resolveUploadUrl } from '../../core/file-url.util';
 
 type ApplicationItem =
   | { kind: 'row'; app: OwnerPaymentApplication }
@@ -21,6 +22,7 @@ export class PaymentDetailPage {
   invoices: OwnerPaymentInvoice[] = [];
   loading = false;
   error = '';
+  appliedExpanded = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -56,12 +58,18 @@ export class PaymentDetailPage {
       .subscribe(list => { this.invoices = list; });
   }
 
+  get appliedTotal(): number {
+    return (this.payment?.applications ?? []).reduce((sum, a) => sum + a.amount, 0);
+  }
+
   openInvoice(invoice: OwnerPaymentInvoice): void {
     const url = this.svc.getInvoicePdfUrl(invoice.id, this.auth.getToken() ?? '');
     window.open(url, '_blank');
   }
 
   back(): void { this.navCtrl.back(); }
+
+  resolveUploadUrl(url: string | null | undefined): string { return resolveUploadUrl(url); }
 
   private expandedGroups = new Set<string>();
 
