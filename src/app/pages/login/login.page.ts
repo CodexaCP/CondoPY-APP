@@ -47,4 +47,8 @@ export class LoginPage {
       }
     });
   }
+
+  goForgotPassword(): void {
+    this.router.navigateByUrl('/forgot-password');
+  }
 }

@@ -27,6 +27,10 @@ export class AuthService {
     );
   }
 
+  forgotPassword(identifier: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/forgot-password`, { identifier: identifier.trim() });
+  }
+
   changePassword(currentPassword: string, newPassword: string): Observable<void> {
     return this.http.post<void>(`${environment.apiUrl}/auth/change-password`, { currentPassword, newPassword }).pipe(
       tap(() => {

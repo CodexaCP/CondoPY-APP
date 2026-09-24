@@ -47,6 +47,7 @@
             <ion-checkbox [(ngModel)]="rememberMe" name="rememberMe" color="primary"></ion-checkbox>
             Recordarme
           </label>
+          <a class="forgot-link" (click)="goForgotPassword()">¿Olvidaste tu contraseña?</a>
         </div>
 
         <div class="error-msg" *ngIf="errorMsg">

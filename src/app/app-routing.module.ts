@@ -9,6 +9,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
   },
   {
+    path: 'forgot-password',
+    loadChildren: () => import('./pages/forgot-password/forgot-password.module').then(m => m.ForgotPasswordPageModule)
+  },
+  {
     path: 'change-password',
     loadChildren: () => import('./pages/change-password/change-password.module').then(m => m.ChangePasswordPageModule)
   },
