@@ -220,7 +220,13 @@ export type NotificationType =
   | 'ClaimStatusUpdated'
   | 'AmenityReservationCreated'
   | 'VoteOpened'
-  | 'ExpensePeriodPublished';
+  | 'ExpensePeriodPublished'
+  | 'SettlementRejected'
+  | 'InvoiceIssued'
+  | 'CreditNoteApproved'
+  | 'SettlementPendingPresidentReview'
+  | 'SettlementRejectedByPresident'
+  | 'SettlementApprovedByPresident';
 
 export interface AppNotification {
   id: string;
@@ -268,4 +274,57 @@ export interface AmenityReservation {
   reservedByName: string;
   rejectionReason: string | null;
   createdAtUtc: string;
+}
+
+// ── Liquidacion / revision del presidente de consorcio ───────────────────
+
+export interface SettlementCategoryItem {
+  description: string;
+  amount: number;
+}
+
+export interface SettlementCategoryTotal {
+  category: string;
+  expenseCount: number;
+  amount: number;
+  items: SettlementCategoryItem[];
+}
+
+export interface ExpenseSettlementSummary {
+  id: string | null;
+  expensePeriodId: string;
+  buildingId: string;
+  expensePeriodName: string;
+  buildingName: string;
+  totalBuildingExpenses: number;
+  totalBuildingIncomes: number;
+  reserveFundAmount: number;
+  extraordinaryAmount: number;
+  netCommonAmount: number;
+  status: string | null;
+  periodStatus: string;
+  generatedChargeCount: number;
+  isCalculated: boolean;
+  categoryTotals: SettlementCategoryTotal[];
+  presidentApprovedAtUtc: string | null;
+  presidentApprovedByUserId: string | null;
+  presidentRejectionReason: string;
+  presidentRejectedAtUtc: string | null;
+  presidentRejectedByUserId: string | null;
+}
+
+export interface PresidentSettlementExpenseItem {
+  id: string;
+  category: string;
+  supplierName: string;
+  description: string;
+  expenseDate: string;
+  amount: number;
+  hasReceipt: boolean;
+  receiptFileName: string | null;
+}
+
+export interface PresidentSettlementReview {
+  settlement: ExpenseSettlementSummary;
+  expenses: PresidentSettlementExpenseItem[];
 }

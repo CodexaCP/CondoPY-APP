@@ -1,0 +1,105 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Revisión de liquidación</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div *ngIf="loading" class="state-msg">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <div *ngIf="error && !loading" class="state-msg">
+    <ion-icon name="alert-circle-outline" class="err-icon"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="back()">Volver</ion-button>
+  </div>
+
+  <div *ngIf="review && !loading">
+
+    <div class="header-block">
+      <h2>{{ review.settlement.expensePeriodName }}</h2>
+      <p class="building-name">{{ review.settlement.buildingName }}</p>
+    </div>
+
+    <ion-card class="detail-card">
+      <ion-card-header>
+        <ion-card-title>Resumen</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="detail-row">
+          <span class="detail-lbl">Total gastos del edificio</span>
+          <span class="detail-val">{{ fmt(review.settlement.totalBuildingExpenses) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-lbl">Total ingresos del edificio</span>
+          <span class="detail-val">{{ fmt(review.settlement.totalBuildingIncomes) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="review.settlement.reserveFundAmount > 0">
+          <span class="detail-lbl">Fondo de reserva</span>
+          <span class="detail-val">{{ fmt(review.settlement.reserveFundAmount) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="review.settlement.extraordinaryAmount > 0">
+          <span class="detail-lbl">Gastos extraordinarios</span>
+          <span class="detail-val">{{ fmt(review.settlement.extraordinaryAmount) }}</span>
+        </div>
+        <div class="detail-row total-row">
+          <span class="detail-lbl">Monto neto a distribuir</span>
+          <span class="detail-val amount">{{ fmt(review.settlement.netCommonAmount) }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="detail-card" *ngFor="let cat of review.settlement.categoryTotals">
+      <ion-card-header>
+        <ion-card-title class="cat-title">
+          {{ categoryLabel(cat.category) }}
+          <span class="cat-total">{{ fmt(cat.amount) }}</span>
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="detail-row" *ngFor="let item of cat.items">
+          <span class="detail-lbl">{{ item.description }}</span>
+          <span class="detail-val">{{ fmt(item.amount) }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="detail-card">
+      <ion-card-header>
+        <ion-card-title>Comprobantes de gastos</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p *ngIf="!review.expenses.length" class="empty-msg">Este período no tiene gastos cargados.</p>
+        <div class="expense-row" *ngFor="let e of review.expenses" (click)="openReceipt(e)" [class.no-receipt]="!e.hasReceipt">
+          <div class="expense-info">
+            <span class="expense-supplier">{{ e.supplierName || categoryLabel(e.category) }}</span>
+            <small class="expense-desc">{{ e.description }} · {{ dateLabel(e.expenseDate) }}</small>
+          </div>
+          <div class="expense-amount-col">
+            <span class="expense-amount">{{ fmt(e.amount) }}</span>
+            <ion-icon *ngIf="e.hasReceipt" name="document-attach-outline" class="receipt-icon"></ion-icon>
+            <small *ngIf="!e.hasReceipt" class="no-receipt-lbl">Sin comprobante</small>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="actions-row">
+      <ion-button expand="block" color="danger" fill="outline" [disabled]="acting" (click)="confirmReject()">
+        Rechazar
+      </ion-button>
+      <ion-button expand="block" color="success" [disabled]="acting" (click)="confirmApprove()">
+        Aprobar (firmar)
+      </ion-button>
+    </div>
+
+  </div>
+
+</ion-content>

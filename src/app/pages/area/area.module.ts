@@ -49,6 +49,10 @@ const routes: Routes = [
         path: 'dashboard',
         loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardPageModule)
       },
+      {
+        path: 'settlement-review/:id',
+        loadChildren: () => import('../settlement-review/settlement-review.module').then(m => m.SettlementReviewPageModule)
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }

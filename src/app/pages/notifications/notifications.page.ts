@@ -10,7 +10,8 @@ const TYPE_ICON: Record<string, string> = {
   PaymentRejected:          'close-circle-outline',
   LateFeeConfigChanged:     'alert-circle-outline',
   ExpensePeriodPublished:   'receipt-outline',
-  InvoiceIssued:            'document-text-outline'
+  InvoiceIssued:            'document-text-outline',
+  SettlementPendingPresidentReview: 'create-outline'
 };
 
 const TYPE_COLOR: Record<string, string> = {
@@ -20,7 +21,8 @@ const TYPE_COLOR: Record<string, string> = {
   PaymentRejected:          '#ef4444',
   LateFeeConfigChanged:     '#f97316',
   ExpensePeriodPublished:   '#6366f1',
-  InvoiceIssued:            '#0ea5e9'
+  InvoiceIssued:            '#0ea5e9',
+  SettlementPendingPresidentReview: '#8b5cf6'
 };
 
 @Component({
@@ -71,6 +73,8 @@ export class NotificationsPage {
     }
     if (n.entityType === 'OwnerPayment' && n.entityId) {
       this.navCtrl.navigateForward(`/area/payments/${n.entityId}`);
+    } else if (n.type === 'SettlementPendingPresidentReview' && n.entityId) {
+      this.navCtrl.navigateForward(`/area/settlement-review/${n.entityId}`);
     } else if (n.entityType === 'ExpensePeriod' && n.entityId) {
       this.navCtrl.navigateForward('/area/account', { state: { expensePeriodId: n.entityId } });
     }

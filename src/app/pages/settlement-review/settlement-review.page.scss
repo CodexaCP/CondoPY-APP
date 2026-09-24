@@ -1,0 +1,86 @@
+.state-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  gap: 0.75rem;
+  color: var(--ion-color-medium);
+  p { margin: 0; font-size: 0.9rem; text-align: center; }
+}
+
+.err-icon { font-size: 3rem; opacity: 0.5; }
+
+.header-block { margin-bottom: 1rem; }
+.header-block h2 { margin: 0; font-size: 1.15rem; }
+.building-name { margin: 0.15rem 0 0; font-size: 0.85rem; color: var(--ion-color-medium); }
+
+.detail-card {
+  margin: 0 0 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  &:last-child { border-bottom: none; }
+}
+
+.total-row .detail-lbl, .total-row .detail-val { font-weight: 700; }
+
+.detail-lbl {
+  font-size: 0.83rem;
+  color: var(--ion-color-medium);
+}
+
+.detail-val {
+  font-size: 0.9rem;
+  font-weight: 500;
+  &.amount { font-weight: 700; font-family: monospace; font-size: 1rem; }
+}
+
+.cat-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+.cat-total { font-family: monospace; font-weight: 700; color: var(--ion-color-primary); }
+
+.empty-msg { font-size: 0.85rem; color: var(--ion-color-medium); margin: 0; }
+
+.expense-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  cursor: pointer;
+  &:last-child { border-bottom: none; }
+  &.no-receipt { cursor: default; }
+}
+
+.expense-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.expense-supplier { font-size: 0.88rem; font-weight: 600; }
+.expense-desc { font-size: 0.76rem; color: var(--ion-color-medium); }
+
+.expense-amount-col {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.expense-amount { font-family: monospace; font-size: 0.88rem; font-weight: 600; }
+.receipt-icon { font-size: 1.1rem; color: var(--ion-color-primary); }
+.no-receipt-lbl { font-size: 0.72rem; color: var(--ion-color-medium); }
+
+.actions-row {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.5rem;
+  ion-button { flex: 1; margin: 0; }
+}
