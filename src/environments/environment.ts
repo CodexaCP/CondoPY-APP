@@ -9,7 +9,7 @@ export const environment = {
   // Dispositivo físico:       http://<IP-PC>:5071/api
   // ngrok:                    https://ophthalmometrical-zainab-irredeemable.ngrok-free.dev/api
 
-    "apiUrl": "https://distant-peas-herbal-guy.trycloudflare.com/api"
+    "apiUrl": "https://pose-kansas-quick-myself.trycloudflare.com/api"
 };
 
 /*

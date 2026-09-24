@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://2.25.187.20:5071/api'
+  apiUrl: 'https://api.tramiya.com.py/api'
 };
