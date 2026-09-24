@@ -23,6 +23,6 @@ export class SettlementReviewService {
   }
 
   getReceiptUrl(expenseId: string, token: string): string {
-    return `${environment.apiUrl}/building-expenses/${expenseId}/download-receipt?access_token=${token}`;
+    return `${environment.apiUrl}/building-expenses/${expenseId}/receipt?access_token=${token}`;
   }
 }
