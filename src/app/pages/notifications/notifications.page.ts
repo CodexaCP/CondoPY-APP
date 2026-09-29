@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController } from '@ionic/angular';
-import { NotificationsService } from '../../core/notifications.service';
+import { NotificationsService, resolveNotificationRoute } from '../../core/notifications.service';
 import { AppNotification } from '../../core/models';
 
 const TYPE_ICON: Record<string, string> = {
@@ -71,12 +71,9 @@ export class NotificationsPage {
       n.isRead = true;
       this.svc.markRead(n.id).subscribe();
     }
-    if (n.entityType === 'OwnerPayment' && n.entityId) {
-      this.navCtrl.navigateForward(`/area/payments/${n.entityId}`);
-    } else if (n.type === 'SettlementPendingPresidentReview' && n.entityId) {
-      this.navCtrl.navigateForward(`/area/settlement-review/${n.entityId}`);
-    } else if (n.entityType === 'ExpensePeriod' && n.entityId) {
-      this.navCtrl.navigateForward('/area/account', { state: { expensePeriodId: n.entityId } });
+    const route = resolveNotificationRoute(n);
+    if (route) {
+      this.navCtrl.navigateForward(route.path, route.state ? { state: route.state } : undefined);
     }
   }
 

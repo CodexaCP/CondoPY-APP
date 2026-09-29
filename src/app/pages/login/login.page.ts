@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { PushService } from '../../core/push.service';
 
 @Component({
   selector: 'app-login',
@@ -16,7 +17,7 @@ export class LoginPage {
   showPass = false;
   errorMsg = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private pushSvc: PushService) {}
 
   submit(): void {
     this.submitted = true;
@@ -31,6 +32,7 @@ export class LoginPage {
         if (res.mustChangePassword) {
           this.router.navigateByUrl('/change-password');
         } else {
+          this.pushSvc.init();
           this.router.navigateByUrl('/area');
         }
       },

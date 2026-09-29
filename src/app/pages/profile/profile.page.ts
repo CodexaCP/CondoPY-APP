@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { PushService } from '../../core/push.service';
 import { LoginResponse } from '../../core/models';
 
 @Component({
@@ -25,7 +26,7 @@ export class ProfilePage implements OnInit {
     return map[this.user?.role ?? ''] ?? this.user?.role ?? '';
   }
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private pushSvc: PushService) {}
 
   ngOnInit(): void {
     this.user = this.auth.getUser();
@@ -63,6 +64,7 @@ export class ProfilePage implements OnInit {
   }
 
   logout(): void {
+    this.pushSvc.unregister();
     this.auth.logout();
     this.router.navigateByUrl('/login');
   }
