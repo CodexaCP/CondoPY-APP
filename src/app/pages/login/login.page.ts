@@ -33,7 +33,7 @@ export class LoginPage {
           this.router.navigateByUrl('/change-password');
         } else {
           this.pushSvc.init();
-          this.router.navigateByUrl('/area');
+          this.router.navigateByUrl('/');
         }
       },
       error: (err) => {

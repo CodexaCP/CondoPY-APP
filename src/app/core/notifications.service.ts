@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AppNotification } from './models';
+import { isManagerRole } from './roles';
 
 export interface UnreadCountDto { count: number; }
 
@@ -14,7 +15,17 @@ export interface NotificationRoute {
 // Misma logica que NotificationsPage.handleTap(), compartida para poder navegar tambien
 // al tocar una push notification del sistema (PushService), donde solo se dispone de
 // entityType/entityId/type como strings sueltos en el payload de datos de FCM.
-export function resolveNotificationRoute(n: { type?: string | null; entityType?: string | null; entityId?: string | null }): NotificationRoute | null {
+//
+// El destino depende del rol: el mismo aviso ("OwnerPayment") lleva al Encargado a revisar el pago y al
+// propietario a ver su pago.
+export function resolveNotificationRoute(
+  n: { type?: string | null; entityType?: string | null; entityId?: string | null },
+  role?: string | null
+): NotificationRoute | null {
+  if (isManagerRole(role)) {
+    return resolveManagerRoute(n);
+  }
+
   if (n.entityType === 'OwnerPayment' && n.entityId) {
     return { path: `/area/payments/${n.entityId}` };
   }
@@ -25,6 +36,21 @@ export function resolveNotificationRoute(n: { type?: string | null; entityType?:
     return { path: '/area/account', state: { expensePeriodId: n.entityId } };
   }
   return null;
+}
+
+function resolveManagerRoute(n: { type?: string | null; entityType?: string | null; entityId?: string | null }): NotificationRoute | null {
+  switch (n.entityType) {
+    case 'OwnerPayment':
+      return n.entityId ? { path: `/manager/payments/${n.entityId}` } : { path: '/manager/payments' };
+    case 'Claim':
+      return { path: '/manager/claims' };
+    case 'AmenityReservation':
+      return { path: '/manager/reservations' };
+    case 'BuildingPlan':
+      return { path: '/manager/plan' };
+    default:
+      return null;
+  }
 }
 
 @Injectable({ providedIn: 'root' })

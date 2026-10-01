@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Más</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="more-hero">
+    <div class="more-avatar">{{ initials }}</div>
+    <h2>{{ user?.fullName }}</h2>
+    <p>{{ user?.email }}</p>
+    <span class="more-role">{{ role }}</span>
+  </div>
+
+  <div class="more-list">
+    <button type="button" class="more-item" (click)="go('/manager/notifications')">
+      <ion-icon name="notifications-outline"></ion-icon>
+      <span>Notificaciones</span>
+      <span class="more-badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+      <ion-icon name="chevron-forward-outline" class="more-caret"></ion-icon>
+    </button>
+
+    <button type="button" class="more-item" (click)="go('/manager/plan')">
+      <ion-icon name="ribbon-outline"></ion-icon>
+      <span>Mi plan</span>
+      <ion-icon name="chevron-forward-outline" class="more-caret"></ion-icon>
+    </button>
+
+    <button type="button" class="more-item" (click)="go('/change-password')">
+      <ion-icon name="key-outline"></ion-icon>
+      <span>Cambiar contraseña</span>
+      <ion-icon name="chevron-forward-outline" class="more-caret"></ion-icon>
+    </button>
+
+    <button type="button" class="more-item danger" (click)="confirmLogout()">
+      <ion-icon name="log-out-outline"></ion-icon>
+      <span>Cerrar sesión</span>
+    </button>
+  </div>
+
+  <p class="more-version" *ngIf="versionName">CondoPY · versión {{ versionName }}</p>
+</ion-content>

@@ -52,7 +52,7 @@ export class PushService {
 
     PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
       const data = (action.notification.data ?? {}) as Record<string, string>;
-      const route = resolveNotificationRoute(data);
+      const route = resolveNotificationRoute(data, this.auth.getUser()?.role);
       if (route) {
         this.zone.run(() => this.navCtrl.navigateForward(route.path, route.state ? { state: route.state } : undefined));
       }

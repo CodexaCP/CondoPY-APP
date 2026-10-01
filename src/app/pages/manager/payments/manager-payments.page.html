@@ -1,0 +1,55 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Pagos</ion-title>
+  </ion-toolbar>
+  <ion-toolbar class="switcher-bar">
+    <app-building-switcher></app-building-switcher>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-segment class="mgr-segment" mode="md" [(ngModel)]="segment" (ionChange)="onSegmentChange()">
+    <ion-segment-button value="pending"><ion-label>Por revisar</ion-label></ion-segment-button>
+    <ion-segment-button value="review"><ion-label>En revisión</ion-label></ion-segment-button>
+    <ion-segment-button value="done"><ion-label>Resueltos</ion-label></ion-segment-button>
+  </ion-segment>
+
+  <div class="mgr-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando pagos...</p>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && error">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="retry()">Reintentar</ion-button>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && !error && items.length === 0">
+    <ion-icon name="wallet-outline"></ion-icon>
+    <p *ngIf="segment === 'pending'">No hay pagos por revisar.</p>
+    <p *ngIf="segment === 'review'">No hay pagos en revisión.</p>
+    <p *ngIf="segment === 'done'">Todavía no hay pagos resueltos.</p>
+  </div>
+
+  <div class="mgr-row" *ngFor="let p of items" (click)="open(p)">
+    <div class="mgr-row-main">
+      <p class="mgr-row-title">{{ p.ownerFullName }}</p>
+      <p class="mgr-row-sub">Unidades: {{ units(p) }}</p>
+      <p class="mgr-row-sub">{{ date(p.paymentDate) }} · {{ p.reference }}</p>
+    </div>
+    <div class="mgr-row-side">
+      <p class="mgr-row-amount">{{ gs(p.reviewedAmount ?? p.declaredAmount) }}</p>
+      <span class="mgr-pill" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span>
+      <ion-icon name="lock-closed-outline" class="mgr-row-lock" *ngIf="!p.canProcess"></ion-icon>
+    </div>
+  </div>
+
+  <ion-infinite-scroll threshold="120px" (ionInfinite)="loadMore($event)" [disabled]="!hasMore">
+    <ion-infinite-scroll-content loadingSpinner="crescent"></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>

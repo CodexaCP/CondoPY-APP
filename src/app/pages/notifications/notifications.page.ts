@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { NotificationsService, resolveNotificationRoute } from '../../core/notifications.service';
+import { AuthService } from '../../core/auth.service';
 import { AppNotification } from '../../core/models';
 
 const TYPE_ICON: Record<string, string> = {
@@ -11,7 +12,14 @@ const TYPE_ICON: Record<string, string> = {
   LateFeeConfigChanged:     'alert-circle-outline',
   ExpensePeriodPublished:   'receipt-outline',
   InvoiceIssued:            'document-text-outline',
-  SettlementPendingPresidentReview: 'create-outline'
+  SettlementPendingPresidentReview: 'create-outline',
+  ClaimCreated:             'chatbubble-ellipses-outline',
+  ClaimStatusUpdated:       'chatbubble-ellipses-outline',
+  AmenityReservationCreated: 'calendar-outline',
+  AmenityReservationUpdated: 'calendar-outline',
+  PlanExpiringSoon:         'time-outline',
+  PlanExpired:              'alert-circle-outline',
+  PlanSuspended:            'lock-closed-outline'
 };
 
 const TYPE_COLOR: Record<string, string> = {
@@ -22,7 +30,14 @@ const TYPE_COLOR: Record<string, string> = {
   LateFeeConfigChanged:     '#f97316',
   ExpensePeriodPublished:   '#6366f1',
   InvoiceIssued:            '#0ea5e9',
-  SettlementPendingPresidentReview: '#8b5cf6'
+  SettlementPendingPresidentReview: '#8b5cf6',
+  ClaimCreated:             '#0ea5e9',
+  ClaimStatusUpdated:       '#0ea5e9',
+  AmenityReservationCreated: '#14b8a6',
+  AmenityReservationUpdated: '#14b8a6',
+  PlanExpiringSoon:         '#f59e0b',
+  PlanExpired:              '#f97316',
+  PlanSuspended:            '#ef4444'
 };
 
 @Component({
@@ -43,6 +58,7 @@ export class NotificationsPage {
 
   constructor(
     private svc: NotificationsService,
+    private auth: AuthService,
     private navCtrl: NavController
   ) {}
 
@@ -71,7 +87,7 @@ export class NotificationsPage {
       n.isRead = true;
       this.svc.markRead(n.id).subscribe();
     }
-    const route = resolveNotificationRoute(n);
+    const route = resolveNotificationRoute(n, this.auth.getUser()?.role);
     if (route) {
       this.navCtrl.navigateForward(route.path, route.state ? { state: route.state } : undefined);
     }

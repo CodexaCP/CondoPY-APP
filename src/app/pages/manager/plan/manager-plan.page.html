@@ -1,0 +1,122 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Mi plan</ion-title>
+    <ion-buttons slot="end" *ngIf="blocked$ | async">
+      <ion-button (click)="confirmLogout()">
+        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="mgr-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando plan...</p>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && error">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="load()">Reintentar</ion-button>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && !error && plans.length === 0">
+    <ion-icon name="ribbon-outline"></ion-icon>
+    <p>No hay un plan asignado a tus edificios.</p>
+    <p>Contactá al administrador del sistema.</p>
+  </div>
+
+  <div class="mgr-card plan-card" *ngFor="let p of plans">
+    <div class="plan-head">
+      <div>
+        <p class="plan-name">{{ p.planName }}</p>
+        <p class="plan-building">{{ p.buildingName }}</p>
+      </div>
+      <span class="mgr-pill" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span>
+    </div>
+
+    <div class="mgr-kv"><span class="k">Vencimiento</span><span class="v">{{ date(p.endDate) }}</span></div>
+    <div class="mgr-kv" *ngIf="p.status === 'Active' || p.status === 'ExpiringSoon'">
+      <span class="k">Días restantes</span><span class="v">{{ p.daysUntilExpiry }}</span>
+    </div>
+    <div class="mgr-kv" *ngIf="p.daysUntilBlocked !== null && p.status !== 'Blocked'">
+      <span class="k">Bloqueo total en</span><span class="v">{{ p.daysUntilBlocked }} día(s)</span>
+    </div>
+
+    <!-- Mensajes por estado -->
+    <div class="mgr-banner warn plan-msg" *ngIf="p.status === 'ExpiringSoon'">
+      <ion-icon name="time-outline"></ion-icon>
+      <div>Tu plan vence pronto. Enviá el comprobante de pago para renovarlo.</div>
+    </div>
+    <div class="mgr-banner warn plan-msg" *ngIf="p.status === 'Expired'">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <div>Tu plan está vencido. Estás en el período de gracia: enviá el comprobante antes de que el sistema pase a solo lectura.</div>
+    </div>
+    <div class="mgr-banner danger plan-msg" *ngIf="p.status === 'ReadOnly'">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+      <div>El sistema está en <strong>solo lectura</strong>: podés consultar pero no modificar. Lo único habilitado es enviar el comprobante de pago.</div>
+    </div>
+    <div class="mgr-banner danger plan-msg" *ngIf="p.status === 'Blocked'">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+      <div>El acceso está <strong>bloqueado</strong> por falta de pago. Se habilita apenas el administrador apruebe tu comprobante.</div>
+    </div>
+    <div class="mgr-banner info plan-msg" *ngIf="hasPending(p)">
+      <ion-icon name="hourglass-outline"></ion-icon>
+      <div>Ya enviaste un comprobante: está pendiente de revisión.</div>
+    </div>
+    <div class="mgr-banner info plan-msg" *ngIf="p.hasRenewal">
+      <ion-icon name="refresh-outline"></ion-icon>
+      <div>Hay una renovación programada, pendiente de aprobación.</div>
+    </div>
+
+    <ion-button expand="block" class="plan-btn" [fill]="p.status === 'Active' ? 'outline' : 'solid'"
+                [disabled]="hasPending(p)" (click)="openPay(p)">
+      <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+      Enviar comprobante de pago
+    </ion-button>
+  </div>
+
+  <!-- Formulario del comprobante -->
+  <ion-modal [isOpen]="!!payFor" (didDismiss)="closePay()" [initialBreakpoint]="0.9" [breakpoints]="[0, 0.9]">
+    <ng-template>
+      <ion-content>
+        <div class="pay-form" *ngIf="payFor as plan">
+          <p class="pay-title">Enviar comprobante</p>
+          <p class="pay-sub">{{ plan.planName }} · {{ plan.buildingName }}</p>
+          <p class="pay-hint">El administrador revisará el comprobante y aprobará o rechazará el pago. Solo podés tener uno pendiente a la vez.</p>
+
+          <ion-input type="number" inputmode="numeric" fill="outline" label="Monto pagado (Gs.)" labelPlacement="stacked"
+                     [(ngModel)]="amount" min="1" class="pay-field"></ion-input>
+
+          <ion-input type="date" fill="outline" label="Fecha del pago" labelPlacement="stacked"
+                     [(ngModel)]="payDate" [max]="today" class="pay-field"></ion-input>
+
+          <p class="pay-label">Foto del comprobante</p>
+          <label class="photo-pick" *ngIf="!photoPreview">
+            <ion-icon name="camera-outline"></ion-icon>
+            <span>Tocá para sacar o elegir una foto</span>
+            <small>JPG o PNG · máximo 10 MB</small>
+            <input type="file" accept="image/*" (change)="onPhoto($event)" hidden />
+          </label>
+          <div class="photo-preview" *ngIf="photoPreview">
+            <img [src]="photoPreview" alt="Comprobante" />
+            <ion-button size="small" fill="outline" color="danger" (click)="removePhoto()">Quitar foto</ion-button>
+          </div>
+
+          <p class="pay-error" *ngIf="formError">{{ formError }}</p>
+
+          <ion-button expand="block" [disabled]="sending" (click)="submit()">
+            <ion-spinner *ngIf="sending" name="crescent" slot="start"></ion-spinner>
+            Enviar comprobante
+          </ion-button>
+          <ion-button expand="block" fill="clear" [disabled]="sending" (click)="closePay()">Cancelar</ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

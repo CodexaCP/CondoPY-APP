@@ -1,0 +1,124 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title slot="start">
+      <div class="toolbar-brand">
+        <div class="brand-avatar">{{ initials }}</div>
+        <div class="brand-text">
+          <span class="brand-greeting">Encargado</span>
+          <span class="brand-name">{{ userName || '—' }}</span>
+        </div>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="go('/manager/notifications')" class="bell-btn">
+        <div class="bell-wrap" slot="icon-only">
+          <ion-icon name="notifications-outline"></ion-icon>
+          <span class="bell-badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+        </div>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar class="switcher-bar">
+    <app-building-switcher></app-building-switcher>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="reload($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Aviso del plan -->
+  <div class="mgr-banner" [ngClass]="b.cls" *ngIf="planBanner as b">
+    <ion-icon [name]="b.icon"></ion-icon>
+    <div>
+      {{ b.text }}
+      <a class="mgr-banner-link" (click)="go('/manager/plan')">Ver mi plan</a>
+    </div>
+  </div>
+
+  <!-- Cargando -->
+  <div class="mgr-state" *ngIf="loading && !summary">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando resumen...</p>
+  </div>
+
+  <!-- Sin edificios -->
+  <div class="mgr-state" *ngIf="!loading && !hasBuilding && !summary">
+    <ion-icon name="business-outline"></ion-icon>
+    <p>No tenés edificios asignados.</p>
+    <p>Pedile al administrador que te asigne uno.</p>
+  </div>
+
+  <!-- Error -->
+  <div class="mgr-state" *ngIf="!loading && error && !summary">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>No se pudo cargar el resumen.</p>
+    <ion-button fill="outline" size="small" (click)="reload()">Reintentar</ion-button>
+  </div>
+
+  <ng-container *ngIf="summary as s">
+
+    <!-- Requieren atención -->
+    <p class="mgr-section-title">Requieren tu atención</p>
+    <div class="attn-grid">
+      <button type="button" class="attn-card" (click)="go('/manager/payments')">
+        <ion-icon name="wallet-outline"></ion-icon>
+        <span class="attn-count" [class.zero]="paymentsWaiting === 0">{{ paymentsWaiting }}</span>
+        <span class="attn-label">Pagos por revisar</span>
+      </button>
+      <button type="button" class="attn-card" (click)="go('/manager/claims')">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        <span class="attn-count" [class.zero]="s.pendingClaims === 0">{{ s.pendingClaims }}</span>
+        <span class="attn-label">Reclamos<small *ngIf="s.inProgressClaims > 0"> · {{ s.inProgressClaims }} en proceso</small></span>
+      </button>
+      <button type="button" class="attn-card" (click)="go('/manager/reservations')">
+        <ion-icon name="calendar-outline"></ion-icon>
+        <span class="attn-count" [class.zero]="s.pendingReservations === 0">{{ s.pendingReservations }}</span>
+        <span class="attn-label">Reservas por revisar</span>
+      </button>
+    </div>
+
+    <!-- Cobranza del período -->
+    <p class="mgr-section-title">{{ s.currentPeriod ? s.currentPeriod.name : 'Cobranza' }}</p>
+    <div class="mgr-card">
+      <ng-container *ngIf="s.currentPeriod; else noPeriod">
+        <div class="coll-head">
+          <span class="coll-rate">{{ s.collectionRatePercentage | number:'1.0-1' }}%</span>
+          <span class="coll-sub">cobrado</span>
+        </div>
+        <ion-progress-bar [value]="s.collectionRatePercentage / 100"></ion-progress-bar>
+        <div class="mgr-kv"><span class="k">Cobrado</span><span class="v">{{ gs(s.currentPeriodCollected) }}</span></div>
+        <div class="mgr-kv"><span class="k">Emitido</span><span class="v">{{ gs(s.currentPeriodCharged) }}</span></div>
+      </ng-container>
+      <ng-template #noPeriod>
+        <p class="muted">Este edificio todavía no tiene un período de expensas.</p>
+      </ng-template>
+    </div>
+
+    <!-- Morosidad -->
+    <p class="mgr-section-title">Morosidad</p>
+    <div class="mgr-card">
+      <div class="mgr-kv"><span class="k">Saldo vencido</span><span class="v" [class.danger]="s.overdueBalance > 0">{{ gs(s.overdueBalance) }}</span></div>
+      <div class="mgr-kv"><span class="k">Unidades en mora</span><span class="v">{{ s.unitsInArrears }}</span></div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <p class="mgr-section-title">Acciones rápidas</p>
+    <div class="quick-grid">
+      <button type="button" class="quick-btn" (click)="go('/manager/payments')">
+        <ion-icon name="wallet-outline"></ion-icon><span>Revisar pagos</span>
+      </button>
+      <button type="button" class="quick-btn" (click)="go('/manager/claims')">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon><span>Reclamos</span>
+      </button>
+      <button type="button" class="quick-btn" (click)="go('/manager/reservations')">
+        <ion-icon name="calendar-outline"></ion-icon><span>Reservas</span>
+      </button>
+      <button type="button" class="quick-btn" (click)="go('/manager/plan')">
+        <ion-icon name="ribbon-outline"></ion-icon><span>Mi plan</span>
+      </button>
+    </div>
+
+  </ng-container>
+</ion-content>

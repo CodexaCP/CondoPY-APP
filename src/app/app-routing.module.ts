@@ -1,9 +1,11 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/auth.guard';
+import { AreaGuard, ManagerGuard, RoleRedirectGuard } from './core/role.guard';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'area', pathMatch: 'full' },
+  // La raíz manda a cada usuario a su sección según el rol (Encargado → /manager, el resto → /area).
+  { path: '', pathMatch: 'full', canActivate: [RoleRedirectGuard], children: [] },
   {
     path: 'login',
     loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
@@ -23,13 +25,18 @@ const routes: Routes = [
   },
   {
     path: 'area',
-    canActivate: [AuthGuard],
+    canActivate: [AreaGuard],
     loadChildren: () => import('./pages/area/area.module').then(m => m.AreaPageModule)
   },
   {
     path: 'area-comun',
     canActivate: [AuthGuard],
     loadChildren: () => import('./pages/area-comun/area-comun.module').then(m => m.AreaComunPageModule)
+  },
+  {
+    path: 'manager',
+    canActivate: [ManagerGuard],
+    loadChildren: () => import('./pages/manager/manager.module').then(m => m.ManagerPageModule)
   },
 ];
 

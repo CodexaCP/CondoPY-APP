@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { roleLabel as roleName } from '../../core/roles';
 import { PushService } from '../../core/push.service';
 import { LoginResponse } from '../../core/models';
 
@@ -22,8 +23,7 @@ export class ProfilePage implements OnInit {
   }
 
   get roleLabel(): string {
-    const map: Record<string, string> = { Owner: 'Propietario', Resident: 'Residente', Porter: 'Encargado' };
-    return map[this.user?.role ?? ''] ?? this.user?.role ?? '';
+    return roleName(this.user?.role);
   }
 
   constructor(private auth: AuthService, private router: Router, private pushSvc: PushService) {}

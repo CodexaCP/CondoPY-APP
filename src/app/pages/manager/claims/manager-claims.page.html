@@ -1,0 +1,85 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Reclamos</ion-title>
+  </ion-toolbar>
+  <ion-toolbar class="switcher-bar">
+    <app-building-switcher></app-building-switcher>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-segment class="mgr-segment" mode="md" [(ngModel)]="segment" (ionChange)="onSegmentChange()">
+    <ion-segment-button value="Pendiente"><ion-label>Pendientes</ion-label></ion-segment-button>
+    <ion-segment-button value="EnProceso"><ion-label>En proceso</ion-label></ion-segment-button>
+    <ion-segment-button value="Resuelto"><ion-label>Resueltos</ion-label></ion-segment-button>
+  </ion-segment>
+
+  <div class="mgr-banner danger" *ngIf="readOnly">
+    <ion-icon name="lock-closed-outline"></ion-icon>
+    <div>Plan vencido: el sistema está en solo lectura. No podés cambiar el estado de los reclamos.</div>
+  </div>
+
+  <div class="mgr-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando reclamos...</p>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && error">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="retry()">Reintentar</ion-button>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && !error && claims.length === 0">
+    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+    <p>No hay reclamos en este estado.</p>
+  </div>
+
+  <div class="mgr-row" *ngFor="let c of claims" (click)="open(c)">
+    <div class="mgr-row-main">
+      <p class="mgr-row-title">{{ c.category }} · {{ c.unitCode }}</p>
+      <p class="mgr-row-sub">{{ c.description }}</p>
+      <p class="mgr-row-sub">{{ c.createdByName }} · {{ dateTime(c.createdAtUtc) }}</p>
+    </div>
+    <div class="mgr-row-side">
+      <span class="mgr-pill" [ngClass]="statusClass(c.status)">{{ statusLabel(c.status) }}</span>
+    </div>
+  </div>
+
+  <!-- Detalle -->
+  <ion-modal [isOpen]="!!selected" (didDismiss)="close()" [initialBreakpoint]="0.75" [breakpoints]="[0, 0.75, 1]">
+    <ng-template>
+      <ion-content *ngIf="selected as c">
+        <div class="claim-detail">
+          <div class="claim-head">
+            <div>
+              <p class="claim-title">{{ c.category }}</p>
+              <p class="claim-sub">{{ c.buildingName }} · Unidad {{ c.unitCode }}</p>
+            </div>
+            <span class="mgr-pill" [ngClass]="statusClass(c.status)">{{ statusLabel(c.status) }}</span>
+          </div>
+
+          <p class="claim-desc">{{ c.description }}</p>
+
+          <div class="mgr-kv"><span class="k">Reclamante</span><span class="v">{{ c.createdByName }}</span></div>
+          <div class="mgr-kv"><span class="k">Creado</span><span class="v">{{ dateTime(c.createdAtUtc) }}</span></div>
+          <div class="mgr-kv" *ngIf="c.resolvedAtUtc"><span class="k">Resuelto</span><span class="v">{{ dateTime(c.resolvedAtUtc) }}</span></div>
+          <div class="mgr-kv" *ngIf="c.resolvedByUserName"><span class="k">Resuelto por</span><span class="v">{{ c.resolvedByUserName }}</span></div>
+
+          <div class="claim-actions" *ngIf="!readOnly">
+            <ion-button *ngFor="let t of transitions" expand="block" [fill]="t.primary ? 'solid' : 'outline'"
+                        [disabled]="acting" (click)="change(t.to)">
+              <ion-icon [name]="t.icon" slot="start"></ion-icon>
+              {{ t.label }}
+            </ion-button>
+          </div>
+          <p class="claim-note" *ngIf="readOnly">No se puede cambiar el estado mientras el plan esté vencido.</p>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

@@ -1,0 +1,98 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Reservas</ion-title>
+  </ion-toolbar>
+  <ion-toolbar class="switcher-bar">
+    <app-building-switcher></app-building-switcher>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-segment class="mgr-segment" mode="md" [(ngModel)]="segment">
+    <ion-segment-button value="review"><ion-label>Por revisar ({{ count('review') }})</ion-label></ion-segment-button>
+    <ion-segment-button value="confirmed"><ion-label>Confirmadas</ion-label></ion-segment-button>
+    <ion-segment-button value="closed"><ion-label>Cerradas</ion-label></ion-segment-button>
+  </ion-segment>
+
+  <div class="mgr-banner danger" *ngIf="readOnly">
+    <ion-icon name="lock-closed-outline"></ion-icon>
+    <div>Plan vencido: el sistema está en solo lectura. No podés aprobar ni rechazar reservas.</div>
+  </div>
+
+  <div class="mgr-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando reservas...</p>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && error">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="load()">Reintentar</ion-button>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && !error && items.length === 0">
+    <ion-icon name="calendar-outline"></ion-icon>
+    <p>No hay reservas en esta sección.</p>
+  </div>
+
+  <div class="mgr-row" *ngFor="let r of items" (click)="open(r)">
+    <div class="mgr-row-main">
+      <p class="mgr-row-title">{{ r.amenityName }}</p>
+      <p class="mgr-row-sub">{{ range(r.startsAt, r.endsAt) }}</p>
+      <p class="mgr-row-sub">{{ r.reservedByName }}</p>
+    </div>
+    <div class="mgr-row-side">
+      <p class="mgr-row-amount" *ngIf="r.price > 0">{{ gs(r.price) }}</p>
+      <span class="mgr-pill" [ngClass]="statusClass(r.status)">{{ statusLabel(r.status) }}</span>
+    </div>
+  </div>
+
+  <!-- Detalle -->
+  <ion-modal [isOpen]="!!selected" (didDismiss)="close()" [initialBreakpoint]="0.85" [breakpoints]="[0, 0.85, 1]">
+    <ng-template>
+      <ion-content *ngIf="selected as r">
+        <div class="res-detail">
+          <div class="res-head">
+            <div>
+              <p class="res-title">{{ r.amenityName }}</p>
+              <p class="res-sub">{{ r.buildingName }}</p>
+            </div>
+            <span class="mgr-pill" [ngClass]="statusClass(r.status)">{{ statusLabel(r.status) }}</span>
+          </div>
+
+          <div class="mgr-kv"><span class="k">Horario</span><span class="v">{{ range(r.startsAt, r.endsAt) }}</span></div>
+          <div class="mgr-kv"><span class="k">Reservó</span><span class="v">{{ r.reservedByName }}</span></div>
+          <div class="mgr-kv" *ngIf="r.price > 0"><span class="k">Precio</span><span class="v">{{ gs(r.price) }}</span></div>
+          <div class="mgr-kv"><span class="k">Solicitada</span><span class="v">{{ dateTime(r.createdAtUtc) }}</span></div>
+          <div class="mgr-kv" *ngIf="r.rejectionReason"><span class="k">Motivo del rechazo</span><span class="v">{{ r.rejectionReason }}</span></div>
+
+          <p class="res-notes" *ngIf="r.notes">{{ r.notes }}</p>
+
+          <ng-container *ngIf="r.comprobanteUrl">
+            <p class="res-label">Comprobante de pago</p>
+            <img *ngIf="!comprobanteIsPdf" class="res-img" [src]="comprobante" alt="Comprobante" />
+            <ion-button *ngIf="comprobanteIsPdf" expand="block" fill="outline" (click)="openPdf()">
+              <ion-icon name="document-attach-outline" slot="start"></ion-icon>Abrir comprobante (PDF)
+            </ion-button>
+          </ng-container>
+
+          <div class="res-actions" *ngIf="canReview">
+            <ion-button expand="block" [disabled]="acting" (click)="approve()">
+              <ion-spinner *ngIf="acting" name="crescent" slot="start"></ion-spinner>
+              <ion-icon *ngIf="!acting" name="checkmark-outline" slot="start"></ion-icon>
+              Aprobar
+            </ion-button>
+            <ion-button expand="block" fill="outline" color="danger" [disabled]="acting" (click)="reject()">
+              <ion-icon name="close-outline" slot="start"></ion-icon>
+              Rechazar
+            </ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

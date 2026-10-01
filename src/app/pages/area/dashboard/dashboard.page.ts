@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Subscription, forkJoin, interval, of } from 'rxjs';
 import { startWith, switchMap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth.service';
+import { roleLabel as roleName } from '../../../core/roles';
 import { NotificationsService } from '../../../core/notifications.service';
 import { AnnouncementsService } from '../../../core/announcements.service';
 import { AccountService } from '../../../core/account.service';
@@ -43,8 +44,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   get roleLabel(): string {
-    const map: Record<string, string> = { Owner: 'Propietario', Resident: 'Residente', Porter: 'Encargado' };
-    return map[this.user?.role ?? ''] ?? this.user?.role ?? '';
+    return roleName(this.user?.role);
   }
 
   get balancePositive(): boolean {

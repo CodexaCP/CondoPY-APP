@@ -4,13 +4,20 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { LoginRequest, LoginResponse, MyUnit } from './models';
+import { BuildingContextService } from './building-context.service';
+import { ManagerStateService } from './manager-state.service';
 
 const TOKEN_KEY = 'condopy_token';
 const USER_KEY  = 'condopy_user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private buildingContext: BuildingContextService,
+    private managerState: ManagerStateService
+  ) {}
 
   login(request: LoginRequest, rememberMe = false): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, request).pipe(
@@ -56,6 +63,9 @@ export class AuthService {
     localStorage.removeItem(USER_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
+    // Datos de la sección del Encargado: no deben pasar a la próxima sesión.
+    this.buildingContext.clear();
+    this.managerState.clear();
     this.router.navigateByUrl('/login');
   }
 

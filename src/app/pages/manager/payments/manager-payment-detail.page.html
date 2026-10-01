@@ -1,0 +1,127 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/manager/payments" text="Pagos"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detalle del pago</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <div class="mgr-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && error">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="ionViewWillEnter()">Reintentar</ion-button>
+  </div>
+
+  <ng-container *ngIf="payment && !loading">
+
+    <!-- Encabezado -->
+    <div class="pay-head">
+      <div>
+        <p class="pay-owner">{{ payment.ownerFullName }}</p>
+        <p class="pay-ref">{{ payment.reference }}</p>
+      </div>
+      <span class="mgr-pill" [ngClass]="statusClass(payment.status)">{{ statusLabel(payment.status) }}</span>
+    </div>
+
+    <!-- Avisos -->
+    <div class="mgr-banner info" *ngIf="!payment.canProcess">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+      <div>Este pago incluye unidades de otros edificios. Lo debe procesar un Administrador de empresa.</div>
+    </div>
+    <div class="mgr-banner danger" *ngIf="payment.canProcess && readOnly">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+      <div>El sistema está en solo lectura por plan vencido: no se pueden procesar pagos.</div>
+    </div>
+
+    <!-- Datos -->
+    <div class="mgr-card">
+      <div class="mgr-kv"><span class="k">Fecha del pago</span><span class="v">{{ date(payment.paymentDate) }}</span></div>
+      <div class="mgr-kv"><span class="k">Monto declarado</span><span class="v">{{ gs(payment.declaredAmount) }}</span></div>
+      <div class="mgr-kv" *ngIf="payment.reviewedAmount !== null"><span class="k">Monto verificado</span><span class="v">{{ gs(payment.reviewedAmount) }}</span></div>
+      <div class="mgr-kv"><span class="k">Enviado el</span><span class="v">{{ dateTime(payment.createdAtUtc) }}</span></div>
+      <div class="mgr-kv" *ngIf="payment.reviewedByUserFullName"><span class="k">Revisado por</span><span class="v">{{ payment.reviewedByUserFullName }}</span></div>
+      <div class="mgr-kv" *ngIf="payment.resolvedAt"><span class="k">Resuelto el</span><span class="v">{{ dateTime(payment.resolvedAt) }}</span></div>
+      <div class="mgr-kv" *ngIf="payment.rejectionReason"><span class="k">Motivo del rechazo</span><span class="v">{{ payment.rejectionReason }}</span></div>
+    </div>
+
+    <!-- Comprobante -->
+    <p class="mgr-section-title" *ngIf="payment.comprobanteUrl">Comprobante</p>
+    <div class="mgr-card" *ngIf="payment.comprobanteUrl">
+      <ng-container *ngIf="!comprobanteIsPdf; else pdfLink">
+        <img class="comprobante-img" [src]="comprobante" alt="Comprobante" (click)="imageOpen = true" />
+        <p class="hint">Tocá la imagen para ampliarla.</p>
+      </ng-container>
+      <ng-template #pdfLink>
+        <ion-button expand="block" fill="outline" (click)="openPdf()">
+          <ion-icon name="document-attach-outline" slot="start"></ion-icon>
+          Abrir comprobante (PDF)
+        </ion-button>
+      </ng-template>
+    </div>
+
+    <!-- Unidades -->
+    <p class="mgr-section-title">Unidades incluidas</p>
+    <div class="mgr-card">
+      <div class="mgr-kv" *ngFor="let u of payment.units">
+        <span class="k">{{ u.unitCode }} · {{ u.buildingName }}</span>
+        <span class="v" *ngIf="u.allocatedAmount > 0">{{ gs(u.allocatedAmount) }}</span>
+      </div>
+    </div>
+
+    <!-- Monto verificado (solo si falta verificar) -->
+    <ng-container *ngIf="isPending && canAct">
+      <p class="mgr-section-title">Monto verificado</p>
+      <div class="mgr-card">
+        <ion-input type="number" inputmode="numeric" fill="outline" label="Monto recibido (Gs.)" labelPlacement="stacked"
+                   [(ngModel)]="amount" min="1"></ion-input>
+        <p class="hint">Precargado con el monto declarado. Corregilo si el comprobante dice otra cosa.</p>
+      </div>
+    </ng-container>
+
+    <!-- Acciones -->
+    <div class="mgr-actions" *ngIf="canAct && (isPending || isUnderReview)">
+      <ng-container *ngIf="isPending">
+        <ion-button expand="block" [disabled]="acting" (click)="verifyAndApprove()">
+          <ion-spinner *ngIf="acting" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!acting" name="checkmark-done-outline" slot="start"></ion-icon>
+          Verificar y aprobar
+        </ion-button>
+        <ion-button expand="block" fill="outline" [disabled]="acting" (click)="verifyOnly()">Solo verificar monto</ion-button>
+      </ng-container>
+
+      <ion-button *ngIf="isUnderReview" expand="block" [disabled]="acting" (click)="approve()">
+        <ion-spinner *ngIf="acting" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!acting" name="checkmark-outline" slot="start"></ion-icon>
+        Aprobar
+      </ion-button>
+
+      <ion-button expand="block" fill="outline" color="danger" [disabled]="acting" (click)="reject()">
+        <ion-icon name="close-outline" slot="start"></ion-icon>
+        Rechazar
+      </ion-button>
+    </div>
+
+  </ng-container>
+
+  <!-- Comprobante ampliado -->
+  <ion-modal [isOpen]="imageOpen" (didDismiss)="imageOpen = false">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Comprobante</ion-title>
+          <ion-buttons slot="end"><ion-button (click)="imageOpen = false">Cerrar</ion-button></ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="zoom-content">
+        <img class="zoom-img" [src]="comprobante" alt="Comprobante" />
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

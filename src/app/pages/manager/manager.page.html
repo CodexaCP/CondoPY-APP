@@ -1,0 +1,33 @@
+<ion-tabs>
+  <ion-tab-bar slot="bottom" *ngIf="!(blocked$ | async)">
+
+    <ion-tab-button tab="dashboard" href="/manager/dashboard">
+      <ion-icon name="grid-outline"></ion-icon>
+      <ion-label>Inicio</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="payments" href="/manager/payments">
+      <ion-icon name="wallet-outline"></ion-icon>
+      <ion-label>Pagos</ion-label>
+      <ion-badge color="danger" *ngIf="paymentsCount(summary$ | async) as n">{{ n }}</ion-badge>
+    </ion-tab-button>
+
+    <ion-tab-button tab="claims" href="/manager/claims">
+      <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+      <ion-label>Reclamos</ion-label>
+      <ion-badge color="danger" *ngIf="(summary$ | async)?.pendingClaims as n">{{ n }}</ion-badge>
+    </ion-tab-button>
+
+    <ion-tab-button tab="reservations" href="/manager/reservations">
+      <ion-icon name="calendar-outline"></ion-icon>
+      <ion-label>Reservas</ion-label>
+      <ion-badge color="danger" *ngIf="(summary$ | async)?.pendingReservations as n">{{ n }}</ion-badge>
+    </ion-tab-button>
+
+    <ion-tab-button tab="more" href="/manager/more">
+      <ion-icon name="ellipsis-horizontal-outline"></ion-icon>
+      <ion-label>Más</ion-label>
+    </ion-tab-button>
+
+  </ion-tab-bar>
+</ion-tabs>
