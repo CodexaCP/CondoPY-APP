@@ -1,0 +1,58 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Pagar reserva</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <p class="state-msg" *ngIf="loading">Cargando...</p>
+  <p class="state-msg error" *ngIf="error">{{ error }}</p>
+
+  <div class="wrap" *ngIf="!loading && !error && info">
+
+    <div class="countdown" [class.over]="expired">
+      <ion-icon name="hourglass-outline"></ion-icon>
+      <span *ngIf="!expired">Tenés <strong>{{ remaining.text }}</strong> para pagar</span>
+      <span *ngIf="expired">La reserva venció. El horario quedó libre; podés hacer otra reserva.</span>
+    </div>
+
+    <section class="card total-card">
+      <p class="label">{{ info.title }} · {{ info.reference }}</p>
+      <p class="total">{{ formatCurrency(info.totalAmount) }}</p>
+      <p class="label">Total a transferir</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">1</span> Hacé la transferencia</h2>
+      <p class="transfer" *ngIf="info.transferInfo">{{ info.transferInfo }}</p>
+      <p class="hint" *ngIf="!info.transferInfo">
+        Tu edificio todavía no cargó los datos para transferir. Consultá con la administración.
+      </p>
+      <p class="hint">Poné <strong>{{ info.reference }}</strong> como referencia o concepto de la transferencia.</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">2</span> Adjuntá el comprobante</h2>
+
+      <label class="upload-btn" [class.disabled]="sending || expired">
+        <ion-icon name="camera-outline"></ion-icon>
+        {{ file ? 'Cambiar imagen' : 'Elegir imagen del comprobante' }}
+        <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+      </label>
+
+      <div class="preview" *ngIf="previewUrl">
+        <img [src]="previewUrl" alt="Vista previa del comprobante" />
+      </div>
+    </section>
+
+    <ion-button expand="block" (click)="send()" [disabled]="!canSend">
+      {{ sending ? 'Enviando...' : 'Enviar comprobante' }}
+    </ion-button>
+    <p class="hint center">Cuando lo envíes, el horario queda reservado para vos mientras la administración lo revisa.</p>
+  </div>
+</ion-content>

@@ -9,6 +9,8 @@ import {
   MarketplaceListingCreateRequest,
   MarketplaceExploreItem,
   MarketplaceListingUpdateRequest,
+  MarketplacePaymentInfo,
+  MarketplaceReviewItem,
   MarketplacePublishableUnit,
   MarketplaceQuote,
   MarketplaceQuoteRequest,
@@ -119,6 +121,32 @@ export class MarketplaceService {
   // Cancelar una reserva que todavía no se pagó (libera el horario).
   cancelReservation(id: string): Observable<MarketplaceReservation> {
     return this.http.post<MarketplaceReservation>(`${this.base}/reservations/${id}/cancel`, {});
+  }
+
+  // ── Pago (comprador) ─────────────────────────────────────────────────────
+
+  // Datos para pagar; los datos para transferir solo vienen mientras la reserva espera el pago.
+  paymentInfo(reservationId: string): Observable<MarketplacePaymentInfo> {
+    return this.http.get<MarketplacePaymentInfo>(`${this.base}/reservations/${reservationId}/payment-info`);
+  }
+
+  // Envía el comprobante (ya subido con UploadService): la reserva pasa a "en revisión".
+  submitPayment(reservationId: string, comprobanteUrl: string): Observable<MarketplaceReservation> {
+    return this.http.post<MarketplaceReservation>(`${this.base}/reservations/${reservationId}/payment`, { comprobanteUrl });
+  }
+
+  // ── Revisión (personal del edificio) ─────────────────────────────────────
+
+  pendingPayments(buildingId: string): Observable<MarketplaceReviewItem[]> {
+    return this.http.get<MarketplaceReviewItem[]>(`${this.base}/payments/pending`, { params: { buildingId } });
+  }
+
+  approvePayment(paymentId: string, reviewedAmount: number): Observable<MarketplaceReviewItem> {
+    return this.http.post<MarketplaceReviewItem>(`${this.base}/payments/${paymentId}/approve`, { reviewedAmount });
+  }
+
+  rejectPayment(paymentId: string, reason: string): Observable<MarketplaceReviewItem> {
+    return this.http.post<MarketplaceReviewItem>(`${this.base}/payments/${paymentId}/reject`, { reason });
   }
 
   private pickInitial(list: MarketplaceBuilding[]): MarketplaceBuilding | null {

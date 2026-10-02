@@ -164,6 +164,10 @@ export class MarketplacePage {
     return intervals.map(i => `${formatTime(i.startUtc)} a ${formatTime(i.endUtc)}`).join(' · ');
   }
 
+  pay(r: MarketplaceReservation): void {
+    this.router.navigate(['/area/marketplace/pay', r.id]);
+  }
+
   // ── Mis reservas ─────────────────────────────────────────────────────────
   statusLabel(r: MarketplaceReservation): string { return reservationStatusLabel(r.status); }
   statusTone(r: MarketplaceReservation): Tone { return reservationTone(r.status); }

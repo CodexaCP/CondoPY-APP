@@ -6,16 +6,18 @@ import { RouterModule, Routes } from '@angular/router';
 import { MarketplacePage } from './marketplace.page';
 import { MarketplaceFormPage } from './marketplace-form.page';
 import { MarketplaceReservePage } from './marketplace-reserve.page';
+import { MarketplacePayPage } from './marketplace-pay.page';
 
 const routes: Routes = [
   { path: '', component: MarketplacePage },
   { path: 'new', component: MarketplaceFormPage },
   { path: 'reserve/:listingId', component: MarketplaceReservePage },
+  { path: 'pay/:id', component: MarketplacePayPage },
   { path: ':id/edit', component: MarketplaceFormPage }
 ];
 
 @NgModule({
   imports: [CommonModule, FormsModule, IonicModule, RouterModule.forChild(routes)],
-  declarations: [MarketplacePage, MarketplaceFormPage, MarketplaceReservePage]
+  declarations: [MarketplacePage, MarketplaceFormPage, MarketplaceReservePage, MarketplacePayPage]
 })
 export class MarketplacePageModule {}

@@ -1,0 +1,110 @@
+.state-msg {
+  text-align: center;
+  color: #64748b;
+  padding: 1rem;
+  &.error { color: #ef4444; }
+}
+
+.wrap { padding: 1rem; }
+
+.countdown {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.95rem;
+
+  strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  &.over { background: #fee2e2; color: #991b1b; }
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.9rem;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.7rem;
+    font-size: 1rem;
+    color: #0f172a;
+  }
+
+  .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: #1385b6;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+}
+
+.total-card {
+  text-align: center;
+  background: linear-gradient(135deg, #1385b6, #1ab7af);
+  border: none;
+  color: #fff;
+
+  .label { margin: 0; font-size: 0.85rem; opacity: 0.9; }
+  .total { margin: 0.2rem 0; font-size: 1.9rem; font-weight: 800; }
+}
+
+.transfer {
+  margin: 0 0 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.hint {
+  margin: 0.3rem 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.4;
+
+  &.center { text-align: center; margin-top: 0.7rem; }
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: #1385b6;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &.disabled { opacity: 0.6; pointer-events: none; }
+}
+
+.preview {
+  margin-top: 0.8rem;
+
+  img {
+    max-width: 100%;
+    max-height: 280px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+}

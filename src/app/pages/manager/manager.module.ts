@@ -13,6 +13,7 @@ import { ManagerClaimsPage } from './claims/manager-claims.page';
 import { ManagerReservationsPage } from './reservations/manager-reservations.page';
 import { ManagerMorePage } from './more/manager-more.page';
 import { ManagerPlanPage } from './plan/manager-plan.page';
+import { ManagerMarketplacePage } from './marketplace/manager-marketplace.page';
 
 // Sección del Encargado de edificio (/manager). Ver docs/ESPECIFICACION_APP_ENCARGADO.md en el repo del backend.
 const routes: Routes = [
@@ -27,6 +28,7 @@ const routes: Routes = [
       { path: 'reservations', component: ManagerReservationsPage },
       { path: 'more', component: ManagerMorePage },
       { path: 'plan', component: ManagerPlanPage },
+      { path: 'marketplace', component: ManagerMarketplacePage },
       {
         // Se reutiliza la pantalla de notificaciones de la app; el destino de cada aviso depende del rol.
         path: 'notifications',
@@ -48,7 +50,8 @@ const routes: Routes = [
     ManagerClaimsPage,
     ManagerReservationsPage,
     ManagerMorePage,
-    ManagerPlanPage
+    ManagerPlanPage,
+    ManagerMarketplacePage
   ]
 })
 export class ManagerPageModule {}

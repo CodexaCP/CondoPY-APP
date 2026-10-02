@@ -91,14 +91,19 @@
             <span *ngIf="!remaining(r).expired">Tenés <strong>{{ remaining(r).text }}</strong> para pagar</span>
             <span *ngIf="remaining(r).expired">Venciendo…</span>
           </div>
-          <p class="note">Podrás pagar por transferencia y adjuntar el comprobante desde acá en la próxima actualización.</p>
           <div class="card-actions">
+            <ion-button size="small" (click)="pay(r)" [disabled]="remaining(r).expired || busyId === r.id">
+              <ion-icon name="card-outline" slot="start"></ion-icon>
+              Pagar ahora
+            </ion-button>
             <ion-button size="small" fill="clear" color="danger" (click)="cancelReservation(r)" [disabled]="busyId === r.id">
               Cancelar reserva
             </ion-button>
           </div>
         </ng-container>
 
+        <p class="note" *ngIf="r.status === 'InReview'">Enviaste el comprobante. La administración lo está revisando; el horario queda reservado para vos.</p>
+        <p class="note ok" *ngIf="r.status === 'Confirmed'">¡Reserva confirmada! El espacio es tuyo en ese horario.</p>
         <p class="note" *ngIf="r.status === 'Expired'">Venció por falta de pago. El horario quedó libre.</p>
         <p class="reason" *ngIf="r.cancelReason">{{ r.cancelReason }}</p>
       </ion-card>
