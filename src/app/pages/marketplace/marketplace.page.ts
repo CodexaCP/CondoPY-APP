@@ -1,11 +1,27 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ActionSheetController, AlertController, NavController, ToastController } from '@ionic/angular';
 import { MarketplaceService } from '../../core/marketplace.service';
-import { MarketplaceBuilding, MarketplaceListing } from '../../core/marketplace.models';
-import { apiErrorMessage, formatCurrency, formatWindow, hoursLabel } from './marketplace.util';
+import {
+  MarketplaceBuilding,
+  MarketplaceExploreItem,
+  MarketplaceInterval,
+  MarketplaceListing,
+  MarketplaceReservation
+} from '../../core/marketplace.models';
+import {
+  Tone,
+  apiErrorMessage,
+  countdown,
+  formatCurrency,
+  formatTime,
+  formatWindow,
+  hoursLabel,
+  reservationStatusLabel,
+  reservationTone
+} from './marketplace.util';
 
-type Tone = 'green' | 'amber' | 'grey';
+type Segment = 'explore' | 'reservations' | 'mine';
 
 @Component({
   selector: 'app-marketplace',
@@ -14,12 +30,21 @@ type Tone = 'green' | 'amber' | 'grey';
   standalone: false
 })
 export class MarketplacePage {
+  segment: Segment = 'explore';
   loading = true;
   error = '';
   buildings: MarketplaceBuilding[] = [];
   selected: MarketplaceBuilding | null = null;
+
+  explore: MarketplaceExploreItem[] = [];
+  reservations: MarketplaceReservation[] = [];
   listings: MarketplaceListing[] = [];
   busyId: string | null = null;
+
+  // Reloj de la pantalla: mueve la cuenta regresiva de las reservas esperando pago.
+  nowMs = Date.now();
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private reloadedForExpiry = false;
 
   readonly formatCurrency = formatCurrency;
   readonly formatWindow = formatWindow;
@@ -27,6 +52,7 @@ export class MarketplacePage {
 
   constructor(
     private readonly market: MarketplaceService,
+    private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly navCtrl: NavController,
     private readonly alertCtrl: AlertController,
@@ -34,7 +60,30 @@ export class MarketplacePage {
     private readonly toastCtrl: ToastController
   ) {}
 
-  ionViewWillEnter(): void { this.load(); }
+  ionViewWillEnter(): void {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab === 'reservations' || tab === 'mine' || tab === 'explore') this.segment = tab;
+
+    this.nowMs = Date.now();
+    this.timer = setInterval(() => this.tick(), 1000);
+    this.load();
+  }
+
+  ionViewWillLeave(): void {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+  }
+
+  private tick(): void {
+    this.nowMs = Date.now();
+    // Cuando una reserva esperando pago llega a cero, se vuelve a pedir la lista una sola vez: el servidor ya la marca vencida.
+    const justExpired = this.reservations.some(r => r.status === 'PendingPayment' && this.remaining(r).expired);
+    if (justExpired && !this.reloadedForExpiry) {
+      this.reloadedForExpiry = true;
+      setTimeout(() => this.loadSegment(), 1500);
+    }
+    if (!justExpired) this.reloadedForExpiry = false;
+  }
 
   load(event?: CustomEvent): void {
     this.error = '';
@@ -44,11 +93,12 @@ export class MarketplacePage {
         this.selected = this.market.selected;
         if (!this.selected) {
           this.loading = false;
-          this.listings = [];
           (event as any)?.detail?.complete?.();
           return;
         }
-        this.loadListings(event);
+        // Si no puede publicar, la pestaña "Mis publicaciones" no existe.
+        if (this.segment === 'mine' && !this.selected.canPublish) this.segment = 'explore';
+        this.loadSegment(event);
       },
       error: () => {
         this.loading = false;
@@ -58,20 +108,31 @@ export class MarketplacePage {
     });
   }
 
-  private loadListings(event?: CustomEvent): void {
+  onSegmentChange(): void { this.loadSegment(); }
+
+  loadSegment(event?: CustomEvent): void {
     if (!this.selected) return;
-    this.market.getMine(this.selected.buildingId).subscribe({
-      next: items => {
-        this.listings = items.filter(x => !(x.status === 'Closed'));
-        this.loading = false;
-        (event as any)?.detail?.complete?.();
-      },
-      error: err => {
-        this.loading = false;
-        this.error = apiErrorMessage(err, 'No se pudieron cargar tus publicaciones.');
-        (event as any)?.detail?.complete?.();
-      }
-    });
+    const buildingId = this.selected.buildingId;
+    this.error = '';
+    const done = () => { this.loading = false; (event as any)?.detail?.complete?.(); };
+    const fail = (err: any, fallback: string) => { this.error = apiErrorMessage(err, fallback); done(); };
+
+    if (this.segment === 'explore') {
+      this.market.explore(buildingId).subscribe({
+        next: items => { this.explore = items; done(); },
+        error: err => fail(err, 'No se pudieron cargar los espacios.')
+      });
+    } else if (this.segment === 'reservations') {
+      this.market.getMyReservations(buildingId).subscribe({
+        next: items => { this.reservations = items; done(); },
+        error: err => fail(err, 'No se pudieron cargar tus reservas.')
+      });
+    } else {
+      this.market.getMine(buildingId).subscribe({
+        next: items => { this.listings = items.filter(x => x.status !== 'Closed'); done(); },
+        error: err => fail(err, 'No se pudieron cargar tus publicaciones.')
+      });
+    }
   }
 
   async chooseBuilding(): Promise<void> {
@@ -83,8 +144,9 @@ export class MarketplacePage {
           handler: () => {
             this.market.select(b.buildingId);
             this.selected = b;
+            if (this.segment === 'mine' && !b.canPublish) this.segment = 'explore';
             this.loading = true;
-            this.loadListings();
+            this.loadSegment();
           }
         })),
         { text: 'Cancelar', role: 'cancel' }
@@ -93,39 +155,81 @@ export class MarketplacePage {
     await sheet.present();
   }
 
+  // ── Explorar ─────────────────────────────────────────────────────────────
+  reserve(item: MarketplaceExploreItem): void {
+    this.router.navigate(['/area/marketplace/reserve', item.listingId]);
+  }
+
+  occupiedText(intervals: MarketplaceInterval[]): string {
+    return intervals.map(i => `${formatTime(i.startUtc)} a ${formatTime(i.endUtc)}`).join(' · ');
+  }
+
+  // ── Mis reservas ─────────────────────────────────────────────────────────
+  statusLabel(r: MarketplaceReservation): string { return reservationStatusLabel(r.status); }
+  statusTone(r: MarketplaceReservation): Tone { return reservationTone(r.status); }
+  remaining(r: MarketplaceReservation) { return countdown(r.expiresAtUtc, this.nowMs); }
+
+  async cancelReservation(r: MarketplaceReservation): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Cancelar reserva',
+      message: `¿Cancelar tu reserva de ${r.title}? El horario queda libre para otros vecinos.`,
+      buttons: [
+        { text: 'No', role: 'cancel' },
+        {
+          text: 'Sí, cancelar',
+          role: 'destructive',
+          handler: () => {
+            if (this.busyId) return;
+            this.busyId = r.id;
+            this.market.cancelReservation(r.id).subscribe({
+              next: updated => {
+                this.busyId = null;
+                this.reservations = this.reservations.map(x => (x.id === updated.id ? updated : x));
+                this.toast('Reserva cancelada.', 'success');
+              },
+              error: err => {
+                this.busyId = null;
+                this.toast(apiErrorMessage(err, 'No se pudo cancelar la reserva.'), 'danger');
+                this.loadSegment();
+              }
+            });
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  // ── Mis publicaciones ────────────────────────────────────────────────────
   publish(): void { this.router.navigateByUrl('/area/marketplace/new'); }
   edit(item: MarketplaceListing): void { this.router.navigateByUrl(`/area/marketplace/${item.id}/edit`); }
 
-  // ── Estado que ve la gente ───────────────────────────────────────────────
-  isEnded(item: MarketplaceListing): boolean { return item.windowEnded; }
-
-  statusLabel(item: MarketplaceListing): string {
+  listingLabel(item: MarketplaceListing): string {
     if (item.windowEnded) return 'Finalizada';
     return item.status === 'Suspended' ? 'Pausada' : 'Activa';
   }
 
-  statusTone(item: MarketplaceListing): Tone {
+  listingTone(item: MarketplaceListing): Tone {
     if (item.windowEnded) return 'grey';
     return item.status === 'Suspended' ? 'amber' : 'green';
   }
 
   canEdit(item: MarketplaceListing): boolean { return !item.windowEnded; }
 
-  // ── Acciones ─────────────────────────────────────────────────────────────
   async suspend(item: MarketplaceListing): Promise<void> {
     const alert = await this.alertCtrl.create({
       header: 'Pausar publicación',
       message: 'Nadie podrá reservarla hasta que la reanudes. Las reservas que ya tenga se mantienen.',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Pausar', handler: () => this.run(item, this.market.suspend(item.id), 'Publicación pausada.') }
+        { text: 'Pausar', handler: () => this.runListing(item, this.market.suspend(item.id), 'Publicación pausada.') }
       ]
     });
     await alert.present();
   }
 
   resume(item: MarketplaceListing): void {
-    this.run(item, this.market.resume(item.id), 'Publicación reanudada.');
+    this.runListing(item, this.market.resume(item.id), 'Publicación reanudada.');
   }
 
   async close(item: MarketplaceListing): Promise<void> {
@@ -134,13 +238,13 @@ export class MarketplacePage {
       message: 'Se cierra definitivamente y ya no se puede reabrir. Si querés ofrecerla de nuevo, publicala otra vez.',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Cerrar', role: 'destructive', handler: () => this.run(item, this.market.close(item.id), 'Publicación cerrada.') }
+        { text: 'Cerrar', role: 'destructive', handler: () => this.runListing(item, this.market.close(item.id), 'Publicación cerrada.') }
       ]
     });
     await alert.present();
   }
 
-  private run(item: MarketplaceListing, call: ReturnType<MarketplaceService['suspend']>, okMessage: string): void {
+  private runListing(item: MarketplaceListing, call: ReturnType<MarketplaceService['suspend']>, okMessage: string): void {
     if (this.busyId) return;
     this.busyId = item.id;
     call.subscribe({
@@ -154,7 +258,7 @@ export class MarketplacePage {
       error: err => {
         this.busyId = null;
         this.toast(apiErrorMessage(err, 'No se pudo completar la acción.'), 'danger');
-        this.loadListings();
+        this.loadSegment();
       }
     });
   }

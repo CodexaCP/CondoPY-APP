@@ -1,0 +1,71 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Reservar</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <p class="state-msg" *ngIf="loading">Cargando...</p>
+  <p class="state-msg error" *ngIf="error">{{ error }}</p>
+
+  <div class="form-wrap" *ngIf="!loading && !error && item">
+
+    <section class="step">
+      <h2>{{ item.title }}</h2>
+      <p class="sub">Unidad {{ item.unitCode }} · {{ formatCurrency(item.hourlyPrice) }} por hora</p>
+      <p class="sub">Disponible: {{ formatWindow(item.windowStartUtc, item.windowEndUtc) }}</p>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">1</span> ¿Desde cuándo?</h2>
+      <div class="field">
+        <select [(ngModel)]="startIso" (ngModelChange)="onStartChange()">
+          <option value="" disabled>Elegí el día y la hora</option>
+          <option *ngFor="let o of options" [value]="o.startIso">{{ o.label }}</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="step" *ngIf="startIso">
+      <h2><span class="num">2</span> ¿Cuántas horas?</h2>
+      <div class="field">
+        <select [(ngModel)]="hours" (ngModelChange)="onHoursChange()">
+          <option *ngFor="let h of hourChoices" [ngValue]="h">{{ hoursLabel(h) }}</option>
+        </select>
+      </div>
+      <p class="hint">Se reserva por horas enteras.</p>
+    </section>
+
+    <section class="step summary" *ngIf="startIso">
+      <h2>Tu reserva</h2>
+      <p class="sub" *ngIf="quoting">Calculando el precio…</p>
+      <p class="problem" *ngIf="quoteError">{{ quoteError }}</p>
+
+      <ng-container *ngIf="quote && !quoting">
+        <p class="when">{{ formatWindow(quote.startsAtUtc, quote.endsAtUtc) }}</p>
+        <div class="row">
+          <span>Precio del espacio ({{ hoursLabel(quote.hours) }})</span>
+          <span>{{ formatCurrency(quote.baseAmount) }}</span>
+        </div>
+        <div class="row">
+          <span>Comisión por gestión</span>
+          <span>{{ formatCurrency(quote.commissionAmount) }}</span>
+        </div>
+        <div class="row total">
+          <span>Total a pagar</span>
+          <span>{{ formatCurrency(quote.totalAmount) }}</span>
+        </div>
+        <p class="hint">Después de reservar tenés unos minutos para pagar por transferencia. Si no se paga a tiempo, la reserva vence y el horario queda libre.</p>
+      </ng-container>
+    </section>
+
+    <ion-button expand="block" (click)="reserve()" [disabled]="!quote || quoting || saving">
+      {{ saving ? 'Reservando...' : 'Reservar' }}
+    </ion-button>
+  </div>
+</ion-content>

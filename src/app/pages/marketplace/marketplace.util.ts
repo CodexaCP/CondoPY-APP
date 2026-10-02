@@ -1,3 +1,5 @@
+import { MarketplaceExploreItem, MarketplaceReservationStatus } from '../../core/marketplace.models';
+
 // Utilidades de fecha, importe y mensajes del marketplace.
 
 export function formatCurrency(value: number): string {
@@ -53,4 +55,84 @@ export function localDate(iso: string): string {
 export function localTime(iso: string): string {
   const d = new Date(iso);
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+// ── Reservas ──────────────────────────────────────────────────────────────────
+
+
+export type Tone = 'green' | 'amber' | 'grey' | 'blue' | 'red';
+
+// Estados en palabras simples (un rechazo se muestra como cancelada, con su motivo).
+export function reservationStatusLabel(status: MarketplaceReservationStatus): string {
+  switch (status) {
+    case 'PendingPayment': return 'Esperando tu pago';
+    case 'InReview':       return 'En revisión';
+    case 'Confirmed':      return 'Confirmada';
+    case 'Completed':      return 'Finalizada';
+    case 'Expired':        return 'Vencida';
+    default:               return 'Cancelada';
+  }
+}
+
+export function reservationTone(status: MarketplaceReservationStatus): Tone {
+  switch (status) {
+    case 'PendingPayment': return 'amber';
+    case 'InReview':       return 'blue';
+    case 'Confirmed':      return 'green';
+    case 'Completed':      return 'grey';
+    default:               return 'red';
+  }
+}
+
+// Tiempo que queda para pagar, "08:41". expired = ya pasó.
+export function countdown(expiresIso: string | null, nowMs: number): { text: string; expired: boolean } {
+  if (!expiresIso) return { text: '', expired: false };
+  const left = Date.parse(expiresIso) - nowMs;
+  if (left <= 0) return { text: '00:00', expired: true };
+  const totalSeconds = Math.ceil(left / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return { text: `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`, expired: false };
+}
+
+export interface StartOption {
+  startIso: string;
+  label: string;
+  // Máximo de horas enteras seguidas que se pueden reservar desde ese horario.
+  maxHours: number;
+}
+
+const SLOT_MS = 30 * 60 * 1000;
+
+// Horarios desde los que se puede reservar al menos una hora entera: empiezan en punto o y media, en el futuro, dentro de la
+// ventana y sin pisar lo ya ocupado. Es solo una ayuda para elegir; el servidor valida igual.
+export function startOptions(item: MarketplaceExploreItem, nowMs: number): StartOption[] {
+  const windowStart = Date.parse(item.windowStartUtc);
+  const windowEnd = Date.parse(item.windowEndUtc);
+
+  const taken = new Set<number>();
+  for (const interval of item.occupied) {
+    const end = Date.parse(interval.endUtc);
+    for (let t = Date.parse(interval.startUtc); t < end; t += SLOT_MS) taken.add(t);
+  }
+
+  const options: StartOption[] = [];
+  for (let start = windowStart; start + 2 * SLOT_MS <= windowEnd; start += SLOT_MS) {
+    if (start <= nowMs) continue;
+
+    let maxHours = 0;
+    for (let h = 1; start + h * 2 * SLOT_MS <= windowEnd; h++) {
+      const firstSlot = start + (h - 1) * 2 * SLOT_MS;
+      if (taken.has(firstSlot) || taken.has(firstSlot + SLOT_MS)) break;
+      maxHours = h;
+    }
+
+    if (maxHours >= 1) {
+      const d = new Date(start);
+      const day = d.toLocaleDateString('es-PY', { weekday: 'short', day: '2-digit', month: '2-digit' });
+      const time = d.toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' });
+      options.push({ startIso: d.toISOString(), label: `${day} · ${time}`, maxHours });
+    }
+  }
+  return options;
 }

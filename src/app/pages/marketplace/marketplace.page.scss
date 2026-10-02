@@ -91,3 +91,46 @@
   padding-top: 0.6rem;
   border-top: 1px solid #e2e8f0;
 }
+
+ion-segment { margin: 0 1rem 0.5rem; }
+
+.price {
+  font-weight: 700;
+  color: #1385b6;
+  white-space: nowrap;
+
+  small { font-weight: 500; color: #64748b; }
+}
+
+.occupied {
+  margin: 0.2rem 0 0.7rem;
+  font-size: 0.8rem;
+  color: #92400e;
+}
+
+.note {
+  margin: 0.4rem 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.countdown {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.9rem;
+
+  strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  &.over { background: #fee2e2; color: #991b1b; }
+}
+
+.status-chip {
+  &.tone-blue { background: #3b82f6; }
+  &.tone-red  { background: #ef4444; }
+}

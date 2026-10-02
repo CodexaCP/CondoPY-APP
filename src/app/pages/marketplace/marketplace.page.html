@@ -21,9 +21,15 @@
   </ion-refresher>
 
   <div class="hero-banner">
-    <strong>Tus espacios</strong>
-    <span>Publicá tu cochera u otro espacio por unas horas. Lo que ganás se suma a tu saldo a favor.</span>
+    <strong>Espacios de tu edificio</strong>
+    <span>Reservá la cochera u otro espacio de un vecino por horas, o publicá el tuyo y ganá saldo a favor.</span>
   </div>
+
+  <ion-segment *ngIf="selected" [(ngModel)]="segment" (ionChange)="onSegmentChange()">
+    <ion-segment-button value="explore">Explorar</ion-segment-button>
+    <ion-segment-button value="reservations">Mis reservas</ion-segment-button>
+    <ion-segment-button value="mine" *ngIf="selected.canPublish">Publicaciones</ion-segment-button>
+  </ion-segment>
 
   <p class="state-msg" *ngIf="loading">Cargando...</p>
   <p class="state-msg error" *ngIf="error">{{ error }}</p>
@@ -33,53 +39,117 @@
   </p>
 
   <ng-container *ngIf="!loading && selected">
-    <!-- Publicar -->
-    <div class="publish-box" *ngIf="selected.canPublish">
-      <ion-button expand="block" (click)="publish()">
-        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-        Publicar un espacio
-      </ion-button>
-    </div>
-    <div class="info-box" *ngIf="!selected.canPublish">
-      Solo el propietario principal de una unidad puede publicarla.
-    </div>
 
-    <p class="section-label" *ngIf="listings.length">Mis publicaciones</p>
-    <p class="state-msg" *ngIf="!listings.length && !error && selected.canPublish">
-      Todavía no publicaste nada. Tocá «Publicar un espacio» para empezar.
-    </p>
+    <!-- ── EXPLORAR ─────────────────────────────────────────── -->
+    <ng-container *ngIf="segment === 'explore'">
+      <p class="state-msg" *ngIf="!explore.length && !error">
+        Por ahora no hay espacios disponibles en tu edificio.
+      </p>
 
-    <ion-card class="listing-card" *ngFor="let item of listings">
-      <div class="card-head">
-        <div>
-          <strong>{{ item.title }}</strong>
-          <small>Unidad {{ item.unitCode }}</small>
+      <ion-card class="listing-card" *ngFor="let item of explore">
+        <div class="card-head">
+          <div>
+            <strong>{{ item.title }}</strong>
+            <small>Unidad {{ item.unitCode }}</small>
+          </div>
+          <span class="price">{{ formatCurrency(item.hourlyPrice) }}<small> / hora</small></span>
         </div>
-        <span class="status-chip" [ngClass]="'tone-' + statusTone(item)">{{ statusLabel(item) }}</span>
+        <div class="card-line">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>{{ formatWindow(item.windowStartUtc, item.windowEndUtc) }}</span>
+        </div>
+        <p class="occupied" *ngIf="item.occupied.length">Ya reservado: {{ occupiedText(item.occupied) }}</p>
+        <ion-button expand="block" size="small" (click)="reserve(item)">Reservar</ion-button>
+      </ion-card>
+    </ng-container>
+
+    <!-- ── MIS RESERVAS ─────────────────────────────────────── -->
+    <ng-container *ngIf="segment === 'reservations'">
+      <p class="state-msg" *ngIf="!reservations.length && !error">Todavía no hiciste ninguna reserva.</p>
+
+      <ion-card class="listing-card" *ngFor="let r of reservations">
+        <div class="card-head">
+          <div>
+            <strong>{{ r.title }}</strong>
+            <small>{{ r.reference }}</small>
+          </div>
+          <span class="status-chip" [ngClass]="'tone-' + statusTone(r)">{{ statusLabel(r) }}</span>
+        </div>
+
+        <div class="card-line">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>{{ formatWindow(r.startsAtUtc, r.endsAtUtc) }} · {{ hoursLabel(r.hours) }}</span>
+        </div>
+        <div class="card-line">
+          <ion-icon name="cash-outline"></ion-icon>
+          <span>Total {{ formatCurrency(r.totalAmount) }}</span>
+        </div>
+
+        <ng-container *ngIf="r.status === 'PendingPayment'">
+          <div class="countdown" [class.over]="remaining(r).expired">
+            <ion-icon name="hourglass-outline"></ion-icon>
+            <span *ngIf="!remaining(r).expired">Tenés <strong>{{ remaining(r).text }}</strong> para pagar</span>
+            <span *ngIf="remaining(r).expired">Venciendo…</span>
+          </div>
+          <p class="note">Podrás pagar por transferencia y adjuntar el comprobante desde acá en la próxima actualización.</p>
+          <div class="card-actions">
+            <ion-button size="small" fill="clear" color="danger" (click)="cancelReservation(r)" [disabled]="busyId === r.id">
+              Cancelar reserva
+            </ion-button>
+          </div>
+        </ng-container>
+
+        <p class="note" *ngIf="r.status === 'Expired'">Venció por falta de pago. El horario quedó libre.</p>
+        <p class="reason" *ngIf="r.cancelReason">{{ r.cancelReason }}</p>
+      </ion-card>
+    </ng-container>
+
+    <!-- ── MIS PUBLICACIONES ────────────────────────────────── -->
+    <ng-container *ngIf="segment === 'mine'">
+      <div class="publish-box" *ngIf="selected.canPublish">
+        <ion-button expand="block" (click)="publish()">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          Publicar un espacio
+        </ion-button>
       </div>
 
-      <div class="card-line">
-        <ion-icon name="time-outline"></ion-icon>
-        <span>{{ formatWindow(item.windowStartUtc, item.windowEndUtc) }} · {{ hoursLabel(item.windowHours) }}</span>
-      </div>
-      <div class="card-line">
-        <ion-icon name="cash-outline"></ion-icon>
-        <span>{{ formatCurrency(item.hourlyPrice) }} por hora</span>
-      </div>
-      <div class="card-line" *ngIf="item.activeReservations > 0">
-        <ion-icon name="people-outline"></ion-icon>
-        <span>{{ item.activeReservations }} {{ item.activeReservations === 1 ? 'reserva' : 'reservas' }}</span>
-      </div>
-      <p class="reason" *ngIf="item.status === 'Suspended' && item.statusReason">{{ item.statusReason }}</p>
+      <p class="state-msg" *ngIf="!listings.length && !error">
+        Todavía no publicaste nada. Tocá «Publicar un espacio» para empezar.
+      </p>
 
-      <div class="card-actions" *ngIf="canEdit(item)">
-        <ion-button size="small" fill="outline" (click)="edit(item)" [disabled]="busyId === item.id">Editar</ion-button>
-        <ion-button size="small" fill="outline" color="warning" *ngIf="item.status === 'Active'"
-                    (click)="suspend(item)" [disabled]="busyId === item.id">Pausar</ion-button>
-        <ion-button size="small" fill="outline" color="success" *ngIf="item.status === 'Suspended'"
-                    (click)="resume(item)" [disabled]="busyId === item.id">Reanudar</ion-button>
-        <ion-button size="small" fill="clear" color="danger" (click)="close(item)" [disabled]="busyId === item.id">Cerrar</ion-button>
-      </div>
-    </ion-card>
+      <ion-card class="listing-card" *ngFor="let item of listings">
+        <div class="card-head">
+          <div>
+            <strong>{{ item.title }}</strong>
+            <small>Unidad {{ item.unitCode }}</small>
+          </div>
+          <span class="status-chip" [ngClass]="'tone-' + listingTone(item)">{{ listingLabel(item) }}</span>
+        </div>
+
+        <div class="card-line">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>{{ formatWindow(item.windowStartUtc, item.windowEndUtc) }} · {{ hoursLabel(item.windowHours) }}</span>
+        </div>
+        <div class="card-line">
+          <ion-icon name="cash-outline"></ion-icon>
+          <span>{{ formatCurrency(item.hourlyPrice) }} por hora</span>
+        </div>
+        <div class="card-line" *ngIf="item.activeReservations > 0">
+          <ion-icon name="people-outline"></ion-icon>
+          <span>{{ item.activeReservations }} {{ item.activeReservations === 1 ? 'reserva' : 'reservas' }}</span>
+        </div>
+        <p class="reason" *ngIf="item.status === 'Suspended' && item.statusReason">{{ item.statusReason }}</p>
+
+        <div class="card-actions" *ngIf="canEdit(item)">
+          <ion-button size="small" fill="outline" (click)="edit(item)" [disabled]="busyId === item.id">Editar</ion-button>
+          <ion-button size="small" fill="outline" color="warning" *ngIf="item.status === 'Active'"
+                      (click)="suspend(item)" [disabled]="busyId === item.id">Pausar</ion-button>
+          <ion-button size="small" fill="outline" color="success" *ngIf="item.status === 'Suspended'"
+                      (click)="resume(item)" [disabled]="busyId === item.id">Reanudar</ion-button>
+          <ion-button size="small" fill="clear" color="danger" (click)="close(item)" [disabled]="busyId === item.id">Cerrar</ion-button>
+        </div>
+      </ion-card>
+    </ng-container>
+
   </ng-container>
 </ion-content>

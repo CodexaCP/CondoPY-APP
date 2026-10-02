@@ -47,3 +47,67 @@ export interface MarketplaceListingCreateRequest extends MarketplaceListingUpdat
   buildingId: string;
   unitId: string;
 }
+
+// ── Explorar y reservar ───────────────────────────────────────────────────────
+
+export interface MarketplaceInterval {
+  startUtc: string;
+  endUtc: string;
+}
+
+// Publicación de otro vecino que se puede reservar, con lo que ya está ocupado.
+export interface MarketplaceExploreItem {
+  listingId: string;
+  title: string;
+  unitCode: string;
+  windowStartUtc: string;
+  windowEndUtc: string;
+  hourlyPrice: number;
+  // Comisión de gestión del edificio (se muestra en el desglose).
+  commissionPercent: number;
+  occupied: MarketplaceInterval[];
+}
+
+export interface MarketplaceQuoteRequest {
+  listingId: string;
+  startsAtUtc: string;
+  endsAtUtc: string;
+}
+
+// Desglose que calcula siempre el servidor.
+export interface MarketplaceQuote {
+  listingId: string;
+  startsAtUtc: string;
+  endsAtUtc: string;
+  hours: number;
+  hourlyPrice: number;
+  baseAmount: number;
+  commissionPercent: number;
+  commissionAmount: number;
+  totalAmount: number;
+}
+
+export type MarketplaceReservationStatus =
+  'PendingPayment' | 'InReview' | 'Confirmed' | 'Completed' | 'Cancelled' | 'Expired' | 'Rejected';
+
+export interface MarketplaceReservation {
+  id: string;
+  reference: string;
+  listingId: string;
+  buildingId: string;
+  title: string;
+  unitCode: string;
+  startsAtUtc: string;
+  endsAtUtc: string;
+  hours: number;
+  hourlyPrice: number;
+  baseAmount: number;
+  commissionPercent: number;
+  commissionAmount: number;
+  totalAmount: number;
+  status: MarketplaceReservationStatus;
+  // Solo mientras espera el pago: hasta cuándo puede pagar.
+  expiresAtUtc: string | null;
+  cancelReason: string | null;
+  createdAtUtc: string;
+}

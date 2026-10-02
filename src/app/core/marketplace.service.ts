@@ -7,8 +7,12 @@ import {
   MarketplaceBuilding,
   MarketplaceListing,
   MarketplaceListingCreateRequest,
+  MarketplaceExploreItem,
   MarketplaceListingUpdateRequest,
-  MarketplacePublishableUnit
+  MarketplacePublishableUnit,
+  MarketplaceQuote,
+  MarketplaceQuoteRequest,
+  MarketplaceReservation
 } from './marketplace.models';
 
 const KEY = 'condopy_marketplace_building';
@@ -90,6 +94,31 @@ export class MarketplaceService {
 
   close(id: string, reason?: string): Observable<MarketplaceListing> {
     return this.http.post<MarketplaceListing>(`${this.base}/listings/${id}/close`, { reason: reason ?? null });
+  }
+
+  // ── Explorar y reservar ──────────────────────────────────────────────────
+
+  // Publicaciones de otros vecinos de mi edificio con horario libre.
+  explore(buildingId: string): Observable<MarketplaceExploreItem[]> {
+    return this.http.get<MarketplaceExploreItem[]>(`${this.base}/listings/explore`, { params: { buildingId } });
+  }
+
+  // Desglose exacto (lo calcula el servidor); no reserva nada.
+  quote(request: MarketplaceQuoteRequest): Observable<MarketplaceQuote> {
+    return this.http.post<MarketplaceQuote>(`${this.base}/reservations/quote`, request);
+  }
+
+  reserve(request: MarketplaceQuoteRequest): Observable<MarketplaceReservation> {
+    return this.http.post<MarketplaceReservation>(`${this.base}/reservations`, request);
+  }
+
+  getMyReservations(buildingId: string): Observable<MarketplaceReservation[]> {
+    return this.http.get<MarketplaceReservation[]>(`${this.base}/reservations/mine`, { params: { buildingId } });
+  }
+
+  // Cancelar una reserva que todavía no se pagó (libera el horario).
+  cancelReservation(id: string): Observable<MarketplaceReservation> {
+    return this.http.post<MarketplaceReservation>(`${this.base}/reservations/${id}/cancel`, {});
   }
 
   private pickInitial(list: MarketplaceBuilding[]): MarketplaceBuilding | null {
