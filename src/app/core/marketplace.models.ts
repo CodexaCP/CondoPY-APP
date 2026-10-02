@@ -150,3 +150,12 @@ export interface MarketplaceReviewItem {
   // La reserva ya terminó: ya no se puede aprobar (solo rechazar).
   reservationEnded: boolean;
 }
+
+// Edificio del personal (Encargado) con el marketplace disponible y lo que su rol puede hacer ahí.
+export interface MarketplaceStaffBuilding {
+  buildingId: string;
+  buildingName: string;
+  canReviewPayments: boolean;
+  canViewAccount: boolean;
+  canEditAccount: boolean;
+}

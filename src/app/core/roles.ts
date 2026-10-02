@@ -7,6 +7,12 @@ export function isManagerRole(role: string | null | undefined): boolean {
   return !!role && MANAGER_ROLES.includes(role);
 }
 
+// Los pagos de expensas (enviar comprobante, ver mis pagos y mi saldo a favor) son solo del propietario: el backend
+// responde 403 al residente, así que la app no le ofrece esas pantallas.
+export function canPayExpenses(role: string | null | undefined): boolean {
+  return role === 'Owner';
+}
+
 // Mismos nombres que el panel web.
 export function roleLabel(role: string | null | undefined): string {
   switch (role) {

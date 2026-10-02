@@ -20,7 +20,7 @@
       <ion-icon name="chevron-forward-outline" class="more-caret"></ion-icon>
     </button>
 
-    <button type="button" class="more-item" (click)="go('/manager/marketplace')">
+    <button type="button" class="more-item" *ngIf="marketplaceAvailable" (click)="go('/manager/marketplace')">
       <ion-icon name="storefront-outline"></ion-icon>
       <span>Marketplace · pagos por revisar</span>
       <ion-icon name="chevron-forward-outline" class="more-caret"></ion-icon>

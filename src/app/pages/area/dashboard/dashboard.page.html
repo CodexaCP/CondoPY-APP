@@ -63,7 +63,7 @@
       <span class="chip-lbl">Expensas</span>
     </div>
 
-    <div class="chip" (click)="goPagos()">
+    <div class="chip" *ngIf="canPay" (click)="goPagos()">
       <div class="chip-icon ic-green">
         <ion-icon name="wallet-outline"></ion-icon>
       </div>

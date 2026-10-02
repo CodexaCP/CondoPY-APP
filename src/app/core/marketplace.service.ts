@@ -14,7 +14,8 @@ import {
   MarketplacePublishableUnit,
   MarketplaceQuote,
   MarketplaceQuoteRequest,
-  MarketplaceReservation
+  MarketplaceReservation,
+  MarketplaceStaffBuilding
 } from './marketplace.models';
 
 const KEY = 'condopy_marketplace_building';
@@ -29,8 +30,12 @@ export class MarketplaceService {
   private loaded = false;
   private pending$: Observable<MarketplaceBuilding[]> | null = null;
 
+  // Edificios donde el Encargado puede revisar pagos del marketplace (solo los que tienen el módulo disponible).
+  private readonly staffBuildingsSubject = new BehaviorSubject<MarketplaceStaffBuilding[]>([]);
+
   readonly buildings$ = this.buildingsSubject.asObservable();
   readonly selected$ = this.selectedSubject.asObservable();
+  readonly staffBuildings$ = this.staffBuildingsSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -54,6 +59,13 @@ export class MarketplaceService {
     return this.pending$;
   }
 
+  // Edificios del personal con el marketplace disponible y sus permisos (para mostrar u ocultar la sección del Encargado).
+  loadStaffBuildings(): Observable<MarketplaceStaffBuilding[]> {
+    return this.http.get<MarketplaceStaffBuilding[]>(`${this.base}/staff-buildings`).pipe(
+      tap(list => this.staffBuildingsSubject.next(list))
+    );
+  }
+
   select(id: string): void {
     const found = this.buildings.find(b => b.buildingId === id);
     if (!found) return;
@@ -66,6 +78,7 @@ export class MarketplaceService {
     this.loaded = false;
     this.buildingsSubject.next([]);
     this.selectedSubject.next(null);
+    this.staffBuildingsSubject.next([]);
     try { localStorage.removeItem(KEY); } catch { /* nada */ }
   }
 

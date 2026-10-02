@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Subscription, forkJoin, interval, of } from 'rxjs';
 import { startWith, switchMap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth.service';
-import { roleLabel as roleName } from '../../../core/roles';
+import { canPayExpenses, roleLabel as roleName } from '../../../core/roles';
 import { NotificationsService } from '../../../core/notifications.service';
 import { AnnouncementsService } from '../../../core/announcements.service';
 import { AccountService } from '../../../core/account.service';
@@ -47,6 +47,11 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   get roleLabel(): string {
     return roleName(this.user?.role);
+  }
+
+  // «Mis pagos» es solo del propietario (el backend no atiende pagos de expensas de un residente).
+  get canPay(): boolean {
+    return canPayExpenses(this.user?.role);
   }
 
   get balancePositive(): boolean {
