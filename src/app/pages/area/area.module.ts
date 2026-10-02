@@ -46,6 +46,10 @@ const routes: Routes = [
         loadChildren: () => import('../amenities/amenities.module').then(m => m.AmenitiesPageModule)
       },
       {
+        path: 'marketplace',
+        loadChildren: () => import('../marketplace/marketplace.module').then(m => m.MarketplacePageModule)
+      },
+      {
         path: 'dashboard',
         loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardPageModule)
       },

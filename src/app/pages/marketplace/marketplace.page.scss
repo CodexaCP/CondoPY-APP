@@ -1,0 +1,93 @@
+.hero-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  margin: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1385b6, #1ab7af);
+  color: #fff;
+
+  strong { font-size: 1.05rem; }
+  span   { font-size: 0.85rem; opacity: 0.9; }
+}
+
+.state-msg {
+  text-align: center;
+  color: #64748b;
+  padding: 1rem;
+  &.error { color: #ef4444; }
+}
+
+.publish-box { margin: 0 1rem 0.5rem; }
+
+.info-box {
+  margin: 0 1rem 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+.section-label {
+  margin: 0.75rem 1rem 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.listing-card { padding: 1rem; }
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+
+  strong { display: block; font-size: 1.05rem; color: #0f172a; }
+  small  { color: #64748b; }
+}
+
+.status-chip {
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.tone-green { background: #22c55e; }
+  &.tone-amber { background: #f59e0b; }
+  &.tone-grey  { background: #94a3b8; }
+}
+
+.card-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.88rem;
+  color: #334155;
+
+  ion-icon { color: #1385b6; font-size: 1.05rem; flex-shrink: 0; }
+}
+
+.reason {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  color: #b45309;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #e2e8f0;
+}

@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import { LoginRequest, LoginResponse, MyUnit } from './models';
 import { BuildingContextService } from './building-context.service';
 import { ManagerStateService } from './manager-state.service';
+import { MarketplaceService } from './marketplace.service';
 
 const TOKEN_KEY = 'condopy_token';
 const USER_KEY  = 'condopy_user';
@@ -16,7 +17,8 @@ export class AuthService {
     private http: HttpClient,
     private router: Router,
     private buildingContext: BuildingContextService,
-    private managerState: ManagerStateService
+    private managerState: ManagerStateService,
+    private marketplace: MarketplaceService
   ) {}
 
   login(request: LoginRequest, rememberMe = false): Observable<LoginResponse> {
@@ -66,6 +68,7 @@ export class AuthService {
     // Datos de la sección del Encargado: no deben pasar a la próxima sesión.
     this.buildingContext.clear();
     this.managerState.clear();
+    this.marketplace.clear();
     this.router.navigateByUrl('/login');
   }
 

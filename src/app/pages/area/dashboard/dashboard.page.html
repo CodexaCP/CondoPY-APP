@@ -84,6 +84,14 @@
       <span class="chip-lbl">Amenities</span>
     </div>
 
+    <!-- Solo aparece si el Marketplace está habilitado en alguno de mis edificios -->
+    <div class="chip" *ngIf="marketplaceAvailable" (click)="goMarketplace()">
+      <div class="chip-icon ic-teal">
+        <ion-icon name="storefront-outline"></ion-icon>
+      </div>
+      <span class="chip-lbl">Marketplace</span>
+    </div>
+
   </div>
 
   <!-- ── Comunicados ── -->

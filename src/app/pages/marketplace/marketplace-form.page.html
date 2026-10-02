@@ -1,0 +1,91 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ isEditing ? 'Editar publicación' : 'Publicar un espacio' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <p class="state-msg" *ngIf="loading">Cargando...</p>
+  <p class="state-msg error" *ngIf="error">{{ error }}</p>
+
+  <div class="form-wrap" *ngIf="!loading && !error">
+
+    <!-- Paso 1 -->
+    <section class="step">
+      <h2><span class="num">1</span> ¿Qué publicás?</h2>
+
+      <div class="field" *ngIf="!isEditing && units.length > 1">
+        <label>Unidad</label>
+        <select [(ngModel)]="unitId">
+          <option value="" disabled>Elegí la unidad</option>
+          <option *ngFor="let u of units" [value]="u.unitId">Unidad {{ u.code }}<ng-container *ngIf="u.floor"> · piso {{ u.floor }}</ng-container></option>
+        </select>
+      </div>
+      <p class="unit-fixed" *ngIf="!isEditing && units.length === 1">Unidad {{ units[0].code }}</p>
+      <p class="unit-fixed" *ngIf="isEditing">{{ unitLabel }}</p>
+
+      <div class="field">
+        <label>Título</label>
+        <input type="text" [(ngModel)]="title" maxlength="200" placeholder="Ej: Cochera 12" />
+      </div>
+    </section>
+
+    <!-- Paso 2 -->
+    <section class="step">
+      <h2><span class="num">2</span> ¿Cuándo está disponible?</h2>
+
+      <div class="when-row">
+        <div class="field">
+          <label>Desde (día)</label>
+          <input type="date" [(ngModel)]="startDate" [min]="today" (ngModelChange)="onStartDateChange()" />
+        </div>
+        <div class="field">
+          <label>Hora</label>
+          <select [(ngModel)]="startTime">
+            <option value="" disabled>--:--</option>
+            <option *ngFor="let t of times" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="when-row">
+        <div class="field">
+          <label>Hasta (día)</label>
+          <input type="date" [(ngModel)]="endDate" [min]="startDate || today" />
+        </div>
+        <div class="field">
+          <label>Hora</label>
+          <select [(ngModel)]="endTime">
+            <option value="" disabled>--:--</option>
+            <option *ngFor="let t of times" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="duration" *ngIf="durationLabel">Duración: <strong>{{ durationLabel }}</strong></p>
+      <p class="hint">Se reserva por horas enteras. Podés empezar en punto o y media, por ejemplo de 19:30 a 22:30. También podés pasar la medianoche.</p>
+    </section>
+
+    <!-- Paso 3 -->
+    <section class="step">
+      <h2><span class="num">3</span> ¿Cuánto querés recibir por hora?</h2>
+
+      <div class="field">
+        <label>Precio por hora (Gs.)</label>
+        <input type="number" inputmode="numeric" [(ngModel)]="price" min="1" step="1" placeholder="Ej: 20000" />
+      </div>
+      <p class="hint" *ngIf="price && price > 0">Vas a recibir exactamente {{ formatCurrency(price) }} por cada hora que te reserven.</p>
+    </section>
+
+    <p class="problem" *ngIf="problem">{{ problem }}</p>
+
+    <ion-button expand="block" (click)="save()" [disabled]="!!problem || saving">
+      {{ saving ? 'Guardando...' : (isEditing ? 'Guardar cambios' : 'Publicar') }}
+    </ion-button>
+  </div>
+</ion-content>

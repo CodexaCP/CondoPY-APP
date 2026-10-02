@@ -7,6 +7,7 @@ import { roleLabel as roleName } from '../../../core/roles';
 import { NotificationsService } from '../../../core/notifications.service';
 import { AnnouncementsService } from '../../../core/announcements.service';
 import { AccountService } from '../../../core/account.service';
+import { MarketplaceService } from '../../../core/marketplace.service';
 import { LoginResponse, MyUnit, AccountStatementPeriod, Announcement } from '../../../core/models';
 
 const CAT_ICON: Record<string, string> = {
@@ -32,6 +33,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   primaryUnit: MyUnit | null = null;
   latestPeriod: AccountStatementPeriod | null = null;
   unitsCount = 0;
+  marketplaceAvailable = false;
   totalBalance = 0;
 
   comunicados: Announcement[] = [];
@@ -56,7 +58,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private router: Router,
     private notificationsSvc: NotificationsService,
     private announcementsSvc: AnnouncementsService,
-    private accountSvc: AccountService
+    private accountSvc: AccountService,
+    private marketplaceSvc: MarketplaceService
   ) {}
 
   ngOnInit(): void {
@@ -70,6 +73,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   ionViewWillEnter(): void {
     this.loadBalance();
     this.loadComunicados();
+    this.marketplaceSvc.loadBuildings(true).pipe(catchError(() => of([]))).subscribe(b => { this.marketplaceAvailable = b.length > 0; });
   }
 
   loadBalance(): void {
@@ -124,6 +128,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   goNotif():      void { this.router.navigateByUrl('/area/notifications'); }
   goComunicados():void { this.router.navigateByUrl('/area-comun'); }
   goAmenities():   void { this.router.navigateByUrl('/area/amenities'); }
+  goMarketplace(): void { this.router.navigateByUrl('/area/marketplace'); }
 
   ngOnDestroy(): void { this.pollSub?.unsubscribe(); }
 }
