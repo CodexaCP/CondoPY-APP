@@ -25,10 +25,11 @@
     <span>Reservá la cochera u otro espacio de un vecino por horas, o publicá el tuyo y ganá saldo a favor.</span>
   </div>
 
-  <ion-segment *ngIf="selected" [(ngModel)]="segment" (ionChange)="onSegmentChange()">
+  <ion-segment *ngIf="selected" [scrollable]="true" [(ngModel)]="segment" (ionChange)="onSegmentChange()">
     <ion-segment-button value="explore">Explorar</ion-segment-button>
     <ion-segment-button value="reservations">Mis reservas</ion-segment-button>
     <ion-segment-button value="mine" *ngIf="selected.canPublish">Publicaciones</ion-segment-button>
+    <ion-segment-button value="received" *ngIf="selected.canPublish">Recibidas</ion-segment-button>
   </ion-segment>
 
   <p class="state-msg" *ngIf="loading">Cargando...</p>
@@ -103,9 +104,98 @@
         </ng-container>
 
         <p class="note" *ngIf="r.status === 'InReview'">Enviaste el comprobante. La administración lo está revisando; el horario queda reservado para vos.</p>
-        <p class="note ok" *ngIf="r.status === 'Confirmed'">¡Reserva confirmada! El espacio es tuyo en ese horario.</p>
+        <p class="note ok" *ngIf="r.status === 'Confirmed' && !r.needsStartResponse">¡Reserva confirmada! El espacio es tuyo en ese horario.</p>
         <p class="note" *ngIf="r.status === 'Expired'">Venció por falta de pago. El horario quedó libre.</p>
         <p class="reason" *ngIf="r.cancelReason">{{ r.cancelReason }}</p>
+
+        <!-- Aviso de inicio: solo queda registrado, no devuelve dinero -->
+        <div class="start-box" *ngIf="r.needsStartResponse">
+          <strong>Tu reserva empezó. ¿La vas a usar?</strong>
+          <div class="start-actions">
+            <ion-button size="small" (click)="respondStart(r, true)" [disabled]="busyId === r.id">Sí, voy</ion-button>
+            <ion-button size="small" fill="outline" color="medium" (click)="respondStart(r, false)" [disabled]="busyId === r.id">No la voy a usar</ion-button>
+          </div>
+        </div>
+        <p class="note" *ngIf="r.startResponse === 'Attending'">Avisaste que ibas a usar el espacio.</p>
+        <p class="note" *ngIf="r.startResponse === 'NotUsing'">Avisaste que no ibas a usarlo. Eso no genera devolución: si querés tu dinero, reportá un problema.</p>
+
+        <!-- Reembolso -->
+        <div class="refund-box" *ngIf="r.refundStatus === 'Pending' && r.refundAmount !== null">
+          <ion-icon name="cash-outline"></ion-icon>
+          <span>Te devolvemos {{ formatCurrency(r.refundAmount) }} hasta el {{ formatDateTime(r.refundDueAtUtc!) }}.</span>
+        </div>
+        <div class="refund-box ok" *ngIf="r.refundStatus === 'Returned' && r.refundAmount !== null">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          <span>Te devolvieron {{ formatCurrency(r.refundAmount) }}.</span>
+        </div>
+
+        <!-- Reclamo -->
+        <p class="note" *ngIf="r.claimStatus === 'Open'">Hay un problema reportado en esta reserva. La administración lo está revisando.</p>
+        <p class="note" *ngIf="r.claimStatus === 'Resolved'">
+          Reclamo resuelto {{ r.claimResolution === 'InFavorOfBuyer' ? 'a tu favor' : 'sin devolución' }}.
+          <ng-container *ngIf="r.claimResolutionNote">{{ r.claimResolutionNote }}</ng-container>
+        </p>
+
+        <div class="card-actions" *ngIf="r.status !== 'PendingPayment' && (r.canCancel || r.canReportProblem)">
+          <ion-button size="small" fill="outline" color="danger" *ngIf="r.canCancel" (click)="cancelPaid(r)" [disabled]="busyId === r.id">
+            Cancelar reserva
+          </ion-button>
+          <ion-button size="small" fill="outline" *ngIf="r.canReportProblem" (click)="reportProblem(r.id, r.title)" [disabled]="busyId === r.id">
+            <ion-icon name="flag-outline" slot="start"></ion-icon>
+            Reportar un problema
+          </ion-button>
+        </div>
+      </ion-card>
+    </ng-container>
+
+    <!-- ── RECIBIDAS: reservas en mis publicaciones ────────── -->
+    <ng-container *ngIf="segment === 'received'">
+      <p class="state-msg" *ngIf="!received.length && !error">Todavía nadie reservó tus espacios.</p>
+
+      <ion-card class="listing-card" *ngFor="let r of received">
+        <div class="card-head">
+          <div>
+            <strong>{{ r.title }}</strong>
+            <small>{{ r.reference }}</small>
+          </div>
+          <span class="status-chip" [ngClass]="'tone-' + receivedTone(r)">{{ receivedLabel(r) }}</span>
+        </div>
+
+        <div class="card-line">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>{{ formatWindow(r.startsAtUtc, r.endsAtUtc) }} · {{ hoursLabel(r.hours) }}</span>
+        </div>
+        <div class="card-line">
+          <ion-icon name="person-outline"></ion-icon>
+          <span>Reservado por {{ r.buyerName }}<ng-container *ngIf="r.buyerUnits">, unidad {{ r.buyerUnits }}</ng-container></span>
+        </div>
+        <div class="card-line">
+          <ion-icon name="cash-outline"></ion-icon>
+          <span>Vas a recibir {{ formatCurrency(r.ownerNetAmount) }}</span>
+        </div>
+
+        <p class="note" *ngIf="r.status === 'InReview'">El pago está en revisión.</p>
+        <p class="note" *ngIf="(r.status === 'Confirmed' || r.status === 'Completed') && r.creditStatus === 'Pending'">
+          Se acredita a tu saldo a favor 24 horas después de que termine la reserva, si no hay reclamos.
+        </p>
+        <p class="note" *ngIf="r.creditStatus === 'Held'">La acreditación está retenida por un reclamo abierto.</p>
+        <p class="note ok" *ngIf="r.creditStatus === 'Credited'">Acreditado a tu saldo a favor.</p>
+        <p class="reason" *ngIf="r.status === 'Cancelled' && r.cancelReason">{{ r.cancelReason }}</p>
+        <p class="note" *ngIf="r.claimStatus === 'Open'">Hay un problema reportado en esta reserva. La administración lo está revisando.</p>
+        <p class="note" *ngIf="r.claimStatus === 'Resolved'">
+          Reclamo resuelto {{ r.claimResolution === 'InFavorOfOwner' ? 'a tu favor' : 'a favor del comprador' }}.
+          <ng-container *ngIf="r.claimResolutionNote">{{ r.claimResolutionNote }}</ng-container>
+        </p>
+
+        <div class="card-actions" *ngIf="r.canCancel || r.canReportProblem">
+          <ion-button size="small" fill="outline" color="danger" *ngIf="r.canCancel" (click)="ownerCancel(r)" [disabled]="busyId === r.id">
+            Cancelar reserva
+          </ion-button>
+          <ion-button size="small" fill="outline" *ngIf="r.canReportProblem" (click)="reportProblem(r.id, r.title)" [disabled]="busyId === r.id">
+            <ion-icon name="flag-outline" slot="start"></ion-icon>
+            Reportar un problema
+          </ion-button>
+        </div>
       </ion-card>
     </ng-container>
 

@@ -136,3 +136,31 @@ ion-segment { margin: 0 1rem 0.5rem; }
 }
 
 .note.ok { color: #166534; font-weight: 600; }
+
+// Aviso de inicio: "¿La vas a usar?".
+.start-box {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-size: 0.9rem;
+
+  .start-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+}
+
+// Reembolso al comprador (pendiente o ya devuelto).
+.refund-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.85rem;
+
+  ion-icon { font-size: 1.1rem; flex-shrink: 0; }
+  &.ok { background: #dcfce7; color: #166534; }
+}

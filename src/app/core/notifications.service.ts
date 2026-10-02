@@ -29,9 +29,12 @@ export function resolveNotificationRoute(
   if (n.entityType === 'OwnerPayment' && n.entityId) {
     return { path: `/area/payments/${n.entityId}` };
   }
-  // Avisos del Marketplace (reserva vencida, confirmada, rechazada, nueva reserva en mi espacio): a mis reservas.
+  // Avisos del Marketplace (reserva vencida, confirmada, rechazada, cancelada, nueva reserva en mi espacio, reclamo, reembolso):
+  // se abre la reserva en la lista donde esté (mis reservas o las recibidas en mis espacios).
   if (n.entityType === 'MarketplaceReservation') {
-    return { path: '/area/marketplace?tab=reservations' };
+    return n.entityId
+      ? { path: `/area/marketplace?focus=${n.entityId}` }
+      : { path: '/area/marketplace?tab=reservations' };
   }
   if (n.type === 'SettlementPendingPresidentReview' && n.entityId) {
     return { path: `/area/settlement-review/${n.entityId}` };
@@ -52,9 +55,13 @@ function resolveManagerRoute(n: { type?: string | null; entityType?: string | nu
       return { path: '/manager/reservations' };
     case 'BuildingPlan':
       return { path: '/manager/plan' };
-    // Pago de una reserva del Marketplace por revisar.
+    // Pago de una reserva del Marketplace por revisar, reembolso por devolver o reclamo por resolver.
     case 'MarketplacePayment':
       return { path: '/manager/marketplace' };
+    case 'MarketplaceRefund':
+      return { path: '/manager/marketplace?tab=refunds' };
+    case 'MarketplaceClaim':
+      return { path: '/manager/marketplace?tab=claims' };
     default:
       return null;
   }

@@ -5,6 +5,9 @@ import { finalize, shareReplay, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   MarketplaceBuilding,
+  MarketplaceCancelPreview,
+  MarketplaceClaim,
+  MarketplaceClaimResolution,
   MarketplaceListing,
   MarketplaceListingCreateRequest,
   MarketplaceExploreItem,
@@ -14,6 +17,8 @@ import {
   MarketplacePublishableUnit,
   MarketplaceQuote,
   MarketplaceQuoteRequest,
+  MarketplaceOwnerReservation,
+  MarketplaceRefund,
   MarketplaceReservation,
   MarketplaceStaffBuilding
 } from './marketplace.models';
@@ -131,9 +136,34 @@ export class MarketplaceService {
     return this.http.get<MarketplaceReservation[]>(`${this.base}/reservations/mine`, { params: { buildingId } });
   }
 
-  // Cancelar una reserva que todavía no se pagó (libera el horario).
-  cancelReservation(id: string): Observable<MarketplaceReservation> {
-    return this.http.post<MarketplaceReservation>(`${this.base}/reservations/${id}/cancel`, {});
+  // Qué pasa si cancelo (monto a devolver y comisión): lo calcula el servidor para avisarlo antes de confirmar.
+  cancelPreview(id: string): Observable<MarketplaceCancelPreview> {
+    return this.http.get<MarketplaceCancelPreview>(`${this.base}/reservations/${id}/cancel-preview`);
+  }
+
+  // El comprador cancela: sin pagar libera el horario; ya pagada y antes del inicio se le devuelve la base (la comisión no).
+  cancelReservation(id: string, reason?: string): Observable<MarketplaceReservation> {
+    return this.http.post<MarketplaceReservation>(`${this.base}/reservations/${id}/cancel`, { reason: reason ?? null });
+  }
+
+  // Reservas de MIS publicaciones (quién reservó: nombre y unidad).
+  getOnMyListings(buildingId: string): Observable<MarketplaceOwnerReservation[]> {
+    return this.http.get<MarketplaceOwnerReservation[]>(`${this.base}/reservations/on-my-listings`, { params: { buildingId } });
+  }
+
+  // El propietario cancela una reserva ya pagada (motivo obligatorio): devolución total al comprador y comisión a su cargo.
+  ownerCancel(id: string, reason: string): Observable<MarketplaceOwnerReservation> {
+    return this.http.post<MarketplaceOwnerReservation>(`${this.base}/reservations/${id}/owner-cancel`, { reason });
+  }
+
+  // "Reportar un problema" (comprador o propietario): retiene la acreditación y avisa al Encargado.
+  openClaim(id: string, reason: string): Observable<MarketplaceClaim> {
+    return this.http.post<MarketplaceClaim>(`${this.base}/reservations/${id}/claim`, { reason });
+  }
+
+  // Respuesta al aviso de inicio: solo queda registrada (sin devolución automática).
+  respondStart(id: string, attending: boolean, reason?: string): Observable<MarketplaceReservation> {
+    return this.http.post<MarketplaceReservation>(`${this.base}/reservations/${id}/start-response`, { attending, reason: reason ?? null });
   }
 
   // ── Pago (comprador) ─────────────────────────────────────────────────────
@@ -160,6 +190,24 @@ export class MarketplaceService {
 
   rejectPayment(paymentId: string, reason: string): Observable<MarketplaceReviewItem> {
     return this.http.post<MarketplaceReviewItem>(`${this.base}/payments/${paymentId}/reject`, { reason });
+  }
+
+  // ── Seguimiento del Encargado: reembolsos y reclamos ─────────────────────
+
+  refunds(buildingId: string, includeReturned = false): Observable<MarketplaceRefund[]> {
+    return this.http.get<MarketplaceRefund[]>(`${this.base}/refunds`, { params: { buildingId, includeReturned } });
+  }
+
+  markRefundReturned(id: string): Observable<MarketplaceRefund> {
+    return this.http.post<MarketplaceRefund>(`${this.base}/refunds/${id}/return`, {});
+  }
+
+  claims(buildingId: string, includeResolved = false): Observable<MarketplaceClaim[]> {
+    return this.http.get<MarketplaceClaim[]>(`${this.base}/claims`, { params: { buildingId, includeResolved } });
+  }
+
+  resolveClaim(id: string, outcome: MarketplaceClaimResolution, note: string): Observable<MarketplaceClaim> {
+    return this.http.post<MarketplaceClaim>(`${this.base}/claims/${id}/resolve`, { outcome, note });
   }
 
   private pickInitial(list: MarketplaceBuilding[]): MarketplaceBuilding | null {

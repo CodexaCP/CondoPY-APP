@@ -110,6 +110,65 @@ export interface MarketplaceReservation {
   expiresAtUtc: string | null;
   cancelReason: string | null;
   createdAtUtc: string;
+
+  // Fase 7: lo que el comprador puede hacer y cómo van su reclamo y su reembolso (los decide el servidor).
+  // Cancelar: sin pagar (sin costo) o confirmada y antes del inicio (la comisión no se devuelve).
+  canCancel: boolean;
+  // "Reportar un problema": desde que empieza hasta 24 horas después de su fin.
+  canReportProblem: boolean;
+  // Llegó el aviso de inicio y todavía no respondió.
+  needsStartResponse: boolean;
+  startResponse: 'Attending' | 'NotUsing' | null;
+  claimStatus: MarketplaceClaimStatus | null;
+  claimResolution: MarketplaceClaimResolution | null;
+  claimResolutionNote: string | null;
+  refundAmount: number | null;
+  refundStatus: 'Pending' | 'Returned' | null;
+  // Hasta cuándo se le devuelve (72 horas desde que se creó el reembolso).
+  refundDueAtUtc: string | null;
+}
+
+export type MarketplaceClaimStatus = 'Open' | 'Resolved';
+export type MarketplaceClaimResolution = 'InFavorOfOwner' | 'InFavorOfBuyer';
+
+// Reserva en una de MIS publicaciones: quién reservó (solo nombre y unidad) y lo que voy a recibir.
+export interface MarketplaceOwnerReservation {
+  id: string;
+  reference: string;
+  listingId: string;
+  buildingId: string;
+  title: string;
+  unitCode: string;
+  buyerName: string;
+  buyerUnits: string;
+  startsAtUtc: string;
+  endsAtUtc: string;
+  hours: number;
+  ownerNetAmount: number;
+  status: MarketplaceReservationStatus;
+  creditStatus: 'None' | 'Pending' | 'Held' | 'Credited' | 'Reversed';
+  creditedAtUtc: string | null;
+  cancelReason: string | null;
+  canCancel: boolean;
+  canReportProblem: boolean;
+  claimStatus: MarketplaceClaimStatus | null;
+  claimResolution: MarketplaceClaimResolution | null;
+  claimResolutionNote: string | null;
+  createdAtUtc: string;
+}
+
+// Lo que pasa si cancelo, calculado por el servidor para avisarlo antes de confirmar.
+export interface MarketplaceCancelPreview {
+  reservationId: string;
+  role: 'Buyer' | 'Owner';
+  canCancel: boolean;
+  blockedReason: string | null;
+  // Comprador: solo la base. Propietario: se le devuelve todo al comprador.
+  refundAmount: number;
+  // Comprador: comisión que NO se devuelve. Propietario: comisión que asume.
+  commissionAmount: number;
+  requiresReason: boolean;
+  beforePayment: boolean;
 }
 
 // ── Pago y revisión ───────────────────────────────────────────────────────────
@@ -158,4 +217,55 @@ export interface MarketplaceStaffBuilding {
   canReviewPayments: boolean;
   canViewAccount: boolean;
   canEditAccount: boolean;
+}
+
+// ── Seguimiento del Encargado: reembolsos y reclamos ──────────────────────────
+
+// Reembolso pendiente al comprador: se devuelve fuera del sistema y se marca "devuelto".
+export interface MarketplaceRefund {
+  id: string;
+  reservationId: string;
+  buildingId: string;
+  reference: string;
+  title: string;
+  unitCode: string;
+  buyerName: string;
+  amount: number;
+  origin: 'BuyerCancellation' | 'OwnerCancellation' | 'ClaimResolution';
+  reason: string;
+  status: 'Pending' | 'Returned';
+  createdAtUtc: string;
+  // Plazo máximo para devolver (72 horas desde que se creó).
+  dueAtUtc: string;
+  overdue: boolean;
+  returnedAtUtc: string | null;
+  returnedByName: string | null;
+}
+
+// "Reportar un problema", con lo necesario para decidir.
+export interface MarketplaceClaim {
+  id: string;
+  reservationId: string;
+  buildingId: string;
+  reference: string;
+  title: string;
+  unitCode: string;
+  ownerName: string;
+  buyerName: string;
+  buyerUnits: string;
+  startsAtUtc: string;
+  endsAtUtc: string;
+  baseAmount: number;
+  commissionAmount: number;
+  totalAmount: number;
+  openedBy: 'Buyer' | 'Owner';
+  openedByName: string;
+  reason: string;
+  status: MarketplaceClaimStatus;
+  resolution: MarketplaceClaimResolution | null;
+  resolutionNote: string | null;
+  createdAtUtc: string;
+  resolvedAtUtc: string | null;
+  buyerStartResponse: 'Attending' | 'NotUsing' | null;
+  buyerStartResponseReason: string | null;
 }

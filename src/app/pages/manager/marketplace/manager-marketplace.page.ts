@@ -1,16 +1,18 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { AlertController, NavController, ToastController } from '@ionic/angular';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map, skip } from 'rxjs/operators';
 import { BuildingContextService } from '../../../core/building-context.service';
 import { resolveUploadUrl } from '../../../core/file-url.util';
 import { ManagerStateService } from '../../../core/manager-state.service';
 import { MarketplaceService } from '../../../core/marketplace.service';
-import { MarketplaceReviewItem } from '../../../core/marketplace.models';
+import { MarketplaceClaim, MarketplaceClaimResolution, MarketplaceRefund, MarketplaceReviewItem } from '../../../core/marketplace.models';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { errorMessage, fmtDateTime, fmtRange, formatGs, isPdf } from '../manager.util';
 
-// Revisión de los pagos de reservas del Marketplace: el Encargado ve el comprobante y confirma o rechaza.
+// Marketplace del Encargado: revisa los pagos de reservas (ve el comprobante y confirma o rechaza), devuelve los reembolsos a los
+// compradores (fuera del sistema; acá los marca "devueltos") y resuelve los reclamos ("Reportar un problema").
 @Component({
   selector: 'app-manager-marketplace',
   templateUrl: './manager-marketplace.page.html',
@@ -18,7 +20,11 @@ import { errorMessage, fmtDateTime, fmtRange, formatGs, isPdf } from '../manager
   standalone: false,
 })
 export class ManagerMarketplacePage implements OnInit, OnDestroy {
+  segment: 'payments' | 'refunds' | 'claims' = 'payments';
   items: MarketplaceReviewItem[] = [];
+  refunds: MarketplaceRefund[] = [];
+  claims: MarketplaceClaim[] = [];
+  claim: MarketplaceClaim | null = null;
   loading = true;
   error = '';
   selected: MarketplaceReviewItem | null = null;
@@ -32,6 +38,7 @@ export class ManagerMarketplacePage implements OnInit, OnDestroy {
   private seq = 0;
 
   constructor(
+    private route: ActivatedRoute,
     private market: MarketplaceService,
     private buildings: BuildingContextService,
     private state: ManagerStateService,
@@ -60,8 +67,13 @@ export class ManagerMarketplacePage implements OnInit, OnDestroy {
   ngOnDestroy(): void { this.sub.unsubscribe(); }
 
   ionViewWillEnter(): void {
+    // Un aviso trae la solapa (reembolsos o reclamos).
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab === 'refunds' || tab === 'claims' || tab === 'payments') this.segment = tab;
     if (this.buildings.selectedId) this.load(true);
   }
+
+  onSegmentChange(): void { this.load(); }
 
   refresh(event: CustomEvent): void {
     this.load(true, event);
@@ -145,22 +157,122 @@ export class ManagerMarketplacePage implements OnInit, OnDestroy {
     const buildingId = this.buildings.selectedId;
     if (!buildingId) { this.loading = false; event?.detail.complete(); return; }
 
-    if (!silent) { this.loading = true; this.items = []; }
+    if (!silent) { this.loading = true; }
     this.error = '';
 
     const mine = ++this.seq;
-    this.market.pendingPayments(buildingId).subscribe({
-      next: list => {
-        event?.detail.complete();
-        if (mine !== this.seq) return;
-        this.items = list;
-        this.loading = false;
+    const ok = <T>(apply: (list: T) => void) => (list: T) => {
+      event?.detail.complete();
+      if (mine !== this.seq) return;
+      apply(list);
+      this.loading = false;
+    };
+    const fail = (fallback: string) => (err: unknown) => {
+      event?.detail.complete();
+      if (mine !== this.seq) return;
+      this.loading = false;
+      this.error = errorMessage(err, fallback);
+    };
+
+    if (this.segment === 'payments') {
+      this.market.pendingPayments(buildingId).subscribe({
+        next: ok(list => { this.items = list; }),
+        error: fail('No se pudieron cargar los pagos del Marketplace.')
+      });
+    } else if (this.segment === 'refunds') {
+      this.market.refunds(buildingId).subscribe({
+        next: ok(list => { this.refunds = list; }),
+        error: fail('No se pudieron cargar los reembolsos.')
+      });
+    } else {
+      this.market.claims(buildingId).subscribe({
+        next: ok(list => { this.claims = list; }),
+        error: fail('No se pudieron cargar los reclamos.')
+      });
+    }
+  }
+
+  // ── Reembolsos ───────────────────────────────────────────────────────────
+
+  originLabel(origin: MarketplaceRefund['origin']): string {
+    switch (origin) {
+      case 'BuyerCancellation': return 'Canceló el comprador (se devuelve el precio; la comisión no)';
+      case 'OwnerCancellation': return 'Canceló el propietario (se devuelve todo)';
+      default:                  return 'Reclamo resuelto a favor del comprador (se devuelve todo)';
+    }
+  }
+
+  async markReturned(refund: MarketplaceRefund): Promise<void> {
+    const alert = await this.alerts.create({
+      header: 'Marcar como devuelto',
+      message: `Confirmá que ya le devolviste ${this.gs(refund.amount)} a ${refund.buyerName} por la reserva ${refund.reference}. ` +
+               'Queda registrado quién y cuándo.',
+      buttons: [
+        { text: 'Volver', role: 'cancel' },
+        { text: 'Sí, ya lo devolví', handler: () => this.runAction(this.market.markRefundReturned(refund.id), 'Reembolso marcado como devuelto') }
+      ]
+    });
+    await alert.present();
+  }
+
+  // ── Reclamos ─────────────────────────────────────────────────────────────
+
+  openClaim(c: MarketplaceClaim): void { this.claim = c; }
+  closeClaim(): void { this.claim = null; }
+
+  async resolveClaim(outcome: MarketplaceClaimResolution): Promise<void> {
+    const c = this.claim;
+    if (!c) return;
+
+    const favorBuyer = outcome === 'InFavorOfBuyer';
+    const alert = await this.alerts.create({
+      header: favorBuyer ? 'A favor del comprador' : 'A favor del propietario',
+      message: favorBuyer
+        ? `Se le devuelve todo (${this.gs(c.totalAmount)}) a ${c.buyerName}. El propietario no cobra y asume la comisión (${this.gs(c.commissionAmount)}): ` +
+          'se le descuenta de su saldo a favor o queda como deuda por gestión.'
+        : `No se devuelve nada. La ganancia del propietario (${this.gs(c.baseAmount)}) se acredita a su saldo a favor normalmente.`,
+      inputs: [{ name: 'note', type: 'textarea', placeholder: 'Explicación para las dos partes (obligatoria)', attributes: { maxlength: 500 } }],
+      buttons: [
+        { text: 'Volver', role: 'cancel' },
+        {
+          text: 'Resolver',
+          handler: (data: { note?: string }) => {
+            const note = (data.note ?? '').trim();
+            if (!note) {
+              void this.toast('Escribí una explicación: la ven las dos partes.', 'warning');
+              return false;
+            }
+            this.runAction(this.market.resolveClaim(c.id, outcome, note), 'Reclamo resuelto');
+            return true;
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  // Reembolsos y reclamos: al terminar se recarga la lista (y los contadores del Encargado).
+  private runAction(call: Observable<unknown>, okMessage: string): void {
+    this.acting = true;
+    call.subscribe({
+      next: () => {
+        this.acting = false;
+        this.claim = null;
+        void this.toast(okMessage, 'success');
+        this.load(true);
+        this.state.refresh().subscribe();
       },
-      error: err => {
-        event?.detail.complete();
-        if (mine !== this.seq) return;
-        this.loading = false;
-        this.error = errorMessage(err, 'No se pudieron cargar los pagos del Marketplace.');
+      error: async err => {
+        this.acting = false;
+        const alert = await this.alerts.create({
+          header: 'No se pudo completar',
+          message: errorMessage(err, 'Ocurrió un error. Intentá de nuevo.'),
+          buttons: ['Entendido']
+        });
+        await alert.present();
+        // Por ejemplo "este reclamo ya fue resuelto": se recarga para mostrar el estado real.
+        this.claim = null;
+        this.load(true);
       }
     });
   }

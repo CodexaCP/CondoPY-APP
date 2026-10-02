@@ -27,3 +27,15 @@
 .res-actions { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.25rem; }
 
 .mgr-kv.total .k, .mgr-kv.total .v { font-weight: 800; color: var(--brand-ink); }
+
+.mk-seg { margin: 0.5rem 1rem 0; }
+
+.res-quote {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: var(--brand-surface);
+  color: var(--brand-ink);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}

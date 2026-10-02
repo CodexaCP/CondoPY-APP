@@ -136,3 +136,8 @@ export function startOptions(item: MarketplaceExploreItem, nowMs: number): Start
   }
   return options;
 }
+
+// "03/10/2026 19:00": fecha y hora de un instante (plazos de devolución, etc.).
+export function formatDateTime(iso: string): string {
+  return `${formatDate(iso)} ${formatTime(iso)}`;
+}
