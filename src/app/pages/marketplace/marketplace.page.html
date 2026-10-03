@@ -236,6 +236,7 @@
         <p class="reason" *ngIf="item.status === 'Suspended' && item.statusReason">{{ item.statusReason }}</p>
 
         <div class="card-actions" *ngIf="canEdit(item)">
+          <ion-button size="small" fill="outline" *ngIf="item.activeReservations > 0" (click)="showReceived()">Ver reservas</ion-button>
           <ion-button size="small" fill="outline" (click)="edit(item)" [disabled]="busyId === item.id">Editar</ion-button>
           <ion-button size="small" fill="outline" color="warning" *ngIf="item.status === 'Active'"
                       (click)="suspend(item)" [disabled]="busyId === item.id">Pausar</ion-button>

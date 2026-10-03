@@ -457,6 +457,13 @@ export class MarketplacePage {
     });
   }
 
+  // Una publicación con reservas no se cierra hasta que terminen o se cancelen: este atajo lleva a ellas.
+  showReceived(): void {
+    this.segment = 'received';
+    this.loading = true;
+    this.loadSegment();
+  }
+
   // ── Mis publicaciones ────────────────────────────────────────────────────
   publish(): void { this.router.navigateByUrl('/area/marketplace/new'); }
   edit(item: MarketplaceListing): void { this.router.navigateByUrl(`/area/marketplace/${item.id}/edit`); }
