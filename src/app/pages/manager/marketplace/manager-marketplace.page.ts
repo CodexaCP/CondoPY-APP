@@ -3,11 +3,12 @@ import { ActivatedRoute } from '@angular/router';
 import { AlertController, NavController, ToastController } from '@ionic/angular';
 import { Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map, skip } from 'rxjs/operators';
+import { AuthService } from '../../../core/auth.service';
 import { BuildingContextService } from '../../../core/building-context.service';
 import { resolveUploadUrl } from '../../../core/file-url.util';
 import { ManagerStateService } from '../../../core/manager-state.service';
 import { MarketplaceService } from '../../../core/marketplace.service';
-import { MarketplaceClaim, MarketplaceClaimResolution, MarketplaceRefund, MarketplaceReviewItem } from '../../../core/marketplace.models';
+import { MarketplaceClaim, MarketplaceClaimResolution, MarketplaceHandoverNote, MarketplaceRefund, MarketplaceReviewItem } from '../../../core/marketplace.models';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { errorMessage, fmtDateTime, fmtRange, formatGs, isPdf } from '../manager.util';
 
@@ -20,7 +21,9 @@ import { errorMessage, fmtDateTime, fmtRange, formatGs, isPdf } from '../manager
   standalone: false,
 })
 export class ManagerMarketplacePage implements OnInit, OnDestroy {
-  segment: 'payments' | 'refunds' | 'claims' = 'payments';
+  segment: 'payments' | 'refunds' | 'claims' | 'notes' = 'payments';
+  notes: MarketplaceHandoverNote[] = [];
+  note: MarketplaceHandoverNote | null = null;
   items: MarketplaceReviewItem[] = [];
   refunds: MarketplaceRefund[] = [];
   claims: MarketplaceClaim[] = [];
@@ -39,6 +42,7 @@ export class ManagerMarketplacePage implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
+    private auth: AuthService,
     private market: MarketplaceService,
     private buildings: BuildingContextService,
     private state: ManagerStateService,
@@ -69,7 +73,7 @@ export class ManagerMarketplacePage implements OnInit, OnDestroy {
   ionViewWillEnter(): void {
     // Un aviso trae la solapa (reembolsos o reclamos).
     const tab = this.route.snapshot.queryParamMap.get('tab');
-    if (tab === 'refunds' || tab === 'claims' || tab === 'payments') this.segment = tab;
+    if (tab === 'refunds' || tab === 'claims' || tab === 'payments' || tab === 'notes') this.segment = tab;
     if (this.buildings.selectedId) this.load(true);
   }
 
@@ -184,10 +188,15 @@ export class ManagerMarketplacePage implements OnInit, OnDestroy {
         next: ok(list => { this.refunds = list; }),
         error: fail('No se pudieron cargar los reembolsos.')
       });
-    } else {
+    } else if (this.segment === 'claims') {
       this.market.claims(buildingId).subscribe({
         next: ok(list => { this.claims = list; }),
         error: fail('No se pudieron cargar los reclamos.')
+      });
+    } else {
+      this.market.handoverNotes(buildingId).subscribe({
+        next: ok(list => { this.notes = list; }),
+        error: fail('No se pudieron cargar las notas de cambio de propietario.')
       });
     }
   }
@@ -213,6 +222,33 @@ export class ManagerMarketplacePage implements OnInit, OnDestroy {
       ]
     });
     await alert.present();
+  }
+
+  // ── Cambios de propietario principal ─────────────────────────────────────
+
+  // Abrir la nota la marca como leída (la primera vez) y trae la situación actual de cada operación.
+  openNote(n: MarketplaceHandoverNote): void {
+    this.market.handoverNote(n.id).subscribe({
+      next: opened => { this.note = opened; },
+      error: err => { void this.toast(errorMessage(err, 'No se pudo abrir la nota.'), 'warning'); }
+    });
+  }
+
+  closeNote(): void {
+    this.note = null;
+    this.load(true);
+  }
+
+  notePdf(): void {
+    if (!this.note) return;
+    window.open(this.market.handoverPdfUrl(this.note.id, this.auth.getToken() ?? ''), '_system');
+  }
+
+  opStatus(status: string, credit: string, claim: boolean, refund: string | null): string {
+    const base: Record<string, string> = { InReview: 'Pago en revisión', Confirmed: 'Confirmada', Completed: 'Finalizada', Cancelled: 'Cancelada' };
+    const creditLabel: Record<string, string> = { Pending: 'acreditación pendiente', Held: 'acreditación retenida', Credited: 'acreditada', Reversed: 'acreditación revertida' };
+    const extra = [creditLabel[credit], claim ? 'reclamo abierto' : '', refund === 'Pending' ? 'reembolso pendiente' : refund === 'Returned' ? 'reembolso devuelto' : ''].filter(Boolean);
+    return (base[status] ?? status) + (extra.length ? ' (' + extra.join(', ') + ')' : '');
   }
 
   // ── Reclamos ─────────────────────────────────────────────────────────────

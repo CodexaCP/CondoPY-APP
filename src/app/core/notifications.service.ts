@@ -62,6 +62,9 @@ function resolveManagerRoute(n: { type?: string | null; entityType?: string | nu
       return { path: '/manager/marketplace?tab=refunds' };
     case 'MarketplaceClaim':
       return { path: '/manager/marketplace?tab=claims' };
+    // Cambió el propietario principal de una unidad con operaciones abiertas.
+    case 'MarketplaceHandoverNote':
+      return { path: '/manager/marketplace?tab=notes' };
     default:
       return null;
   }

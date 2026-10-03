@@ -26,6 +26,7 @@
     <ion-segment-button value="payments"><ion-label>Pagos</ion-label></ion-segment-button>
     <ion-segment-button value="refunds"><ion-label>Reembolsos</ion-label></ion-segment-button>
     <ion-segment-button value="claims"><ion-label>Reclamos</ion-label></ion-segment-button>
+    <ion-segment-button value="notes"><ion-label>Cambios</ion-label></ion-segment-button>
   </ion-segment>
 
   <div class="mgr-state" *ngIf="loading">
@@ -110,6 +111,61 @@
       </div>
     </div>
   </ng-container>
+
+  <!-- ── Cambios de propietario principal ── -->
+  <ng-container *ngIf="segment === 'notes' && !loading && !error">
+    <p class="mk-title">Cambios de propietario principal</p>
+
+    <div class="mgr-state" *ngIf="notes.length === 0">
+      <ion-icon name="checkmark-done-outline"></ion-icon>
+      <p>No hay notas sin leer.</p>
+    </div>
+
+    <div class="mgr-row" *ngFor="let n of notes" (click)="openNote(n)">
+      <div class="mgr-row-main">
+        <p class="mgr-row-title">Unidad {{ n.unitCode }} · {{ n.buildingName }}</p>
+        <p class="mgr-row-sub">Antes: {{ n.previousOwnerName }}</p>
+        <p class="mgr-row-sub">Ahora: {{ n.newOwnerName || 'todavía no hay otro principal' }}</p>
+        <p class="mgr-row-sub">{{ n.reservationCount }} {{ n.reservationCount === 1 ? 'operación abierta' : 'operaciones abiertas' }}</p>
+      </div>
+      <div class="mgr-row-side">
+        <span class="mgr-pill warn">Sin leer</span>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Nota de cambio de propietario principal -->
+  <ion-modal [isOpen]="!!note" (didDismiss)="closeNote()" [initialBreakpoint]="0.9" [breakpoints]="[0, 0.9, 1]">
+    <ng-template>
+      <ion-content *ngIf="note as n">
+        <div class="res-detail">
+          <div class="res-head">
+            <div>
+              <p class="res-title">Unidad {{ n.unitCode }}</p>
+              <p class="res-sub">{{ n.buildingName }}</p>
+            </div>
+          </div>
+          <div class="mgr-kv"><span class="k">Propietario anterior</span><span class="v">{{ n.previousOwnerName }}</span></div>
+          <div class="mgr-kv"><span class="k">Nuevo principal</span><span class="v">{{ n.newOwnerName || 'Todavía no hay' }}</span></div>
+
+          <p class="res-label">Qué pasó</p>
+          <p class="res-quote res-pre">{{ n.content }}</p>
+
+          <p class="res-label">Situación actual ({{ n.operations.length }})</p>
+          <div class="mgr-kv" *ngFor="let op of n.operations">
+            <span class="k">{{ op.reference }} · {{ op.title }}</span>
+            <span class="v">{{ opStatus(op.status, op.creditStatus, op.hasOpenClaim, op.refundStatus) }}</span>
+          </div>
+
+          <div class="res-actions">
+            <ion-button expand="block" fill="outline" (click)="notePdf()">
+              <ion-icon name="document-text-outline" slot="start"></ion-icon>Descargar PDF
+            </ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 
   <!-- Reclamo -->
   <ion-modal [isOpen]="!!claim" (didDismiss)="closeClaim()" [initialBreakpoint]="0.9" [breakpoints]="[0, 0.9, 1]">

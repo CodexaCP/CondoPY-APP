@@ -8,6 +8,7 @@ import {
   MarketplaceCancelPreview,
   MarketplaceClaim,
   MarketplaceClaimResolution,
+  MarketplaceHandoverNote,
   MarketplaceListing,
   MarketplaceListingCreateRequest,
   MarketplaceExploreItem,
@@ -190,6 +191,27 @@ export class MarketplaceService {
 
   rejectPayment(paymentId: string, reason: string): Observable<MarketplaceReviewItem> {
     return this.http.post<MarketplaceReviewItem>(`${this.base}/payments/${paymentId}/reject`, { reason });
+  }
+
+  // ── Documentos ───────────────────────────────────────────────────────────
+
+  // Comprobante interno de la reserva en PDF (no fiscal): comprador, propietario de la reserva o personal. Se abre con el token en la URL.
+  receiptPdfUrl(reservationId: string, token: string): string {
+    return `${this.base}/reservations/${reservationId}/receipt-pdf?access_token=${token}`;
+  }
+
+  // Notas de cambio de propietario principal (Encargado): las no leídas primero.
+  handoverNotes(buildingId: string, includeRead = false): Observable<MarketplaceHandoverNote[]> {
+    return this.http.get<MarketplaceHandoverNote[]>(`${this.base}/handover-notes`, { params: { buildingId, includeRead } });
+  }
+
+  // Abre la nota con la situación actual (la primera vez queda marcada como leída).
+  handoverNote(id: string): Observable<MarketplaceHandoverNote> {
+    return this.http.get<MarketplaceHandoverNote>(`${this.base}/handover-notes/${id}`);
+  }
+
+  handoverPdfUrl(id: string, token: string): string {
+    return `${this.base}/handover-notes/${id}/pdf?access_token=${token}`;
   }
 
   // ── Seguimiento del Encargado: reembolsos y reclamos ─────────────────────

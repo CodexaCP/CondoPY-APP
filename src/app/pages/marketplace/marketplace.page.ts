@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActionSheetController, AlertController, NavController, ToastController } from '@ionic/angular';
+import { AuthService } from '../../core/auth.service';
 import { MarketplaceService } from '../../core/marketplace.service';
 import {
   MarketplaceBuilding,
@@ -57,6 +58,7 @@ export class MarketplacePage {
 
   constructor(
     private readonly market: MarketplaceService,
+    private readonly auth: AuthService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly navCtrl: NavController,
@@ -455,6 +457,16 @@ export class MarketplacePage {
       },
       error: () => this.loadSegment(event)
     });
+  }
+
+  // Comprobante interno de la reserva (PDF, no fiscal): se abre con el token en la URL, como los demás PDF de la app.
+  openReceipt(reservationId: string): void {
+    window.open(this.market.receiptPdfUrl(reservationId, this.auth.getToken() ?? ''), '_blank');
+  }
+
+  // Hay comprobante cuando el pago ya se confirmó: la reserva está confirmada o finalizada, o se canceló después de pagar.
+  hasReceipt(r: MarketplaceReservation): boolean {
+    return r.status === 'Confirmed' || r.status === 'Completed' || (r.status === 'Cancelled' && r.refundStatus !== null);
   }
 
   // Una publicación con reservas no se cierra hasta que terminen o se cancelen: este atajo lleva a ellas.

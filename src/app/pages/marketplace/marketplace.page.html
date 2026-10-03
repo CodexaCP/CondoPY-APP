@@ -136,7 +136,11 @@
           <ng-container *ngIf="r.claimResolutionNote">{{ r.claimResolutionNote }}</ng-container>
         </p>
 
-        <div class="card-actions" *ngIf="r.status !== 'PendingPayment' && (r.canCancel || r.canReportProblem)">
+        <div class="card-actions" *ngIf="r.status !== 'PendingPayment' && (r.canCancel || r.canReportProblem || hasReceipt(r))">
+          <ion-button size="small" fill="outline" color="medium" *ngIf="hasReceipt(r)" (click)="openReceipt(r.id)">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+            Comprobante (PDF)
+          </ion-button>
           <ion-button size="small" fill="outline" color="danger" *ngIf="r.canCancel" (click)="cancelPaid(r)" [disabled]="busyId === r.id">
             Cancelar reserva
           </ion-button>
@@ -187,7 +191,11 @@
           <ng-container *ngIf="r.claimResolutionNote">{{ r.claimResolutionNote }}</ng-container>
         </p>
 
-        <div class="card-actions" *ngIf="r.canCancel || r.canReportProblem">
+        <div class="card-actions" *ngIf="r.canCancel || r.canReportProblem || r.status !== 'InReview'">
+          <ion-button size="small" fill="outline" color="medium" *ngIf="r.status !== 'InReview'" (click)="openReceipt(r.id)">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+            Comprobante (PDF)
+          </ion-button>
           <ion-button size="small" fill="outline" color="danger" *ngIf="r.canCancel" (click)="ownerCancel(r)" [disabled]="busyId === r.id">
             Cancelar reserva
           </ion-button>

@@ -269,3 +269,36 @@ export interface MarketplaceClaim {
   buyerStartResponse: 'Attending' | 'NotUsing' | null;
   buyerStartResponseReason: string | null;
 }
+
+// ── Notas de cambio de propietario principal (Encargado) ──────────────────────
+
+// Estado ACTUAL de una reserva afectada por el cambio.
+export interface MarketplaceHandoverOperation {
+  reservationId: string;
+  reference: string;
+  title: string;
+  status: string;
+  creditStatus: string;
+  startsAtUtc: string;
+  endsAtUtc: string;
+  ownerNetAmount: number;
+  hasOpenClaim: boolean;
+  refundStatus: 'Pending' | 'Returned' | null;
+}
+
+// Nota interna que se genera cuando una unidad deja de tener a su propietario principal y le quedan reservas abiertas.
+export interface MarketplaceHandoverNote {
+  id: string;
+  buildingId: string;
+  buildingName: string;
+  unitCode: string;
+  previousOwnerName: string;
+  newOwnerName: string | null;
+  content: string;
+  reservationCount: number;
+  createdAtUtc: string;
+  readAtUtc: string | null;
+  readByName: string | null;
+  // Solo al abrir la nota.
+  operations: MarketplaceHandoverOperation[];
+}
