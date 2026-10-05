@@ -51,6 +51,8 @@ const VISUALS: Record<string, NotificationVisual> = {
   PlanExpiringSoon:         { icon: 'time-outline',              tone: 'warn' },
   PlanExpired:              { icon: 'alert-circle-outline',      tone: 'plan' },
   PlanSuspended:            { icon: 'lock-closed-outline',       tone: 'bad' },
+  // Ajuste de un gasto por nota de crédito del proveedor (saldo a favor)
+  SupplierCreditApplied:    { icon: 'wallet-outline',            tone: 'ok' },
   // Marketplace
   MarketplaceReservationExpired:   { icon: 'time-outline',            tone: 'plan' },
   MarketplacePaymentPending:       { icon: 'cash-outline',            tone: 'warn' },

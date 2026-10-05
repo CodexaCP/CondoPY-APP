@@ -245,7 +245,8 @@ export type NotificationType =
   | 'MarketplaceClaimOpened'
   | 'MarketplaceClaimResolved'
   | 'MarketplaceStartNotice'
-  | 'MarketplaceHandoverNote';
+  | 'MarketplaceHandoverNote'
+  | 'SupplierCreditApplied';
 
 export interface AppNotification {
   id: string;
