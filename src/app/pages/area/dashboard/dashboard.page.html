@@ -94,6 +94,33 @@
 
   </div>
 
+  <!-- ── Publicidad (solo en edificios con el módulo activado) ── -->
+  <ng-container *ngIf="ads.length > 0 || adsPhone">
+    <div class="section-hd">
+      <span class="section-hd-title">Publicidad</span>
+    </div>
+
+    <div class="ads-row" *ngIf="ads.length > 0">
+      <div class="ad-card" *ngFor="let ad of ads" (click)="openAd(ad)">
+        <img class="ad-img" [src]="adImage(ad)" [alt]="ad.advertiserName" loading="lazy" />
+        <div class="ad-body">
+          <span class="ad-name">{{ ad.advertiserName }}</span>
+          <span class="ad-desc" *ngIf="ad.description">{{ ad.description }}</span>
+          <span class="ad-cta" *ngIf="ad.ctaUrl">{{ ad.ctaText }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sin campañas: invitación a publicitar, con el teléfono de la administración -->
+    <div class="ad-fallback" *ngIf="ads.length === 0 && adsPhone" (click)="callManager()">
+      <ion-icon name="megaphone-outline"></ion-icon>
+      <div>
+        <strong>Espacio publicitario disponible</strong>
+        <span>Contactá a la administración para publicitar tu negocio acá.</span>
+      </div>
+    </div>
+  </ng-container>
+
   <!-- ── Comunicados ── -->
   <div class="section-hd">
     <span class="section-hd-title">Comunicados</span>

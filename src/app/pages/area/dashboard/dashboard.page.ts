@@ -8,7 +8,9 @@ import { NotificationAlertService } from '../../../core/notification-alert.servi
 import { AnnouncementsService } from '../../../core/announcements.service';
 import { AccountService } from '../../../core/account.service';
 import { MarketplaceService } from '../../../core/marketplace.service';
-import { LoginResponse, MyUnit, AccountStatementPeriod, Announcement } from '../../../core/models';
+import { AdsService } from '../../../core/ads.service';
+import { resolveUploadUrl } from '../../../core/file-url.util';
+import { LoginResponse, MyUnit, AccountStatementPeriod, Announcement, AdSlot } from '../../../core/models';
 
 const CAT_ICON: Record<string, string> = {
   General:      'information-circle-outline',
@@ -39,6 +41,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   comunicados: Announcement[] = [];
   comunicadosLoading = true;
 
+  // Publicidad: vacía si ninguno de mis edificios tiene el módulo activado.
+  ads: AdSlot[] = [];
+  adsPhone: string | null = null;
+
   private pollSub?: Subscription;
 
   get initials(): string {
@@ -64,7 +70,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private alerts: NotificationAlertService,
     private announcementsSvc: AnnouncementsService,
     private accountSvc: AccountService,
-    private marketplaceSvc: MarketplaceService
+    private marketplaceSvc: MarketplaceService,
+    private adsSvc: AdsService
   ) {}
 
   ngOnInit(): void {
@@ -83,6 +90,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.balanceLoading = true;
     this.auth.getMyUnits().pipe(catchError(() => of([]))).subscribe(units => {
       this.unitsCount = units.length;
+      this.loadAds(units);
       this.primaryUnit = units.find(u => u.isPrimary) ?? units[0] ?? null;
       if (!this.primaryUnit) { this.balanceLoading = false; return; }
       forkJoin(units.map(u =>
@@ -102,6 +110,24 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.comunicados = items.slice(0, 2);
       this.comunicadosLoading = false;
     });
+  }
+
+  loadAds(units: MyUnit[]): void {
+    this.adsSvc.getForBuildings(units.map(u => u.buildingId)).pipe(catchError(() => of({ slots: [], managerPhone: null }))).subscribe(res => {
+      this.ads = res.slots;
+      this.adsPhone = res.managerPhone;
+    });
+  }
+
+  adImage(ad: AdSlot): string { return resolveUploadUrl(ad.imageUrl); }
+
+  openAd(ad: AdSlot): void {
+    const url = this.adsSvc.linkFor(ad.ctaUrl);
+    if (url) window.open(url, '_blank');
+  }
+
+  callManager(): void {
+    if (this.adsPhone) window.open(`tel:${this.adsPhone.replace(/[^\d+]/g, '')}`, '_system');
   }
 
   formatAmount(amount: number): string {

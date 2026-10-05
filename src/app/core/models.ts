@@ -348,3 +348,21 @@ export interface PresidentSettlementReview {
   settlement: ExpenseSettlementSummary;
   expenses: PresidentSettlementExpenseItem[];
 }
+
+// Publicidad del edificio (banners). Viene vacía si el edificio no tiene el módulo activado.
+export interface AdSlot {
+  id: string;
+  advertiserName: string;
+  description: string | null;
+  ctaText: string;
+  ctaUrl: string | null;
+  imageUrl: string;
+  category: string;
+  position: number;
+}
+
+export interface BuildingAds {
+  slots: AdSlot[];
+  // Teléfono de contacto del edificio, para el banner "publicitá acá" cuando no hay campañas.
+  managerPhone: string | null;
+}
