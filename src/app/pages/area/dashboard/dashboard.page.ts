@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, ElementRef, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -11,6 +11,8 @@ import { MarketplaceService } from '../../../core/marketplace.service';
 import { AdsService } from '../../../core/ads.service';
 import { resolveUploadUrl } from '../../../core/file-url.util';
 import { LoginResponse, MyUnit, AccountStatementPeriod, Announcement, AdSlot } from '../../../core/models';
+
+const ADS_ROTATION_MS = 5000;
 
 const CAT_ICON: Record<string, string> = {
   General:      'information-circle-outline',
@@ -44,6 +46,9 @@ export class DashboardPage implements OnInit, OnDestroy {
   // Publicidad: vacía si ninguno de mis edificios tiene el módulo activado.
   ads: AdSlot[] = [];
   adsPhone: string | null = null;
+  @ViewChild('adsRow') adsRow?: ElementRef<HTMLElement>;
+  private adsTimer?: ReturnType<typeof setInterval>;
+  private adsResume?: ReturnType<typeof setTimeout>;
 
   private pollSub?: Subscription;
 
@@ -116,7 +121,47 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.adsSvc.getForBuildings(units.map(u => u.buildingId)).pipe(catchError(() => of({ slots: [], managerPhone: null }))).subscribe(res => {
       this.ads = res.slots;
       this.adsPhone = res.managerPhone;
+      this.startAdsRotation();
     });
+  }
+
+  // Los banners avanzan solos cada 5 s (y vuelven al primero al llegar al último). Se detienen mientras la persona
+  // toca o desliza la fila y siguen 5 s después de soltarla.
+  startAdsRotation(): void {
+    this.stopAdsRotation();
+    if (this.ads.length < 2) return;
+    this.adsTimer = setInterval(() => this.nextAd(), ADS_ROTATION_MS);
+  }
+
+  stopAdsRotation(): void {
+    if (this.adsTimer) clearInterval(this.adsTimer);
+    if (this.adsResume) clearTimeout(this.adsResume);
+    this.adsTimer = undefined;
+    this.adsResume = undefined;
+  }
+
+  pauseAds(): void {
+    this.stopAdsRotation();
+  }
+
+  resumeAdsLater(): void {
+    if (this.adsResume) clearTimeout(this.adsResume);
+    this.adsResume = setTimeout(() => this.startAdsRotation(), ADS_ROTATION_MS);
+  }
+
+  private nextAd(): void {
+    const row = this.adsRow?.nativeElement;
+    const cards = row ? Array.from(row.children) as HTMLElement[] : [];
+    if (!row || cards.length < 2) return;
+
+    const first = cards[0].offsetLeft;
+    // Tarjeta que está a la vista (la más cercana al borde izquierdo); la siguiente, o la primera si ya es la última.
+    let current = 0;
+    cards.forEach((c, i) => {
+      if (Math.abs(c.offsetLeft - first - row.scrollLeft) < Math.abs(cards[current].offsetLeft - first - row.scrollLeft)) current = i;
+    });
+    const next = (current + 1) % cards.length;
+    row.scrollTo({ left: cards[next].offsetLeft - first, behavior: 'smooth' });
   }
 
   adImage(ad: AdSlot): string { return resolveUploadUrl(ad.imageUrl); }
@@ -159,5 +204,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   goAmenities():   void { this.router.navigateByUrl('/area/amenities'); }
   goMarketplace(): void { this.router.navigateByUrl('/area/marketplace'); }
 
-  ngOnDestroy(): void { this.pollSub?.unsubscribe(); }
+  ionViewWillLeave(): void { this.stopAdsRotation(); }
+
+  ngOnDestroy(): void {
+    this.pollSub?.unsubscribe();
+    this.stopAdsRotation();
+  }
 }

@@ -100,7 +100,9 @@
       <span class="section-hd-title">Publicidad</span>
     </div>
 
-    <div class="ads-row" *ngIf="ads.length > 0">
+    <div class="ads-row" #adsRow *ngIf="ads.length > 0"
+         (touchstart)="pauseAds()" (touchend)="resumeAdsLater()" (touchcancel)="resumeAdsLater()"
+         (mousedown)="pauseAds()" (mouseup)="resumeAdsLater()">
       <div class="ad-card" *ngFor="let ad of ads" (click)="openAd(ad)">
         <img class="ad-img" [src]="adImage(ad)" [alt]="ad.advertiserName" loading="lazy" />
         <div class="ad-body">
