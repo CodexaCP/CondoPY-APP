@@ -99,3 +99,31 @@ ion-tab-button {
   ion-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
   p { margin: 0.25rem 0 0; font-size: 0.9rem; }
 }
+
+// ── Aviso en pantalla de una notificación nueva (NotificationAlertService) ───────────────────────
+// Banner arriba, tarjeta blanca con una franja del color del tipo de aviso. Tocarlo abre el detalle.
+ion-toast.notif-toast {
+  --background: #ffffff;
+  --color: var(--brand-muted, #475569);
+  --border-radius: 14px;
+  --box-shadow: 0 10px 30px rgba(17, 54, 74, 0.22);
+  --max-width: 520px;
+  --button-color: var(--brand-muted, #64748b);
+  --notif-accent: #3b82f6;
+  margin-top: max(env(safe-area-inset-top), 8px);
+  cursor: pointer;
+
+  &::part(container) { border-left: 5px solid var(--notif-accent); }
+  &::part(header)    { color: var(--brand-ink, #0f2f43); font-weight: 700; font-size: 0.95rem; }
+  &::part(message)   { font-size: 0.85rem; line-height: 1.35; }
+  &::part(icon)      { color: var(--notif-accent); font-size: 1.6rem; }
+
+  &.tone-ok     { --notif-accent: #22c55e; }
+  &.tone-warn   { --notif-accent: #f59e0b; }
+  &.tone-bad    { --notif-accent: #ef4444; }
+  &.tone-info   { --notif-accent: #3b82f6; }
+  &.tone-plan   { --notif-accent: #f97316; }
+  &.tone-brand  { --notif-accent: #6366f1; }
+  &.tone-teal   { --notif-accent: #14b8a6; }
+  &.tone-violet { --notif-accent: #8b5cf6; }
+}

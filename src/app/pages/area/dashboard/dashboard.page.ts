@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription, forkJoin, interval, of } from 'rxjs';
-import { startWith, switchMap, catchError } from 'rxjs/operators';
+import { Subscription, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth.service';
 import { canPayExpenses, roleLabel as roleName } from '../../../core/roles';
-import { NotificationsService } from '../../../core/notifications.service';
+import { NotificationAlertService } from '../../../core/notification-alert.service';
 import { AnnouncementsService } from '../../../core/announcements.service';
 import { AccountService } from '../../../core/account.service';
 import { MarketplaceService } from '../../../core/marketplace.service';
@@ -61,7 +61,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private notificationsSvc: NotificationsService,
+    private alerts: NotificationAlertService,
     private announcementsSvc: AnnouncementsService,
     private accountSvc: AccountService,
     private marketplaceSvc: MarketplaceService
@@ -69,10 +69,8 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.user = this.auth.getUser();
-    this.pollSub = interval(30_000).pipe(
-      startWith(0),
-      switchMap(() => this.notificationsSvc.getUnreadCount().pipe(catchError(() => of({ count: 0 }))))
-    ).subscribe(dto => { this.unreadCount = dto.count; });
+    // El contador de la campana lo mantiene el servicio de avisos (consulta cada 30 s y al llegar una push).
+    this.pollSub = this.alerts.unreadCount$.subscribe(count => { this.unreadCount = count; });
   }
 
   ionViewWillEnter(): void {

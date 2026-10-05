@@ -1,12 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription, interval, of } from 'rxjs';
-import { catchError, startWith, switchMap } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth.service';
 import { BuildingContextService } from '../../../core/building-context.service';
 import { ManagerStateService } from '../../../core/manager-state.service';
 import { ManagerSummary } from '../../../core/manager.models';
-import { NotificationsService } from '../../../core/notifications.service';
+import { NotificationAlertService } from '../../../core/notification-alert.service';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { formatGs } from '../manager.util';
 
@@ -31,7 +31,7 @@ export class ManagerDashboardPage implements OnInit, OnDestroy {
     private router: Router,
     private buildings: BuildingContextService,
     private state: ManagerStateService,
-    private notifications: NotificationsService,
+    private alerts: NotificationAlertService,
     private gate: PlanGateService
   ) {}
 
@@ -53,13 +53,8 @@ export class ManagerDashboardPage implements OnInit, OnDestroy {
       if (s) { this.loading = false; this.error = false; }
     }));
 
-    // Contador de la campana: cada 30 segundos, como en la app de propietarios.
-    this.subs.add(
-      interval(30_000).pipe(
-        startWith(0),
-        switchMap(() => this.notifications.getUnreadCount().pipe(catchError(() => of({ count: 0 }))))
-      ).subscribe(dto => { this.unreadCount = dto.count; })
-    );
+    // Contador de la campana: lo mantiene el servicio de avisos (consulta cada 30 s y al llegar una push).
+    this.subs.add(this.alerts.unreadCount$.subscribe(count => { this.unreadCount = count; }));
   }
 
   ionViewWillEnter(): void {

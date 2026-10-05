@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { PushService } from '../../core/push.service';
+import { NotificationAlertService } from '../../core/notification-alert.service';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +18,7 @@ export class LoginPage {
   showPass = false;
   errorMsg = '';
 
-  constructor(private auth: AuthService, private router: Router, private pushSvc: PushService) {}
+  constructor(private auth: AuthService, private router: Router, private pushSvc: PushService, private alerts: NotificationAlertService) {}
 
   submit(): void {
     this.submitted = true;
@@ -33,6 +34,8 @@ export class LoginPage {
           this.router.navigateByUrl('/change-password');
         } else {
           this.pushSvc.init();
+          // Primera consulta ya (deja la marca de base); el resto sigue cada 30 s.
+          void this.alerts.refresh();
           this.router.navigateByUrl('/');
         }
       },

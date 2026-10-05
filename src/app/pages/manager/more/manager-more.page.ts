@@ -2,12 +2,12 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { App } from '@capacitor/app';
 import { AlertController } from '@ionic/angular';
-import { Subscription, combineLatest, interval, of } from 'rxjs';
-import { catchError, startWith, switchMap } from 'rxjs/operators';
+import { Subscription, combineLatest, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth.service';
 import { BuildingContextService } from '../../../core/building-context.service';
 import { MarketplaceService } from '../../../core/marketplace.service';
-import { NotificationsService } from '../../../core/notifications.service';
+import { NotificationAlertService } from '../../../core/notification-alert.service';
 import { PushService } from '../../../core/push.service';
 import { roleLabel } from '../../../core/roles';
 
@@ -28,7 +28,7 @@ export class ManagerMorePage implements OnInit, OnDestroy {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private notifications: NotificationsService,
+    private notificationAlerts: NotificationAlertService,
     private pushSvc: PushService,
     private alerts: AlertController,
     private buildings: BuildingContextService,
@@ -42,12 +42,7 @@ export class ManagerMorePage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.sub.add(
-      interval(30_000).pipe(
-        startWith(0),
-        switchMap(() => this.notifications.getUnreadCount().pipe(catchError(() => of({ count: 0 }))))
-      ).subscribe(dto => { this.unreadCount = dto.count; })
-    );
+    this.sub.add(this.notificationAlerts.unreadCount$.subscribe(count => { this.unreadCount = count; }));
 
     this.sub.add(
       combineLatest([this.buildings.selected$, this.market.staffBuildings$]).subscribe(([selected, list]) => {

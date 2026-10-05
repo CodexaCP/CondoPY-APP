@@ -3,42 +3,8 @@ import { NavController } from '@ionic/angular';
 import { NotificationsService, resolveNotificationRoute } from '../../core/notifications.service';
 import { AuthService } from '../../core/auth.service';
 import { AppNotification } from '../../core/models';
-
-const TYPE_ICON: Record<string, string> = {
-  OwnerPaymentSubmitted:    'cloud-upload-outline',
-  PaymentUnderReview:       'search-outline',
-  PaymentApproved:          'checkmark-circle-outline',
-  PaymentRejected:          'close-circle-outline',
-  LateFeeConfigChanged:     'alert-circle-outline',
-  ExpensePeriodPublished:   'receipt-outline',
-  InvoiceIssued:            'document-text-outline',
-  SettlementPendingPresidentReview: 'create-outline',
-  ClaimCreated:             'chatbubble-ellipses-outline',
-  ClaimStatusUpdated:       'chatbubble-ellipses-outline',
-  AmenityReservationCreated: 'calendar-outline',
-  AmenityReservationUpdated: 'calendar-outline',
-  PlanExpiringSoon:         'time-outline',
-  PlanExpired:              'alert-circle-outline',
-  PlanSuspended:            'lock-closed-outline'
-};
-
-const TYPE_COLOR: Record<string, string> = {
-  OwnerPaymentSubmitted:    '#f59e0b',
-  PaymentUnderReview:       '#3b82f6',
-  PaymentApproved:          '#22c55e',
-  PaymentRejected:          '#ef4444',
-  LateFeeConfigChanged:     '#f97316',
-  ExpensePeriodPublished:   '#6366f1',
-  InvoiceIssued:            '#0ea5e9',
-  SettlementPendingPresidentReview: '#8b5cf6',
-  ClaimCreated:             '#0ea5e9',
-  ClaimStatusUpdated:       '#0ea5e9',
-  AmenityReservationCreated: '#14b8a6',
-  AmenityReservationUpdated: '#14b8a6',
-  PlanExpiringSoon:         '#f59e0b',
-  PlanExpired:              '#f97316',
-  PlanSuspended:            '#ef4444'
-};
+import { NotificationAlertService } from '../../core/notification-alert.service';
+import { notificationColor, notificationVisual } from '../../core/notification-visuals';
 
 @Component({
   selector: 'app-notifications',
@@ -59,7 +25,8 @@ export class NotificationsPage {
   constructor(
     private svc: NotificationsService,
     private auth: AuthService,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private alerts: NotificationAlertService
   ) {}
 
   ionViewWillEnter(): void {
@@ -85,7 +52,7 @@ export class NotificationsPage {
   handleTap(n: AppNotification): void {
     if (!n.isRead) {
       n.isRead = true;
-      this.svc.markRead(n.id).subscribe();
+      this.svc.markRead(n.id).subscribe(() => void this.alerts.refresh());
     }
     const route = resolveNotificationRoute(n, this.auth.getUser()?.role);
     if (route) {
@@ -96,13 +63,13 @@ export class NotificationsPage {
   markAllAsRead(): void {
     this.markingAll = true;
     this.svc.markAllRead().subscribe({
-      next: () => { this.items.forEach(n => n.isRead = true); this.markingAll = false; },
+      next: () => { this.items.forEach(n => n.isRead = true); this.markingAll = false; void this.alerts.refresh(); },
       error: () => { this.markingAll = false; }
     });
   }
 
-  typeIcon(type: string): string  { return TYPE_ICON[type]  ?? 'notifications-outline'; }
-  typeColor(type: string): string { return TYPE_COLOR[type] ?? '#64748b'; }
+  typeIcon(type: string): string  { return notificationVisual(type).icon; }
+  typeColor(type: string): string { return notificationColor(type); }
 
   dateTimeLabel(value: string): string {
     return new Intl.DateTimeFormat('es-PY', {

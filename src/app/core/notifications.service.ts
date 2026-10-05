@@ -42,7 +42,22 @@ export function resolveNotificationRoute(
   if (n.entityType === 'ExpensePeriod' && n.entityId) {
     return { path: '/area/account', state: { expensePeriodId: n.entityId } };
   }
+  // Estado de mi reclamo, mi reserva de área común y comunicados nuevos.
+  if (n.entityType === 'Claim') {
+    return { path: '/area/claims' };
+  }
+  if (n.entityType === 'AmenityReservation') {
+    return { path: '/area/amenities' };
+  }
+  if (n.entityType === 'Announcement') {
+    return { path: '/area-comun' };
+  }
   return null;
+}
+
+// Lista de notificaciones de cada sección: es el destino del aviso cuando el tipo no tiene una pantalla propia.
+export function notificationsPathFor(role?: string | null): string {
+  return isManagerRole(role) ? '/manager/notifications' : '/area/notifications';
 }
 
 function resolveManagerRoute(n: { type?: string | null; entityType?: string | null; entityId?: string | null }): NotificationRoute | null {

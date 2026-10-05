@@ -226,7 +226,26 @@ export type NotificationType =
   | 'CreditNoteApproved'
   | 'SettlementPendingPresidentReview'
   | 'SettlementRejectedByPresident'
-  | 'SettlementApprovedByPresident';
+  | 'SettlementApprovedByPresident'
+  | 'ExpensePeriodUnpublished'
+  | 'PlanExpiringSoon'
+  | 'PlanExpired'
+  | 'PlanSuspended'
+  | 'MarketplaceReservationExpired'
+  | 'MarketplacePaymentPending'
+  | 'MarketplaceReservationConfirmed'
+  | 'MarketplaceReservationRejected'
+  | 'MarketplaceNewReservation'
+  | 'MarketplaceCreditApplied'
+  | 'MarketplaceCreditReversed'
+  | 'MarketplaceReservationCancelled'
+  | 'MarketplaceRefundPending'
+  | 'MarketplaceRefundReturned'
+  | 'MarketplaceRefundOverdue'
+  | 'MarketplaceClaimOpened'
+  | 'MarketplaceClaimResolved'
+  | 'MarketplaceStartNotice'
+  | 'MarketplaceHandoverNote';
 
 export interface AppNotification {
   id: string;

@@ -1,8 +1,12 @@
 import { Injectable, NgZone } from '@angular/core';
 import { NavController } from '@ionic/angular';
-import { ActionPerformed, PushNotifications, Token } from '@capacitor/push-notifications';
+import { ActionPerformed, PushNotificationSchema, PushNotifications, Token } from '@capacitor/push-notifications';
 import { NotificationsService, resolveNotificationRoute } from './notifications.service';
+import { NotificationAlertService } from './notification-alert.service';
 import { AuthService } from './auth.service';
+
+// Mismo id que manda el backend en cada push (FirebaseCloudMessagingSender) y que declara el AndroidManifest.
+const CHANNEL_ID = 'default';
 
 @Injectable({ providedIn: 'root' })
 export class PushService {
@@ -11,6 +15,7 @@ export class PushService {
 
   constructor(
     private notificationsSvc: NotificationsService,
+    private alerts: NotificationAlertService,
     private auth: AuthService,
     private navCtrl: NavController,
     private zone: NgZone
@@ -45,13 +50,21 @@ export class PushService {
       console.error('Error registrando push notifications', error);
     });
 
-    // Con la app en foreground, Android no muestra la notificacion en la barra de estado por si
-    // sola (a diferencia de background/killed). Mostrarla ahi tambien queda para una mejora futura
-    // con @capacitor/local-notifications.
-    PushNotifications.addListener('pushNotificationReceived', () => {});
+    // Con la app abierta Android no muestra la push en la barra de estado: el aviso sale como banner dentro de la app.
+    // La push solo adelanta la consulta de la bandeja (el banner sale con los datos reales de la notificación).
+    PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
+      this.zone.run(() => {
+        void this.alerts.refresh({
+          title: notification.title ?? '',
+          body: notification.body ?? '',
+          data: (notification.data ?? {}) as Record<string, string>
+        });
+      });
+    });
 
     PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
       const data = (action.notification.data ?? {}) as Record<string, string>;
+      this.alerts.markEntityRead(data['entityType'], data['entityId']);
       const route = resolveNotificationRoute(data, this.auth.getUser()?.role);
       if (route) {
         this.zone.run(() => this.navCtrl.navigateForward(route.path, route.state ? { state: route.state } : undefined));
@@ -62,6 +75,17 @@ export class PushService {
   private async requestAndRegister(): Promise<void> {
     const permission = await PushNotifications.requestPermissions();
     if (permission.receive !== 'granted') return;
+    // Android 8+: sin canal propio la push cae en un canal genérico que no abre el aviso emergente arriba de la pantalla.
+    // Crear un canal que ya existe no lo pisa, así que es seguro hacerlo en cada arranque.
+    await PushNotifications.createChannel({
+      id: CHANNEL_ID,
+      name: 'Avisos de CondoPY',
+      description: 'Pagos, facturas, comunicados, reservas y demás avisos del condominio',
+      importance: 4,
+      visibility: 1,
+      vibration: true,
+      lights: true
+    }).catch(() => { /* navegador o plataforma sin canales */ });
     await PushNotifications.register();
   }
 }
