@@ -262,15 +262,29 @@ ion-content { --background: var(--brand-surface); }
   background: #e8f1f6;
 }
 
-.ad-body {
+.ad-line {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 10px 12px 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
 }
-.ad-name { font-size: 13px; font-weight: 800; color: var(--brand-ink, #17324a); }
-.ad-desc { font-size: 12px; color: var(--brand-muted, #5b7083); line-height: 1.35; }
-.ad-cta  { margin-top: 4px; font-size: 12px; font-weight: 800; color: #1385B6; }
+.ad-name { font-size: 13px; font-weight: 800; color: var(--brand-ink, #17324a); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-cta  { flex-shrink: 0; font-size: 12px; font-weight: 800; color: #1385B6; }
+
+// Puntitos de paginación bajo la fila de anuncios: el activo se alarga.
+.ads-dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 8px;
+  i {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #1385B6; opacity: 0.3;
+    transition: opacity .2s, width .2s;
+    &.on { opacity: 1; width: 16px; border-radius: 3px; }
+  }
+}
 
 .ad-fallback {
   margin: 0 14px;

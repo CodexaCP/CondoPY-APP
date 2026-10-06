@@ -48,6 +48,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private adsTimer?: ReturnType<typeof setInterval>;
   private adsRotationMs = DEFAULT_ROTATION_SECONDS * 1000;
   private adsResume?: ReturnType<typeof setTimeout>;
+  adIndex = 0;
 
   private pollSub?: Subscription;
 
@@ -119,6 +120,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   loadAds(units: MyUnit[]): void {
     this.adsSvc.getForBuildings(units.map(u => u.buildingId)).pipe(catchError(() => of({ slots: [], managerPhone: null, rotationSeconds: DEFAULT_ROTATION_SECONDS }))).subscribe(res => {
       this.ads = res.slots;
+      this.adIndex = 0;
       this.adsPhone = res.managerPhone;
       this.adsRotationMs = Math.max(res.rotationSeconds || DEFAULT_ROTATION_SECONDS, 1) * 1000;
       this.startAdsRotation();
@@ -149,19 +151,30 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.adsResume = setTimeout(() => this.startAdsRotation(), this.adsRotationMs);
   }
 
+  // Posición (0, 1, 2...) de la tarjeta que está a la vista: la más cercana al borde izquierdo de la fila.
+  private currentAdIndex(): number {
+    const row = this.adsRow?.nativeElement;
+    const cards = row ? Array.from(row.children) as HTMLElement[] : [];
+    if (!row || cards.length === 0) return 0;
+    const first = cards[0].offsetLeft;
+    let current = 0;
+    cards.forEach((c, i) => {
+      if (Math.abs(c.offsetLeft - first - row.scrollLeft) < Math.abs(cards[current].offsetLeft - first - row.scrollLeft)) current = i;
+    });
+    return current;
+  }
+
+  onAdsScroll(): void {
+    this.adIndex = this.currentAdIndex();
+  }
+
   private nextAd(): void {
     const row = this.adsRow?.nativeElement;
     const cards = row ? Array.from(row.children) as HTMLElement[] : [];
     if (!row || cards.length < 2) return;
 
-    const first = cards[0].offsetLeft;
-    // Tarjeta que está a la vista (la más cercana al borde izquierdo); la siguiente, o la primera si ya es la última.
-    let current = 0;
-    cards.forEach((c, i) => {
-      if (Math.abs(c.offsetLeft - first - row.scrollLeft) < Math.abs(cards[current].offsetLeft - first - row.scrollLeft)) current = i;
-    });
-    const next = (current + 1) % cards.length;
-    row.scrollTo({ left: cards[next].offsetLeft - first, behavior: 'smooth' });
+    const next = (this.currentAdIndex() + 1) % cards.length;
+    row.scrollTo({ left: cards[next].offsetLeft - cards[0].offsetLeft, behavior: 'smooth' });
   }
 
   adImage(ad: AdSlot): string { return resolveUploadUrl(ad.imageUrl); }

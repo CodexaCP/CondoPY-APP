@@ -101,16 +101,20 @@
     </div>
 
     <div class="ads-row" #adsRow *ngIf="ads.length > 0"
+         (scroll)="onAdsScroll()"
          (touchstart)="pauseAds()" (touchend)="resumeAdsLater()" (touchcancel)="resumeAdsLater()"
          (mousedown)="pauseAds()" (mouseup)="resumeAdsLater()">
       <div class="ad-card" *ngFor="let ad of ads" (click)="openAd(ad)">
         <img class="ad-img" [src]="adImage(ad)" [alt]="ad.advertiserName" loading="lazy" />
-        <div class="ad-body">
+        <div class="ad-line">
           <span class="ad-name">{{ ad.advertiserName }}</span>
-          <span class="ad-desc" *ngIf="ad.description">{{ ad.description }}</span>
-          <span class="ad-cta" *ngIf="ad.ctaUrl">{{ ad.ctaText }}</span>
+          <span class="ad-cta" *ngIf="ad.ctaUrl">{{ ad.ctaText }} ›</span>
         </div>
       </div>
+    </div>
+
+    <div class="ads-dots" *ngIf="ads.length > 1" aria-hidden="true">
+      <i *ngFor="let a of ads; let i = index" [class.on]="i === adIndex"></i>
     </div>
 
     <!-- Sin campañas: invitación a publicitar, con el teléfono de la administración -->
