@@ -365,4 +365,6 @@ export interface BuildingAds {
   slots: AdSlot[];
   // Teléfono de contacto del edificio, para el banner "publicitá acá" cuando no hay campañas.
   managerPhone: string | null;
+  // Segundos que se muestra cada banner (lo define el SuperAdmin por edificio).
+  rotationSeconds: number;
 }

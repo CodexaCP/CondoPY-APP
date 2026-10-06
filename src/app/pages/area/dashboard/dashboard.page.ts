@@ -8,11 +8,9 @@ import { NotificationAlertService } from '../../../core/notification-alert.servi
 import { AnnouncementsService } from '../../../core/announcements.service';
 import { AccountService } from '../../../core/account.service';
 import { MarketplaceService } from '../../../core/marketplace.service';
-import { AdsService } from '../../../core/ads.service';
+import { AdsService, DEFAULT_ROTATION_SECONDS } from '../../../core/ads.service';
 import { resolveUploadUrl } from '../../../core/file-url.util';
 import { LoginResponse, MyUnit, AccountStatementPeriod, Announcement, AdSlot } from '../../../core/models';
-
-const ADS_ROTATION_MS = 5000;
 
 const CAT_ICON: Record<string, string> = {
   General:      'information-circle-outline',
@@ -48,6 +46,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   adsPhone: string | null = null;
   @ViewChild('adsRow') adsRow?: ElementRef<HTMLElement>;
   private adsTimer?: ReturnType<typeof setInterval>;
+  private adsRotationMs = DEFAULT_ROTATION_SECONDS * 1000;
   private adsResume?: ReturnType<typeof setTimeout>;
 
   private pollSub?: Subscription;
@@ -118,19 +117,20 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   loadAds(units: MyUnit[]): void {
-    this.adsSvc.getForBuildings(units.map(u => u.buildingId)).pipe(catchError(() => of({ slots: [], managerPhone: null }))).subscribe(res => {
+    this.adsSvc.getForBuildings(units.map(u => u.buildingId)).pipe(catchError(() => of({ slots: [], managerPhone: null, rotationSeconds: DEFAULT_ROTATION_SECONDS }))).subscribe(res => {
       this.ads = res.slots;
       this.adsPhone = res.managerPhone;
+      this.adsRotationMs = Math.max(res.rotationSeconds || DEFAULT_ROTATION_SECONDS, 1) * 1000;
       this.startAdsRotation();
     });
   }
 
-  // Los banners avanzan solos cada 5 s (y vuelven al primero al llegar al último). Se detienen mientras la persona
-  // toca o desliza la fila y siguen 5 s después de soltarla.
+  // Los banners avanzan solos cada tanto (lo define el SuperAdmin por edificio, 10 s por defecto) (y vuelven al primero al llegar al último). Se detienen mientras la persona
+  // toca o desliza la fila y siguen un rato después de soltarla.
   startAdsRotation(): void {
     this.stopAdsRotation();
     if (this.ads.length < 2) return;
-    this.adsTimer = setInterval(() => this.nextAd(), ADS_ROTATION_MS);
+    this.adsTimer = setInterval(() => this.nextAd(), this.adsRotationMs);
   }
 
   stopAdsRotation(): void {
@@ -146,7 +146,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   resumeAdsLater(): void {
     if (this.adsResume) clearTimeout(this.adsResume);
-    this.adsResume = setTimeout(() => this.startAdsRotation(), ADS_ROTATION_MS);
+    this.adsResume = setTimeout(() => this.startAdsRotation(), this.adsRotationMs);
   }
 
   private nextAd(): void {
