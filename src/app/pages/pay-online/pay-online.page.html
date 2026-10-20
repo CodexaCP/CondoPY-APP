@@ -1,0 +1,172 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/area/payments" text="Pagos"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Pagar online</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Cargando -->
+  <div *ngIf="view === 'loading'" class="state-msg">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- ═════════ Elegir hasta qué comprobante pagar ═════════ -->
+  <ng-container *ngIf="view === 'choose'">
+
+    <div *ngIf="error && !options" class="error-msg">
+      <ion-icon name="alert-circle-outline"></ion-icon> {{ error }}
+    </div>
+
+    <div *ngIf="options && (!options.collectionEnabled || options.buildings.length === 0)" class="state-msg">
+      <ion-icon name="card-outline" class="empty-icon"></ion-icon>
+      <p>El pago online todavía no está disponible para tus edificios.</p>
+      <p class="hint">Mientras tanto podés pagar por transferencia y enviar tu comprobante.</p>
+      <ion-button fill="outline" size="small" (click)="goToPayments()">Volver a Pagos</ion-button>
+    </div>
+
+    <ng-container *ngIf="options && options.collectionEnabled && building">
+
+      <!-- Edificio (si tiene más de uno con pago online) -->
+      <ng-container *ngIf="options.buildings.length > 1">
+        <p class="section-label">Edificio</p>
+        <ion-segment [value]="building.buildingId" (ionChange)="selectBuilding($any($event).detail.value)" scrollable="true">
+          <ion-segment-button *ngFor="let b of options.buildings" [value]="b.buildingId">
+            <ion-label>{{ b.buildingName }}</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </ng-container>
+      <p class="building-name" *ngIf="options.buildings.length === 1">{{ building.buildingName }}</p>
+
+      <div class="notice" *ngIf="building.blockedReason">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <span>{{ building.blockedReason }}</span>
+      </div>
+
+      <!-- Medio de pago (solo si el edificio tiene más de uno) -->
+      <ng-container *ngIf="building.connections.length > 1">
+        <p class="section-label">Medio de pago</p>
+        <ion-list lines="none" class="conn-list">
+          <ion-radio-group [(ngModel)]="connectionId">
+            <ion-item *ngFor="let c of building.connections">
+              <ion-radio [value]="c.id" labelPlacement="end" justify="start">
+                {{ c.productName }} <small>· a nombre de {{ c.holderName }}</small>
+              </ion-radio>
+            </ion-item>
+          </ion-radio-group>
+        </ion-list>
+      </ng-container>
+
+      <!-- Comprobantes -->
+      <p class="section-label">¿Hasta qué comprobante querés pagar?</p>
+      <p class="section-hint">
+        Se paga del más antiguo al más nuevo, siempre comprobantes completos. Tocá <strong>«Pagar hasta aquí»</strong> en el último que quieras cubrir.
+      </p>
+
+      <div *ngFor="let c of building.comprobantes" class="comp-row" [class.comp-covered]="isCovered(c)">
+        <ion-icon [name]="isCovered(c) ? 'checkmark-circle' : 'ellipse-outline'" [color]="isCovered(c) ? 'success' : 'medium'"></ion-icon>
+        <div class="comp-info">
+          <span class="comp-title">Comprobante {{ period(c.periodMonth, c.periodYear) }}</span>
+          <span class="comp-sub">Unidad {{ c.unitCode }}</span>
+        </div>
+        <span class="comp-amount">{{ fmt(c.total) }}</span>
+        <ion-button size="small" fill="outline" [disabled]="!!building.blockedReason" (click)="payUpTo(c)">
+          Pagar hasta aquí · {{ fmt(c.cumulativeTotal) }}
+        </ion-button>
+      </div>
+
+      <!-- Resumen -->
+      <div class="summary" *ngIf="through && connection">
+        <div class="summary-row"><span>Total a pagar</span><strong class="summary-total">{{ fmt(through.cumulativeTotal) }}</strong></div>
+        <div class="summary-row"><span>Se cobra a nombre de</span><strong>{{ connection.holderName }}</strong></div>
+        <div class="summary-row"><span>RUC o cédula del titular</span><strong>{{ connection.holderTaxId }}</strong></div>
+        <p class="hint">
+          Vas a pagar con tarjeta en la página segura del proveedor. Condo-PY no ve ni guarda los datos de tu tarjeta.
+        </p>
+        <div class="notice test" *ngIf="connection.isSimulated">
+          <ion-icon name="flask-outline"></ion-icon>
+          <span><strong>Pago de prueba.</strong> No se cobra plata real y no se aplica a tu deuda.</span>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="error-msg">
+        <ion-icon name="alert-circle-outline"></ion-icon> {{ error }}
+      </div>
+
+      <ion-button expand="block" color="primary" class="pay-btn" [disabled]="!canPay" (click)="pay()">
+        <ion-spinner *ngIf="creating" name="crescent" slot="start"></ion-spinner>
+        {{ creating ? 'Abriendo el pago...' : 'Pagar con tarjeta' }}
+      </ion-button>
+
+    </ng-container>
+  </ng-container>
+
+  <!-- ═════════ Esperando el pago ═════════ -->
+  <ng-container *ngIf="view === 'waiting' && payment">
+    <div class="status-card">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <h2>Estamos esperando tu pago</h2>
+      <p>
+        Completá el pago en la página del proveedor. Cuando lo confirme, esta pantalla se actualiza sola.
+        <strong>Si ya pagaste, no vuelvas a pagar.</strong>
+      </p>
+      <div class="amount-big">{{ fmt(payment.amount) }}</div>
+      <p class="hint">A nombre de {{ payment.holderName }} · {{ payment.buildingName }}</p>
+      <p class="hint" *ngIf="secondsLeft > 0">Tenés <strong>{{ countdown }}</strong> para pagar.</p>
+      <p class="hint" *ngIf="secondsLeft === 0">El tiempo para pagar terminó. Si ya pagaste, tocá «Ya pagué».</p>
+
+      <div class="notice test" *ngIf="payment.isSimulated">
+        <ion-icon name="flask-outline"></ion-icon>
+        <span><strong>Pago de prueba.</strong> No se cobra plata real y no se aplica a tu deuda.</span>
+      </div>
+
+      <ion-button expand="block" *ngIf="payment.checkoutUrl" (click)="openCheckout()">
+        <ion-icon slot="start" name="open-outline"></ion-icon>
+        Abrir la página de pago
+      </ion-button>
+      <ion-button expand="block" fill="outline" [disabled]="checking" (click)="checkNow()">
+        <ion-spinner *ngIf="checking" name="crescent" slot="start"></ion-spinner>
+        Ya pagué, verificar
+      </ion-button>
+      <ion-button expand="block" fill="clear" color="medium" (click)="goToPayments()">Volver a Pagos</ion-button>
+    </div>
+  </ng-container>
+
+  <!-- ═════════ Resultado ═════════ -->
+  <ng-container *ngIf="view === 'result' && payment">
+
+    <div class="status-card" *ngIf="payment.status === 'Paid'">
+      <ion-icon name="checkmark-circle" color="success" class="status-icon"></ion-icon>
+      <h2>¡Pago aprobado!</h2>
+      <div class="amount-big">{{ fmt(payment.amount) }}</div>
+      <p>Tu pago se aplicó a tu deuda. Te llegó un aviso y podés ver el recibo en «Mis Pagos».</p>
+      <p class="hint" *ngIf="payment.ownerPaymentReference">Referencia {{ payment.ownerPaymentReference }}</p>
+      <ion-button expand="block" *ngIf="payment.ownerPaymentId" (click)="goToReceipt()">Ver mi pago</ion-button>
+      <ion-button expand="block" fill="clear" (click)="goToPayments()">Volver a Pagos</ion-button>
+    </div>
+
+    <div class="status-card" *ngIf="payment.status === 'ReviewRequired'">
+      <ion-icon name="alert-circle" color="warning" class="status-icon"></ion-icon>
+      <h2>Estamos revisando tu pago</h2>
+      <p>
+        El proveedor recibió tu pago pero no pudimos aplicarlo a tu deuda automáticamente (por ejemplo, porque el importe cambió).
+        La administración ya fue avisada. Si se te cobró y no se aplica, se te devolverá el dinero.
+      </p>
+      <p class="hint" *ngIf="payment.reviewReason">{{ payment.reviewReason }}</p>
+      <ion-button expand="block" fill="clear" (click)="goToPayments()">Volver a Pagos</ion-button>
+    </div>
+
+    <div class="status-card" *ngIf="payment.status === 'Closed' || payment.status === 'Reversed'">
+      <ion-icon name="close-circle" color="medium" class="status-icon"></ion-icon>
+      <h2>El pago no se completó</h2>
+      <p>{{ closeMessage }}</p>
+      <ion-button expand="block" (click)="retry()">Intentar de nuevo</ion-button>
+      <ion-button expand="block" fill="clear" (click)="goToPayments()">Volver a Pagos</ion-button>
+    </div>
+
+  </ng-container>
+
+</ion-content>

@@ -132,6 +132,8 @@ export interface OwnerPayment {
   createdAtUtc: string;
   units: OwnerPaymentUnit[];
   applications?: OwnerPaymentApplication[];
+  // App: lo declaró el propietario. Web: lo registró el personal. Online: lo confirmó el proveedor de pagos.
+  channel?: 'App' | 'Web' | 'Online';
 }
 
 export interface OwnerPaymentInvoice {

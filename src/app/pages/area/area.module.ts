@@ -38,6 +38,10 @@ const routes: Routes = [
         loadChildren: () => import('../submit-payment/submit-payment.module').then(m => m.SubmitPaymentPageModule)
       },
       {
+        path: 'pay-online',
+        loadChildren: () => import('../pay-online/pay-online.module').then(m => m.PayOnlinePageModule)
+      },
+      {
         path: 'notifications',
         loadChildren: () => import('../notifications/notifications.module').then(m => m.NotificationsPageModule)
       },

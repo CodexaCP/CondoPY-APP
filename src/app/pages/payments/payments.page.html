@@ -14,6 +14,18 @@
     <p class="page-subtitle">Comprobantes enviados para revisión. Los pagos aprobados se aplican a tu deuda.</p>
   </div>
 
+  <!-- Pagar con tarjeta: solo si el edificio tiene pago online habilitado -->
+  <ion-card *ngIf="onlineAvailable" class="online-card" button (click)="goToOnline()">
+    <ion-card-content>
+      <ion-icon name="card-outline" class="online-icon"></ion-icon>
+      <div class="online-text">
+        <strong>{{ onlineInProgress ? 'Tenés un pago online en curso' : 'Pagá tus expensas con tarjeta' }}</strong>
+        <span>{{ onlineInProgress ? 'Tocá para retomarlo.' : 'Se aplica a tu deuda apenas el proveedor lo confirma.' }}</span>
+      </div>
+      <ion-icon name="chevron-forward" color="medium"></ion-icon>
+    </ion-card-content>
+  </ion-card>
+
   <!-- Filter chips -->
   <div class="filter-chips ion-padding-horizontal">
     <button
@@ -55,7 +67,7 @@
 
       <div class="item-content" slot="start">
         <div class="item-ref">{{ item.reference }}</div>
-        <div class="item-date">Pago del {{ dateLabel(item.paymentDate) }}</div>
+        <div class="item-date">Pago del {{ dateLabel(item.paymentDate) }}<span *ngIf="item.channel === 'Online'"> · con tarjeta</span></div>
         <div class="item-amount">{{ fmt(item.declaredAmount) }}</div>
       </div>
 

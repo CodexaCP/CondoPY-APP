@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
+import { OnlinePaymentsService } from '../../core/online-payments.service';
+import { catchError, of } from 'rxjs';
 import { OwnerPayment, OwnerPaymentStatus } from '../../core/models';
 
 type FilterKey = '' | OwnerPaymentStatus;
@@ -31,14 +33,31 @@ export class PaymentsPage {
   loading = false;
   error = '';
 
+  // Pago online con tarjeta: se ofrece solo si el servidor lo habilitó y algún edificio del propietario tiene un medio de pago activo.
+  onlineAvailable = false;
+  onlineInProgress = false;
+
   constructor(
     private svc: OwnerPaymentsService,
+    private onlineSvc: OnlinePaymentsService,
     private auth: AuthService,
     private navCtrl: NavController
   ) {}
 
   ionViewWillEnter(): void {
     this.load();
+    this.loadOnline();
+  }
+
+  private loadOnline(): void {
+    this.onlineSvc.getOptions().pipe(catchError(() => of(null))).subscribe(options => {
+      this.onlineAvailable = !!options?.collectionEnabled && options.buildings.length > 0;
+      this.onlineInProgress = !!options?.buildings.some(b => b.openPaymentId);
+    });
+  }
+
+  goToOnline(): void {
+    this.navCtrl.navigateForward('/area/pay-online');
   }
 
   load(): void {
