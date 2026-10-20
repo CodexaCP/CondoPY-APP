@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.tramiya.com.py/api'
+  apiUrl: 'https://api.expenses.com.py/api'
 };
