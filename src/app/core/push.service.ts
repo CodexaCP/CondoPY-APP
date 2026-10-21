@@ -79,7 +79,7 @@ export class PushService {
     // Crear un canal que ya existe no lo pisa, así que es seguro hacerlo en cada arranque.
     await PushNotifications.createChannel({
       id: CHANNEL_ID,
-      name: 'Avisos de CondoPY',
+      name: 'Avisos de Expenses',
       description: 'Pagos, facturas, comunicados, reservas y demás avisos del condominio',
       importance: 4,
       visibility: 1,

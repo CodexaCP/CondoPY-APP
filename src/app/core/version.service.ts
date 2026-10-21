@@ -52,7 +52,7 @@ export class VersionService {
 
     const alert = await this.alerts.create({
       header: 'Actualizá la app',
-      message: info.message || 'Esta versión de CondoPY ya no es compatible. Descargá la nueva versión para seguir usándola.',
+      message: info.message || 'Esta versión de Expenses ya no es compatible. Descargá la nueva versión para seguir usándola.',
       backdropDismiss: false,
       keyboardClose: false,
       buttons: [{ text: 'Descargar', handler: () => { this.openDownload(info.apkUrl); return false; } }]
@@ -63,7 +63,7 @@ export class VersionService {
   private async showOptional(info: AppVersionInfo): Promise<void> {
     const alert = await this.alerts.create({
       header: 'Hay una versión nueva',
-      message: info.message || 'Descargá la última versión de CondoPY para tener las novedades.',
+      message: info.message || 'Descargá la última versión de Expenses para tener las novedades.',
       buttons: [
         { text: 'Más tarde', role: 'cancel' },
         { text: 'Descargar', handler: () => this.openDownload(info.apkUrl) }

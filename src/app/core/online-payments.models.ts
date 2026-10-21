@@ -1,5 +1,5 @@
-// Pago online de expensas con tarjeta. El dinero no pasa por Condo-PY: el propietario paga en la página del proveedor (a nombre del titular del
-// comercio) y Condo-PY se entera por un aviso del proveedor.
+// Pago online de expensas con tarjeta. El dinero no pasa por Expenses: el propietario paga en la página del proveedor (a nombre del titular del
+// comercio) y Expenses se entera por un aviso del proveedor.
 
 export type OnlinePaymentStatus = 'Open' | 'Paid' | 'Closed' | 'ReviewRequired' | 'Reversed';
 

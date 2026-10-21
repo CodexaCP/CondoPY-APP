@@ -65,7 +65,7 @@ export class ManagerMorePage implements OnInit, OnDestroy {
   async confirmLogout(): Promise<void> {
     const alert = await this.alerts.create({
       header: 'Cerrar sesión',
-      message: '¿Querés salir de CondoPY?',
+      message: '¿Querés salir de Expenses?',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         { text: 'Salir', role: 'destructive', handler: () => this.logout() }

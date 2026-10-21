@@ -23,7 +23,7 @@ const CLOSE_REASONS: Record<string, string> = {
 
 // Pagar las expensas con tarjeta. Se elige hasta qué comprobante pagar (siempre completos, del más antiguo al más nuevo), se abre la página de pago
 // del proveedor y mientras tanto esta pantalla consulta el estado hasta que el proveedor confirma. El dinero va directo al comercio del titular que
-// se muestra antes de pagar: Condo-PY nunca toca los datos de la tarjeta.
+// se muestra antes de pagar: Expenses nunca toca los datos de la tarjeta.
 @Component({
   selector: 'app-pay-online',
   templateUrl: './pay-online.page.html',

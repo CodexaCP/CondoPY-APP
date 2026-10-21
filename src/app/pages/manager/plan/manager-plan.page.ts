@@ -185,7 +185,7 @@ export class ManagerPlanPage {
   async confirmLogout(): Promise<void> {
     const alert = await this.alerts.create({
       header: 'Cerrar sesión',
-      message: '¿Querés salir de CondoPY?',
+      message: '¿Querés salir de Expenses?',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         { text: 'Salir', role: 'destructive', handler: () => { this.pushSvc.unregister(); this.auth.logout(); } }
