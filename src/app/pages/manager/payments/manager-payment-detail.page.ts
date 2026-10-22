@@ -7,6 +7,7 @@ import { ManagerApiService } from '../../../core/manager-api.service';
 import { ManagerStateService } from '../../../core/manager-state.service';
 import { ManagerOwnerPayment } from '../../../core/manager.models';
 import { PlanGateService } from '../../../core/plan-gate.service';
+import { confirmAmount } from '../amount.util';
 import { errorMessage, fmtDate, fmtDateTime, formatGs, isPdf } from '../manager.util';
 
 @Component({
@@ -102,10 +103,14 @@ export class ManagerPaymentDetailPage {
     if (!p || !this.validAmount()) return;
 
     const amount = this.amount as number;
-    const confirmed = await this.confirm(
+    // El monto verificado es un dato tipeado: se confirma con el número grande antes de aprobar.
+    const confirmed = await confirmAmount(
+      this.alerts,
       'Verificar y aprobar',
-      `Vas a aprobar el pago de ${p.ownerFullName} por ${formatGs(amount)}. Se aplica a sus cargos y se notifica al propietario.`,
-      'Aprobar'
+      `Pago de ${p.ownerFullName}`,
+      amount,
+      'Aprobar',
+      'Se aplica a sus cargos y se notifica al propietario.'
     );
     if (!confirmed) return;
 
@@ -124,10 +129,13 @@ export class ManagerPaymentDetailPage {
     if (!p || !this.validAmount()) return;
 
     const amount = this.amount as number;
-    const confirmed = await this.confirm(
+    const confirmed = await confirmAmount(
+      this.alerts,
       'Verificar monto',
-      `Registrar ${formatGs(amount)} como monto verificado. El pago pasa a "En revisión" y queda pendiente de aprobar.`,
-      'Verificar'
+      `Monto verificado del pago de ${p.ownerFullName}`,
+      amount,
+      'Verificar',
+      'El pago pasa a "En revisión" y queda pendiente de aprobar.'
     );
     if (!confirmed) return;
 

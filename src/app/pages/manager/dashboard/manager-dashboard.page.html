@@ -103,6 +103,19 @@
       <div class="mgr-kv"><span class="k">Unidades en mora</span><span class="v">{{ s.unitsInArrears }}</span></div>
     </div>
 
+    <!-- Caja y bancos -->
+    <ng-container *ngIf="finance as f">
+      <p class="mgr-section-title">Caja y bancos</p>
+      <button type="button" class="mgr-card fin-card" (click)="go('/manager/finance')">
+        <ion-icon name="cash-outline" class="fin-ico"></ion-icon>
+        <div class="fin-text">
+          <span class="fin-title">Conciliación bancaria</span>
+          <span class="fin-light" [ngClass]="f.light"><span class="dot"></span>{{ f.text }}</span>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="fin-caret"></ion-icon>
+      </button>
+    </ng-container>
+
     <!-- Acciones rápidas -->
     <p class="mgr-section-title">Acciones rápidas</p>
     <div class="quick-grid">

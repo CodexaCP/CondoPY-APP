@@ -1,0 +1,23 @@
+.switcher-bar { --min-height: 0; padding: 0 1rem 0.55rem; }
+
+.acc-card {
+  .acc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
+  .acc-name { margin: 0; font-size: 1rem; font-weight: 800; color: var(--brand-ink); }
+  .acc-type { margin: 0.1rem 0 0; font-size: 0.74rem; color: var(--brand-muted); }
+  .acc-balance { margin: 0.7rem 0 0; font-size: 1.45rem; font-weight: 800; color: var(--brand-ink); letter-spacing: -0.01em; }
+  .acc-balance-label { margin: 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand-muted); }
+  .acc-last { margin: 0.5rem 0 0.8rem; font-size: 0.8rem; color: var(--brand-muted); }
+  ion-button { margin: 0; --border-radius: 14px; font-weight: 700; }
+}
+
+.pay-form {
+  padding: 1.25rem 1rem 1.5rem;
+  .pay-title { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--brand-ink); }
+  .pay-sub { margin: 0.15rem 0 0.4rem; font-size: 0.85rem; color: var(--brand-muted); }
+  .pay-hint { margin: 0 0 1rem; font-size: 0.8rem; color: var(--brand-muted); line-height: 1.4; }
+  app-amount-input, ion-input { display: block; margin-bottom: 0.9rem; }
+  .pay-error { color: #c94d3f; font-size: 0.82rem; margin: 0 0 0.8rem; }
+  ion-button { margin-top: 0.3rem; }
+}
+
+.hist-row { cursor: pointer; }

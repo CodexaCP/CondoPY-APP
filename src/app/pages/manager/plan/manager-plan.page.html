@@ -90,8 +90,7 @@
           <p class="pay-sub">{{ plan.planName }} · {{ plan.buildingName }}</p>
           <p class="pay-hint">El administrador revisará el comprobante y aprobará o rechazará el pago. Solo podés tener uno pendiente a la vez.</p>
 
-          <ion-input type="number" inputmode="numeric" fill="outline" label="Monto pagado (Gs.)" labelPlacement="stacked"
-                     [(ngModel)]="amount" min="1" class="pay-field"></ion-input>
+          <app-amount-input label="Monto pagado (Gs.)" [(value)]="amount" class="pay-field"></app-amount-input>
 
           <ion-input type="date" fill="outline" label="Fecha del pago" labelPlacement="stacked"
                      [(ngModel)]="payDate" [max]="today" class="pay-field"></ion-input>

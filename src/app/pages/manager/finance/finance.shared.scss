@@ -1,0 +1,13 @@
+// Estilos comunes de Caja y bancos y de la conciliación (semáforo y números grandes).
+
+.fin-light {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.78rem; font-weight: 700;
+  .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: #9aa9b3; }
+  &.ok     { color: #3d7d2d; .dot { background: #6ac64a; } }
+  &.warn   { color: #b45309; .dot { background: #f59e0b; } }
+  &.danger { color: #c94d3f; .dot { background: #c94d3f; } }
+}
+
+.fin-in  { color: #3d7d2d; }
+.fin-out { color: #c94d3f; }

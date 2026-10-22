@@ -8,6 +8,7 @@ import { ManagerStateService } from '../../../core/manager-state.service';
 import { ManagerSummary } from '../../../core/manager.models';
 import { NotificationAlertService } from '../../../core/notification-alert.service';
 import { PlanGateService } from '../../../core/plan-gate.service';
+import { ReconciliationLight, ReconciliationService } from '../../../core/reconciliation.service';
 import { formatGs } from '../manager.util';
 
 @Component({
@@ -22,6 +23,9 @@ export class ManagerDashboardPage implements OnInit, OnDestroy {
   error = false;
   unreadCount = 0;
 
+  // Caja y bancos: semáforo de la conciliación del edificio. Nulo si Finanzas no está disponible para el edificio.
+  finance: { light: ReconciliationLight; text: string } | null = null;
+
   readonly gs = formatGs;
 
   private subs = new Subscription();
@@ -32,7 +36,8 @@ export class ManagerDashboardPage implements OnInit, OnDestroy {
     private buildings: BuildingContextService,
     private state: ManagerStateService,
     private alerts: NotificationAlertService,
-    private gate: PlanGateService
+    private gate: PlanGateService,
+    private recon: ReconciliationService
   ) {}
 
   get userName(): string { return this.auth.getUser()?.fullName ?? ''; }
@@ -50,7 +55,7 @@ export class ManagerDashboardPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subs.add(this.state.summary$.subscribe(s => {
       this.summary = s;
-      if (s) { this.loading = false; this.error = false; }
+      if (s) { this.loading = false; this.error = false; this.loadFinance(); }
     }));
 
     // Contador de la campana: lo mantiene el servicio de avisos (consulta cada 30 s y al llegar una push).
@@ -83,6 +88,29 @@ export class ManagerDashboardPage implements OnInit, OnDestroy {
         this.error = true;
         event?.detail.complete();
       }
+    });
+  }
+
+  // Tarjeta "Caja y bancos": se pide aparte y sin molestar; si el edificio no tiene Finanzas (403/409) simplemente no se muestra.
+  private financeSeq = 0;
+
+  private loadFinance(): void {
+    const buildingId = this.buildings.selectedId;
+    if (!buildingId) { this.finance = null; return; }
+
+    const mine = ++this.financeSeq;
+    this.recon.getOverview(buildingId).subscribe({
+      next: overview => {
+        if (mine !== this.financeSeq) return;
+        const accounts = overview.accounts.filter(a => a.isActive);
+        if (accounts.length === 0) { this.finance = null; return; }
+
+        const light = this.recon.worstLight(accounts);
+        const worst = accounts.find(a => this.recon.lightOf(a).light === light) ?? accounts[0];
+        const info = this.recon.lightOf(worst);
+        this.finance = { light, text: accounts.length > 1 ? `${worst.accountName}: ${info.text.toLowerCase()}` : info.text };
+      },
+      error: () => { if (mine === this.financeSeq) this.finance = null; }
     });
   }
 

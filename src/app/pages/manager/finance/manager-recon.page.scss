@@ -1,0 +1,72 @@
+// Resumen fijo arriba: extracto, conciliado y diferencia.
+.rc-sum {
+  background: var(--brand-card); border-bottom: 1px solid var(--brand-border);
+  padding: 0.7rem 0.6rem 0.6rem;
+
+  .rc-sum-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+  .rc-col {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 0.5rem 0.2rem; border-radius: 14px; background: rgba(19, 133, 182, 0.06);
+  }
+  .rc-label { font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand-muted); }
+  .rc-num { font-size: 0.95rem; font-weight: 800; color: var(--brand-ink); margin-top: 0.15rem; letter-spacing: -0.01em; }
+  .rc-date { font-size: 0.66rem; color: var(--brand-muted); margin-top: 0.1rem; }
+
+  .rc-col.rc-ok { background: rgba(106, 198, 74, 0.16); .rc-num, .rc-date { color: #3d7d2d; } }
+  .rc-col.rc-bad { background: rgba(245, 158, 11, 0.12); .rc-num, .rc-date { color: #b45309; } }
+
+  .rc-preview { margin: 0.5rem 0.4rem 0; font-size: 0.78rem; color: var(--brand-ink-soft); text-align: center; }
+  .rc-preview.rc-ok { color: #3d7d2d; }
+}
+
+.rc-tools {
+  padding: 0.2rem 1rem 0;
+  ion-searchbar { padding: 0; --border-radius: 14px; --box-shadow: none; --background: #fff; }
+  .rc-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.2rem 0 0.4rem; }
+  .rc-chip {
+    border: 1px solid var(--brand-border); background: #fff; color: var(--brand-ink-soft);
+    border-radius: 999px; padding: 0.35rem 0.8rem; font-size: 0.78rem; font-weight: 700;
+    &.on { background: var(--brand-blue); color: #fff; border-color: var(--brand-blue); }
+    &.rc-all { margin-left: auto; border-style: dashed; color: var(--brand-blue); }
+  }
+}
+
+// Fila de movimiento: toda la fila es el botón de tildar.
+.rc-row {
+  display: flex; align-items: center; gap: 0.75rem;
+  background: #fff; border-radius: 16px; margin: 0 1rem 0.5rem; padding: 0.8rem 0.85rem;
+  border: 1px solid var(--brand-border); cursor: pointer;
+
+  &.sel { border-color: var(--brand-blue); background: rgba(19, 133, 182, 0.06); }
+  &.locked { cursor: default; }
+
+  .rc-check { font-size: 1.7rem; flex-shrink: 0; color: #b7c4cc;
+    &.on { color: #3d9a2b; }
+    &.off { color: #c94d3f; }
+  }
+  .rc-main { flex: 1; min-width: 0; }
+  .rc-title { margin: 0; font-size: 0.9rem; font-weight: 800; color: var(--brand-ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rc-sub { margin: 0.1rem 0 0.15rem; font-size: 0.74rem; color: var(--brand-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rc-amt { flex-shrink: 0; font-size: 0.95rem; font-weight: 800; letter-spacing: -0.01em; }
+}
+
+.rc-more { text-align: center; padding: 0.4rem 0 0.8rem; }
+.rc-spacer { height: 1rem; }
+
+.rc-foot {
+  background: #fff; border-top: 1px solid var(--brand-border);
+  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom));
+  ion-button { margin: 0; --border-radius: 14px; font-weight: 800; }
+  ion-button + ion-button { margin-top: 0.2rem; }
+  .rc-foot-hint { margin: 0 0 0.5rem; font-size: 0.78rem; color: var(--brand-muted); text-align: center; }
+}
+
+.edit-form {
+  padding: 1.25rem 1rem 1.5rem;
+  .edit-title { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--brand-ink); }
+  .edit-hint { margin: 0.2rem 0 1rem; font-size: 0.8rem; color: var(--brand-muted); line-height: 1.4; }
+  app-amount-input, ion-input { display: block; margin-bottom: 0.9rem; }
+  .edit-error { color: #c94d3f; font-size: 0.82rem; margin: 0 0 0.8rem; }
+}

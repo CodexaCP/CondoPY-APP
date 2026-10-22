@@ -44,3 +44,19 @@ ion-progress-bar { height: 8px; border-radius: 6px; margin-bottom: 0.7rem; --pro
   border-radius: 14px; padding: 0.85rem 0.9rem; font-size: 0.85rem; font-weight: 700; color: var(--brand-ink);
   ion-icon { font-size: 1.35rem; color: var(--brand-blue); }
 }
+
+// Tarjeta "Caja y bancos": semáforo de la conciliación.
+.fin-card {
+  display: flex; align-items: center; gap: 0.8rem; width: calc(100% - 2rem); text-align: left; cursor: pointer;
+  .fin-ico { font-size: 1.7rem; color: var(--brand-blue); flex-shrink: 0; }
+  .fin-text { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+  .fin-title { font-size: 0.95rem; font-weight: 800; color: var(--brand-ink); }
+  .fin-caret { color: var(--brand-muted); }
+  .fin-light {
+    display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 700;
+    .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: #9aa9b3; }
+    &.ok     { color: #3d7d2d; .dot { background: #6ac64a; } }
+    &.warn   { color: #b45309; .dot { background: #f59e0b; } }
+    &.danger { color: #c94d3f; .dot { background: #c94d3f; } }
+  }
+}

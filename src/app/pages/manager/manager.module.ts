@@ -14,6 +14,9 @@ import { ManagerReservationsPage } from './reservations/manager-reservations.pag
 import { ManagerMorePage } from './more/manager-more.page';
 import { ManagerPlanPage } from './plan/manager-plan.page';
 import { ManagerMarketplacePage } from './marketplace/manager-marketplace.page';
+import { AmountInputComponent } from './amount-input.component';
+import { ManagerFinancePage } from './finance/manager-finance.page';
+import { ManagerReconPage } from './finance/manager-recon.page';
 
 // Sección del Encargado de edificio (/manager). Ver docs/ESPECIFICACION_APP_ENCARGADO.md en el repo del backend.
 const routes: Routes = [
@@ -29,6 +32,9 @@ const routes: Routes = [
       { path: 'more', component: ManagerMorePage },
       { path: 'plan', component: ManagerPlanPage },
       { path: 'marketplace', component: ManagerMarketplacePage },
+      // Caja y bancos: cuentas con su semáforo y conciliación bancaria desde el celular.
+      { path: 'finance', component: ManagerFinancePage },
+      { path: 'finance/:id', component: ManagerReconPage },
       {
         // Se reutiliza la pantalla de notificaciones de la app; el destino de cada aviso depende del rol.
         path: 'notifications',
@@ -51,7 +57,10 @@ const routes: Routes = [
     ManagerReservationsPage,
     ManagerMorePage,
     ManagerPlanPage,
-    ManagerMarketplacePage
+    ManagerMarketplacePage,
+    AmountInputComponent,
+    ManagerFinancePage,
+    ManagerReconPage
   ]
 })
 export class ManagerPageModule {}

@@ -79,8 +79,7 @@
     <ng-container *ngIf="isPending && canAct">
       <p class="mgr-section-title">Monto verificado</p>
       <div class="mgr-card">
-        <ion-input type="number" inputmode="numeric" fill="outline" label="Monto recibido (Gs.)" labelPlacement="stacked"
-                   [(ngModel)]="amount" min="1"></ion-input>
+        <app-amount-input label="Monto recibido (Gs.)" [(value)]="amount"></app-amount-input>
         <p class="hint">Precargado con el monto declarado. Corregilo si el comprobante dice otra cosa.</p>
       </div>
     </ng-container>

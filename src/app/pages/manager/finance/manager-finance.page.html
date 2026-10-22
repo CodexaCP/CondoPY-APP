@@ -1,0 +1,130 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/manager/dashboard" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Caja y bancos</ion-title>
+  </ion-toolbar>
+  <ion-toolbar class="switcher-bar">
+    <app-building-switcher></app-building-switcher>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-segment class="mgr-segment" mode="md" [(ngModel)]="segment">
+    <ion-segment-button value="accounts"><ion-label>Cuentas</ion-label></ion-segment-button>
+    <ion-segment-button value="history"><ion-label>Cerradas</ion-label></ion-segment-button>
+  </ion-segment>
+
+  <div class="mgr-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando cuentas...</p>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && error">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="retry()">Reintentar</ion-button>
+  </div>
+
+  <ng-container *ngIf="overview as o">
+
+    <div class="mgr-banner info" *ngIf="!o.canEdit">
+      <ion-icon name="eye-outline"></ion-icon>
+      <div>Podés consultar el estado de las cuentas. Armar y cerrar conciliaciones lo hace el administrador del edificio.</div>
+    </div>
+    <div class="mgr-banner danger" *ngIf="o.canEdit && readOnly">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+      <div>El sistema está en solo lectura por plan vencido: no se pueden armar ni cerrar conciliaciones.</div>
+    </div>
+
+    <!-- Cuentas -->
+    <ng-container *ngIf="segment === 'accounts'">
+      <div class="mgr-state" *ngIf="!o.accounts.length">
+        <ion-icon name="business-outline"></ion-icon>
+        <p>Este edificio no tiene cuentas para conciliar.</p>
+        <p>Los bancos se concilian solos; la caja o el fondo se activan desde la web.</p>
+      </div>
+
+      <div class="mgr-card acc-card" *ngFor="let a of o.accounts">
+        <div class="acc-top">
+          <div>
+            <p class="acc-name">{{ a.accountName }}</p>
+            <p class="acc-type">{{ typeLabel(a) }}<span *ngIf="!a.isActive"> · inactiva</span></p>
+          </div>
+          <span class="fin-light" [ngClass]="light(a).light"><span class="dot"></span>{{ light(a).text }}</span>
+        </div>
+
+        <p class="acc-balance-label">Saldo según el sistema</p>
+        <p class="acc-balance">{{ gs(a.bookBalance) }}</p>
+        <p class="acc-last" *ngIf="a.lastCompletedDate">
+          Último extracto conciliado: {{ day(a.lastCompletedDate) }} · {{ gs(a.lastStatementBalance) }}
+        </p>
+        <p class="acc-last" *ngIf="!a.lastCompletedDate">Todavía no se hizo ninguna conciliación de esta cuenta.</p>
+
+        <ion-button expand="block" *ngIf="a.openReconciliationId" (click)="continueOpen(a)">
+          <ion-icon name="play-outline" slot="start"></ion-icon>
+          Continuar conciliación (corte {{ day(a.openStatementDate) }})
+        </ion-button>
+        <ion-button expand="block" *ngIf="!a.openReconciliationId && canEdit && a.isActive" (click)="openStart(a)">
+          <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+          Conciliar
+        </ion-button>
+      </div>
+    </ng-container>
+
+    <!-- Historial -->
+    <ng-container *ngIf="segment === 'history'">
+      <div class="mgr-state" *ngIf="!history.length">
+        <ion-icon name="time-outline"></ion-icon>
+        <p>Todavía no hay conciliaciones cerradas.</p>
+      </div>
+
+      <div class="mgr-row hist-row" *ngFor="let h of history" (click)="openHistory(h)">
+        <div class="mgr-row-main">
+          <p class="mgr-row-title">{{ h.accountName }}</p>
+          <p class="mgr-row-sub">Corte {{ day(h.statementDate) }} · {{ h.markedCount }} movimientos</p>
+          <p class="mgr-row-sub" *ngIf="h.completedByName">Cerró {{ h.completedByName }} · {{ dateTime(h.completedAtUtc) }}</p>
+        </div>
+        <div class="mgr-row-side">
+          <p class="mgr-row-amount">{{ gs(h.statementBalance) }}</p>
+          <span class="mgr-pill ok">Cerrada</span>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <!-- Empezar una conciliación -->
+  <ion-modal [isOpen]="!!startFor" (didDismiss)="closeStart()" [initialBreakpoint]="0.85" [breakpoints]="[0, 0.85]">
+    <ng-template>
+      <ion-content>
+        <div class="pay-form" *ngIf="startFor as acc">
+          <p class="pay-title">Nueva conciliación</p>
+          <p class="pay-sub">{{ acc.accountName }}</p>
+          <p class="pay-hint">Mirá tu extracto del banco y escribí el saldo que figura a esa fecha. Después vas a tildar los movimientos que aparecen en el extracto.</p>
+
+          <ion-input type="date" fill="outline" label="Fecha del extracto" labelPlacement="stacked"
+                     [(ngModel)]="statementDate" [max]="today" [min]="minDate(acc)"></ion-input>
+
+          <app-amount-input label="Saldo del extracto (Gs.)" [allowNegative]="true"
+                            [(value)]="statementBalance"></app-amount-input>
+
+          <ion-input type="text" fill="outline" label="Nota (opcional)" labelPlacement="stacked"
+                     maxlength="500" [(ngModel)]="notes"></ion-input>
+
+          <p class="pay-error" *ngIf="formError">{{ formError }}</p>
+
+          <ion-button expand="block" [disabled]="starting" (click)="start()">
+            <ion-spinner *ngIf="starting" name="crescent" slot="start"></ion-spinner>
+            Empezar
+          </ion-button>
+          <ion-button expand="block" fill="clear" [disabled]="starting" (click)="closeStart()">Cancelar</ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

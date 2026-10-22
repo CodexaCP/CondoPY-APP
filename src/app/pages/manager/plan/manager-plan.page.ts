@@ -10,6 +10,7 @@ import { ManagerPlan, ManagerPlanPayment } from '../../../core/manager.models';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PushService } from '../../../core/push.service';
 import { UploadService } from '../../../core/upload.service';
+import { confirmAmount } from '../amount.util';
 import { errorMessage, fmtDate } from '../manager.util';
 
 // Más grave primero: es el plan que hay que regularizar.
@@ -146,7 +147,7 @@ export class ManagerPlanPage {
 
   removePhoto(): void { this.photo = null; this.photoPreview = null; }
 
-  submit(): void {
+  async submit(): Promise<void> {
     const plan = this.payFor;
     if (!plan) return;
 
@@ -155,6 +156,10 @@ export class ManagerPlanPage {
     if (!this.payDate || this.payDate > this.today) { this.formError = 'La fecha del pago no puede ser futura.'; return; }
 
     this.formError = '';
+
+    // Confirmación adicional del monto tipeado antes de enviar el comprobante.
+    if (!await confirmAmount(this.alerts, 'Confirmá el monto pagado', plan.planName, amount, 'Sí, enviar')) return;
+
     this.sending = true;
 
     // Primero se sube la foto (si hay) y después se envía el comprobante con su URL.

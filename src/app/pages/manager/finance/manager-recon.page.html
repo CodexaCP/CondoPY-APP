@@ -1,0 +1,183 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/manager/finance" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ ws?.accountName || 'Conciliación' }}</ion-title>
+    <ion-buttons slot="end" *ngIf="ws && canEdit && isOpen">
+      <ion-button (click)="openMenu()" [disabled]="busy"><ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon></ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Resumen siempre a la vista -->
+  <div class="rc-sum" *ngIf="ws">
+    <div class="rc-sum-cols">
+      <div class="rc-col">
+        <span class="rc-label">Extracto</span>
+        <span class="rc-num">{{ gs(ws.statementBalance) }}</span>
+        <span class="rc-date">al {{ day(ws.statementDate) }}</span>
+      </div>
+      <div class="rc-col">
+        <span class="rc-label">Conciliado</span>
+        <span class="rc-num">{{ gs(ws.reconciledBalance) }}</span>
+        <span class="rc-date">{{ ws.marked.length }} tildados</span>
+      </div>
+      <div class="rc-col" [class.rc-ok]="ws.isBalanced" [class.rc-bad]="!ws.isBalanced">
+        <span class="rc-label">Diferencia</span>
+        <span class="rc-num">{{ gs(ws.difference) }}</span>
+        <span class="rc-date">{{ ws.isBalanced ? 'Cuadra' : 'No cuadra todavía' }}</span>
+      </div>
+    </div>
+    <p class="rc-preview" *ngIf="previewDifference !== null" [class.rc-ok]="previewDifference === 0">
+      Si confirmás lo elegido, la diferencia queda en <strong>{{ gs(previewDifference) }}</strong>
+    </p>
+  </div>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="mgr-state" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando movimientos...</p>
+  </div>
+
+  <div class="mgr-state" *ngIf="!loading && error">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <p>{{ error }}</p>
+    <ion-button fill="outline" size="small" (click)="retry()">Reintentar</ion-button>
+  </div>
+
+  <ng-container *ngIf="ws && !loading">
+
+    <div class="mgr-banner info" *ngIf="!isOpen">
+      <ion-icon name="checkmark-done-outline"></ion-icon>
+      <div>Conciliación cerrada. Acá podés consultar los movimientos que se tildaron.</div>
+    </div>
+    <div class="mgr-banner info" *ngIf="isOpen && !ws.canEdit">
+      <ion-icon name="eye-outline"></ion-icon>
+      <div>Solo podés consultar. Tildar y cerrar lo hace el administrador del edificio.</div>
+    </div>
+    <div class="mgr-banner danger" *ngIf="isOpen && ws.canEdit && !canEdit">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+      <div>El sistema está en solo lectura por plan vencido.</div>
+    </div>
+    <div class="mgr-banner warn" *ngFor="let a of ws.alerts">
+      <ion-icon name="warning-outline"></ion-icon>
+      <div>{{ a }}</div>
+    </div>
+    <div class="mgr-banner info" *ngIf="ws.previousMarkedCount > 0">
+      <ion-icon name="information-circle-outline"></ion-icon>
+      <div>Ya cuentan {{ ws.previousMarkedCount }} movimientos de conciliaciones anteriores ({{ gs(ws.previousMarkedAmount) }}).</div>
+    </div>
+
+    <ion-segment class="mgr-segment" mode="md" [(ngModel)]="segment" (ionChange)="onSegmentChange()" *ngIf="isOpen">
+      <ion-segment-button value="pending"><ion-label>Por tildar ({{ ws.pendingCount }})</ion-label></ion-segment-button>
+      <ion-segment-button value="marked"><ion-label>Tildados ({{ ws.marked.length }})</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <div class="mgr-banner warn" *ngIf="isPendingSegment && ws.pendingTruncated">
+      <ion-icon name="layers-outline"></ion-icon>
+      <div>Hay más movimientos de los que se listan. Tildá los de arriba y se cargan los siguientes.</div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="rc-tools" *ngIf="ws.pending.length + ws.marked.length > 0">
+      <ion-searchbar placeholder="Buscar por detalle o nombre" [debounce]="250" (ionInput)="onSearch($event)"></ion-searchbar>
+      <div class="rc-chips">
+        <button type="button" class="rc-chip" [class.on]="direction === 'all'" (click)="setDirection('all')">Todos</button>
+        <button type="button" class="rc-chip" [class.on]="direction === 'in'" (click)="setDirection('in')">Entradas</button>
+        <button type="button" class="rc-chip" [class.on]="direction === 'out'" (click)="setDirection('out')">Salidas</button>
+        <button type="button" class="rc-chip rc-all" *ngIf="canEdit && isOpen && filteredCount > 0" (click)="toggleAll()">
+          {{ allSelected ? 'Quitar selección' : 'Elegir todos (' + (filteredCount > 500 ? 500 : filteredCount) + ')' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="mgr-state" *ngIf="filteredCount === 0 && !(ws.pending.length + ws.marked.length === 0)">
+      <ion-icon name="search-outline"></ion-icon>
+      <p>No hay movimientos con ese filtro.</p>
+    </div>
+    <div class="mgr-state" *ngIf="ws.pending.length === 0 && isPendingSegment && isOpen">
+      <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <p>No quedan movimientos por tildar.</p>
+    </div>
+    <div class="mgr-state" *ngIf="ws.marked.length === 0 && !isPendingSegment">
+      <ion-icon name="ellipse-outline"></ion-icon>
+      <p>Todavía no tildaste ningún movimiento.</p>
+    </div>
+
+    <!-- Movimientos por día -->
+    <ng-container *ngFor="let g of groups">
+      <p class="mgr-section-title">{{ dayShort(g.date) }}</p>
+      <div class="rc-row" *ngFor="let m of g.items" [class.sel]="isSelected(m)" [class.locked]="!canEdit || !isOpen" (click)="toggle(m)">
+        <ion-icon class="rc-check"
+                  [name]="isPendingSegment ? (isSelected(m) ? 'checkmark-circle' : 'ellipse-outline') : (isSelected(m) ? 'close-circle' : 'checkmark-circle')"
+                  [class.on]="isPendingSegment ? isSelected(m) : !isSelected(m)"
+                  [class.off]="!isPendingSegment && isSelected(m)"></ion-icon>
+        <div class="rc-main">
+          <p class="rc-title">{{ m.description || source(m.sourceType) }}</p>
+          <p class="rc-sub">{{ source(m.sourceType) }}<span *ngIf="m.thirdParty"> · {{ m.thirdParty }}</span><span *ngIf="m.reference"> · {{ m.reference }}</span></p>
+          <span class="mgr-pill warn" *ngIf="m.state === 'Changed'">Cambió de importe</span>
+          <span class="mgr-pill danger" *ngIf="m.state === 'Missing'">Ya no figura</span>
+        </div>
+        <div class="rc-amt" [class.fin-in]="m.amount > 0" [class.fin-out]="m.amount < 0">{{ signed(m.amount) }}</div>
+      </div>
+    </ng-container>
+
+    <div class="rc-more" *ngIf="hiddenCount > 0">
+      <ion-button fill="outline" size="small" (click)="showMore()">Ver {{ hiddenCount > 60 ? 60 : hiddenCount }} más ({{ hiddenCount }} sin mostrar)</ion-button>
+    </div>
+    <div class="rc-spacer"></div>
+  </ng-container>
+
+  <!-- Corregir el extracto -->
+  <ion-modal [isOpen]="editOpen" (didDismiss)="closeEdit()" [initialBreakpoint]="0.85" [breakpoints]="[0, 0.85]">
+    <ng-template>
+      <ion-content>
+        <div class="edit-form">
+          <p class="edit-title">Corregir el extracto</p>
+          <p class="edit-hint">Si cambiás la fecha o el saldo, la diferencia se recalcula. Los tildados se mantienen.</p>
+
+          <ion-input type="date" fill="outline" label="Fecha del extracto" labelPlacement="stacked"
+                     [(ngModel)]="editDate" [max]="today"></ion-input>
+          <app-amount-input label="Saldo del extracto (Gs.)" [allowNegative]="true" [(value)]="editBalance"></app-amount-input>
+          <ion-input type="text" fill="outline" label="Nota (opcional)" labelPlacement="stacked"
+                     maxlength="500" [(ngModel)]="editNotes"></ion-input>
+
+          <p class="edit-error" *ngIf="editError">{{ editError }}</p>
+
+          <ion-button expand="block" [disabled]="busy" (click)="saveEdit()">
+            <ion-spinner *ngIf="busy" name="crescent" slot="start"></ion-spinner>
+            Guardar
+          </ion-button>
+          <ion-button expand="block" fill="clear" [disabled]="busy" (click)="closeEdit()">Cancelar</ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>
+
+<!-- Barra de acción -->
+<ion-footer *ngIf="ws && canEdit && isOpen">
+  <div class="rc-foot">
+    <ng-container *ngIf="selected.size > 0; else closeBar">
+      <ion-button expand="block" [color]="isPendingSegment ? 'primary' : 'danger'" [disabled]="busy" (click)="confirmSelection()">
+        <ion-spinner *ngIf="busy" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!busy" [name]="isPendingSegment ? 'checkmark-done-outline' : 'close-outline'" slot="start"></ion-icon>
+        {{ isPendingSegment ? 'Tildar ' : 'Quitar el tilde a ' }}{{ selected.size }} · {{ signed(selectedTotal) }}
+      </ion-button>
+      <ion-button expand="block" fill="clear" size="small" [disabled]="busy" (click)="clearSelection()">Borrar selección</ion-button>
+    </ng-container>
+    <ng-template #closeBar>
+      <p class="rc-foot-hint" *ngIf="!ws.isBalanced">Cuando la diferencia sea cero vas a poder cerrar la conciliación.</p>
+      <ion-button expand="block" color="success" [disabled]="busy || !ws.isBalanced" (click)="complete()">
+        <ion-spinner *ngIf="busy" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!busy" name="lock-closed-outline" slot="start"></ion-icon>
+        Cerrar conciliación
+      </ion-button>
+    </ng-template>
+  </div>
+</ion-footer>
