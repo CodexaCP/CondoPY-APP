@@ -1,0 +1,327 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="exit()" aria-label="Volver al ingreso">
+        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Demo · Encargado</ion-title>
+    <ion-buttons slot="end">
+      <ion-button class="demo-want" (click)="openCta()">Quiero esto</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <div class="demo-banner">
+    <ion-icon name="eye-outline"></ion-icon>
+    Demostración con datos ficticios · nada se guarda
+  </div>
+</ion-header>
+
+<ion-content>
+
+  <!-- ═══ INICIO ═══ -->
+  <ng-container *ngIf="section === 'inicio'">
+    <p class="mgr-section-title">{{ buildingName }}</p>
+
+    <div class="mgr-card demo-progress">
+      <div class="demo-progress-head">
+        <strong>Probá lo que hace el Encargado</strong>
+        <span>{{ store.done.length }} de {{ tasks.length }}</span>
+      </div>
+      <div class="demo-bar"><i [style.width.%]="(store.done.length / tasks.length) * 100"></i></div>
+      <button type="button" class="demo-task" *ngFor="let t of tasks" [class.done]="store.isDone(t.id)" (click)="go(t.section)">
+        <ion-icon [name]="store.isDone(t.id) ? 'checkmark-circle-outline' : t.icon"></ion-icon>
+        <span class="demo-task-text"><b>{{ t.title }}</b><small>{{ t.hint }}</small></span>
+        <ion-icon name="chevron-forward-outline" class="demo-caret"></ion-icon>
+      </button>
+    </div>
+
+    <p class="mgr-section-title">Requieren tu atención</p>
+    <button type="button" class="mgr-row" (click)="go('pagos')">
+      <div class="mgr-row-main"><p class="mgr-row-title">Pagos por revisar</p><p class="mgr-row-sub">Comprobantes enviados por propietarios</p></div>
+      <div class="mgr-row-side"><span class="mgr-pill warn">{{ store.pendingPayments }}</span></div>
+    </button>
+    <button type="button" class="mgr-row" (click)="go('reclamos')">
+      <div class="mgr-row-main"><p class="mgr-row-title">Reclamos pendientes</p><p class="mgr-row-sub">Esperan respuesta</p></div>
+      <div class="mgr-row-side"><span class="mgr-pill warn">{{ store.pendingClaims }}</span></div>
+    </button>
+    <button type="button" class="mgr-row" (click)="go('reservas')">
+      <div class="mgr-row-main"><p class="mgr-row-title">Reservas por aprobar</p><p class="mgr-row-sub">Salón, quincho y piscina</p></div>
+      <div class="mgr-row-side"><span class="mgr-pill warn">{{ store.pendingReservations }}</span></div>
+    </button>
+
+    <p class="mgr-section-title">{{ periodName }}</p>
+    <div class="mgr-card">
+      <div class="mgr-kv"><span class="k">Emitido</span><span class="v">{{ gs(store.charged) }}</span></div>
+      <div class="mgr-kv"><span class="k">Cobrado</span><span class="v">{{ gs(store.collected) }}</span></div>
+      <div class="mgr-kv"><span class="k">Cobranza</span><span class="v">{{ store.rate }} %</span></div>
+      <div class="demo-bar thick"><i [style.width.%]="store.rate"></i></div>
+    </div>
+
+    <p class="mgr-section-title">Morosidad</p>
+    <div class="mgr-card">
+      <div class="mgr-kv"><span class="k">Saldo vencido</span><span class="v danger">{{ gs(store.overdue) }}</span></div>
+      <div class="mgr-kv"><span class="k">Unidades en mora</span><span class="v">{{ store.unitsInArrears }}</span></div>
+    </div>
+
+    <p class="mgr-section-title">Caja y bancos</p>
+    <button type="button" class="mgr-card demo-card-btn" (click)="openCta('conciliacion')">
+      <ion-icon name="cash-outline" class="demo-card-ico"></ion-icon>
+      <span class="demo-card-text"><b>Conciliación bancaria</b><small>Saldo en caja y bancos {{ gs(store.cash) }}</small></span>
+      <ion-icon name="lock-closed-outline" class="demo-caret"></ion-icon>
+    </button>
+    <div class="demo-pad"></div>
+  </ng-container>
+
+  <!-- ═══ PAGOS ═══ -->
+  <ng-container *ngIf="section === 'pagos'">
+    <ion-segment class="mgr-segment" mode="md" [(ngModel)]="paySegment">
+      <ion-segment-button value="pending"><ion-label>Por revisar</ion-label></ion-segment-button>
+      <ion-segment-button value="review"><ion-label>En revisión</ion-label></ion-segment-button>
+      <ion-segment-button value="done"><ion-label>Resueltos</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <div class="mgr-state" *ngIf="payments.length === 0">
+      <ion-icon name="wallet-outline"></ion-icon>
+      <p>No hay pagos en esta lista.</p>
+    </div>
+
+    <div class="mgr-row" *ngFor="let p of payments" (click)="openPayment(p)">
+      <div class="mgr-row-main">
+        <p class="mgr-row-title">{{ p.owner }} · {{ p.unit }}</p>
+        <p class="mgr-row-sub">{{ p.method }} · {{ p.reference }}</p>
+        <p class="mgr-row-sub">{{ date(p.paymentDate) }}</p>
+      </div>
+      <div class="mgr-row-side">
+        <p class="mgr-row-amount">{{ gs(p.declaredAmount) }}</p>
+        <span class="mgr-pill" [ngClass]="payClass(p.status)">{{ payLabel(p.status) }}</span>
+      </div>
+    </div>
+    <div class="demo-pad"></div>
+  </ng-container>
+
+  <!-- ═══ RECLAMOS ═══ -->
+  <ng-container *ngIf="section === 'reclamos'">
+    <ion-segment class="mgr-segment" mode="md" [(ngModel)]="claimSegment">
+      <ion-segment-button value="Pendiente"><ion-label>Pendientes</ion-label></ion-segment-button>
+      <ion-segment-button value="EnProceso"><ion-label>En proceso</ion-label></ion-segment-button>
+      <ion-segment-button value="Resuelto"><ion-label>Resueltos</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <div class="mgr-state" *ngIf="claims.length === 0">
+      <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+      <p>No hay reclamos en este estado.</p>
+    </div>
+
+    <div class="mgr-row" *ngFor="let c of claims" (click)="claim = c">
+      <div class="mgr-row-main">
+        <p class="mgr-row-title">{{ c.category }} · {{ c.unit }}</p>
+        <p class="mgr-row-sub">{{ c.description }}</p>
+        <p class="mgr-row-sub">{{ c.createdByName }} · {{ dateTime(c.createdAt) }}</p>
+      </div>
+      <div class="mgr-row-side">
+        <span class="mgr-pill" [ngClass]="claimClass(c.status)">{{ claimLabel(c.status) }}</span>
+      </div>
+    </div>
+    <div class="demo-pad"></div>
+  </ng-container>
+
+  <!-- ═══ RESERVAS ═══ -->
+  <ng-container *ngIf="section === 'reservas'">
+    <p class="mgr-section-title">Reservas de espacios comunes</p>
+    <div class="mgr-card" *ngFor="let r of store.reservations">
+      <div class="res-head">
+        <div>
+          <p class="res-title">{{ r.space }}</p>
+          <p class="res-sub">{{ r.requestedBy }} · Unidad {{ r.unit }}</p>
+        </div>
+        <span class="mgr-pill" [ngClass]="reservationClass(r.status)">{{ reservationLabel(r.status) }}</span>
+      </div>
+      <div class="mgr-kv"><span class="k">Día</span><span class="v">{{ r.day }}</span></div>
+      <div class="mgr-kv"><span class="k">Horario</span><span class="v">{{ r.time }}</span></div>
+      <div class="mgr-kv"><span class="k">Invitados</span><span class="v">{{ r.guests }}</span></div>
+      <div class="res-actions" *ngIf="r.status === 'Pending'">
+        <ion-button size="small" (click)="reviewReservation(r, true)"><ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>Aprobar</ion-button>
+        <ion-button size="small" fill="outline" color="danger" (click)="reviewReservation(r, false)"><ion-icon name="close-circle-outline" slot="start"></ion-icon>Rechazar</ion-button>
+      </div>
+    </div>
+    <div class="demo-pad"></div>
+  </ng-container>
+
+  <!-- ═══ MÁS ═══ -->
+  <ng-container *ngIf="section === 'mas'">
+    <div class="more-hero">
+      <div class="more-avatar">EN</div>
+      <h2>Encargado de ejemplo</h2>
+      <p>{{ buildingName }}</p>
+    </div>
+
+    <div class="more-list">
+      <button type="button" class="more-item" (click)="openCta('notificaciones')">
+        <ion-icon name="notifications-outline"></ion-icon><span>Notificaciones</span>
+        <ion-icon name="lock-closed-outline" class="more-caret"></ion-icon>
+      </button>
+      <button type="button" class="more-item" (click)="openCta('marketplace')">
+        <ion-icon name="storefront-outline"></ion-icon><span>Marketplace · pagos, reembolsos y reclamos</span>
+        <ion-icon name="lock-closed-outline" class="more-caret"></ion-icon>
+      </button>
+      <button type="button" class="more-item" (click)="openCta('conciliacion')">
+        <ion-icon name="cash-outline"></ion-icon><span>Caja y bancos · conciliación</span>
+        <ion-icon name="lock-closed-outline" class="more-caret"></ion-icon>
+      </button>
+      <button type="button" class="more-item" (click)="openCta('plan')">
+        <ion-icon name="ribbon-outline"></ion-icon><span>Mi plan</span>
+        <ion-icon name="lock-closed-outline" class="more-caret"></ion-icon>
+      </button>
+      <button type="button" class="more-item" (click)="exit()">
+        <ion-icon name="log-out-outline"></ion-icon><span>Salir de la demo</span>
+      </button>
+    </div>
+
+    <div class="mgr-card demo-want-card">
+      <b>¿Querés esto para tu edificio?</b>
+      <p>Podemos adaptar Expenses a tu administración.</p>
+      <ion-button expand="block" (click)="openCta()">Hablar con Expenses</ion-button>
+    </div>
+    <div class="demo-pad"></div>
+  </ng-container>
+
+  <!-- ═══ DETALLE DE PAGO ═══ -->
+  <ion-modal [isOpen]="!!payment" (didDismiss)="closePayment()" [initialBreakpoint]="0.9" [breakpoints]="[0, 0.9]">
+    <ng-template>
+      <ion-content *ngIf="payment as p">
+        <div class="det">
+          <div class="det-head">
+            <div>
+              <p class="det-title">{{ p.owner }} · {{ p.unit }}</p>
+              <p class="det-sub">{{ p.reference }}</p>
+            </div>
+            <span class="mgr-pill" [ngClass]="payClass(p.status)">{{ payLabel(p.status) }}</span>
+          </div>
+
+          <div class="mgr-kv"><span class="k">Fecha del pago</span><span class="v">{{ date(p.paymentDate) }}</span></div>
+          <div class="mgr-kv"><span class="k">Medio</span><span class="v">{{ p.method }}</span></div>
+          <div class="mgr-kv"><span class="k">Monto declarado</span><span class="v">{{ gs(p.declaredAmount) }}</span></div>
+          <div class="mgr-kv" *ngIf="p.reviewedAmount !== null"><span class="k">Monto verificado</span><span class="v">{{ gs(p.reviewedAmount) }}</span></div>
+          <div class="mgr-kv" *ngIf="p.rejectionReason"><span class="k">Motivo del rechazo</span><span class="v">{{ p.rejectionReason }}</span></div>
+
+          <p class="mgr-section-title det-pad">Comprobante</p>
+          <div class="receipt">
+            <ion-icon name="image-outline"></ion-icon>
+            <b>{{ p.method }} bancaria</b>
+            <span>{{ gs(p.declaredAmount) }}</span>
+            <small>{{ date(p.paymentDate) }} · {{ p.reference }}</small>
+          </div>
+
+          <ng-container *ngIf="p.status === 'Pending' || p.status === 'UnderReview'">
+            <ng-container *ngIf="!rejecting">
+              <div class="mgr-actions det-actions">
+                <ion-button expand="block" (click)="verifyAndApprove()">
+                  <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+                  {{ p.status === 'Pending' ? 'Verificar y aprobar' : 'Aprobar pago' }}
+                </ion-button>
+                <ion-button expand="block" fill="outline" *ngIf="p.status === 'Pending'" (click)="verifyOnly()">Solo verificar monto</ion-button>
+                <ion-button expand="block" fill="outline" color="danger" (click)="rejecting = true">Rechazar</ion-button>
+              </div>
+            </ng-container>
+
+            <div class="reject-box" *ngIf="rejecting">
+              <p class="mgr-section-title det-pad">Motivo del rechazo</p>
+              <button type="button" class="reason" *ngFor="let r of rejectReasons" [class.on]="rejectReason === r" (click)="rejectReason = r">{{ r }}</button>
+              <div class="mgr-actions det-actions">
+                <ion-button expand="block" color="danger" [disabled]="!rejectReason" (click)="confirmReject()">Confirmar rechazo</ion-button>
+                <ion-button expand="block" fill="clear" (click)="rejecting = false">Volver</ion-button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ═══ DETALLE DE RECLAMO ═══ -->
+  <ion-modal [isOpen]="!!claim" (didDismiss)="closeClaim()" [initialBreakpoint]="0.7" [breakpoints]="[0, 0.7, 1]">
+    <ng-template>
+      <ion-content *ngIf="claim as c">
+        <div class="det">
+          <div class="det-head">
+            <div>
+              <p class="det-title">{{ c.category }}</p>
+              <p class="det-sub">{{ buildingName }} · Unidad {{ c.unit }}</p>
+            </div>
+            <span class="mgr-pill" [ngClass]="claimClass(c.status)">{{ claimLabel(c.status) }}</span>
+          </div>
+          <p class="claim-desc">{{ c.description }}</p>
+          <div class="mgr-kv"><span class="k">Reclamante</span><span class="v">{{ c.createdByName }}</span></div>
+          <div class="mgr-kv"><span class="k">Creado</span><span class="v">{{ dateTime(c.createdAt) }}</span></div>
+
+          <div class="mgr-actions det-actions" *ngIf="c.status !== 'Resuelto'">
+            <ion-button expand="block" *ngIf="c.status === 'Pendiente'" (click)="changeClaim('EnProceso')">
+              <ion-icon name="time-outline" slot="start"></ion-icon>Pasar a en proceso
+            </ion-button>
+            <ion-button expand="block" [fill]="c.status === 'Pendiente' ? 'outline' : 'solid'" (click)="changeClaim('Resuelto')">
+              <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>Marcar como resuelto
+            </ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ═══ CIERRE COMERCIAL ═══ -->
+  <ion-modal [isOpen]="ctaOpen" (didDismiss)="closeCta()" [initialBreakpoint]="1" [breakpoints]="[0, 1]">
+    <ng-template>
+      <ion-content>
+        <div class="cta">
+          <div class="cta-ico"><ion-icon [name]="ctaFeature === 'general' ? (store.allDone ? 'sparkles-outline' : 'business-outline') : lockedInfo.icon"></ion-icon></div>
+          <h2>{{ ctaFeature === 'general' ? (store.allDone ? '¡Probaste lo esencial!' : '¿Listo para administrar tu propio edificio?') : lockedInfo.title }}</h2>
+          <p class="cta-lead" *ngIf="ctaFeature !== 'general'">{{ lockedInfo.text }} Está disponible en la versión completa.</p>
+          <p class="cta-lead" *ngIf="ctaFeature === 'general'">Ya viste cómo trabaja el Encargado desde el celular. Contanos tu caso y te ayudamos a evaluar cómo adaptar Expenses a tu administración.</p>
+
+          <div class="diag">
+            <div class="diag-q" *ngFor="let q of questions">
+              <span>{{ q.title }}</span>
+              <div class="diag-opts">
+                <button type="button" *ngFor="let o of q.options" [class.on]="store.answers[q.key] === o" (click)="store.answer(q.key, o)">{{ o }}</button>
+              </div>
+            </div>
+            <p class="diag-reco" *ngIf="store.recommendation">
+              <ion-icon name="bulb-outline"></ion-icon>
+              <span><b>Para vos, Expenses ofrece:</b> {{ store.recommendation }}</span>
+            </p>
+          </div>
+
+          <div class="cta-btns">
+            <ion-button expand="block" (click)="contact('demostracion')"><ion-icon name="play-circle-outline" slot="start"></ion-icon>Solicitar una demostración personalizada</ion-button>
+            <ion-button expand="block" fill="outline" (click)="contact('planes')">Consultar planes y condiciones</ion-button>
+            <ion-button expand="block" color="success" (click)="contact('presupuesto')"><ion-icon name="logo-whatsapp" slot="start"></ion-icon>Pedir presupuesto por WhatsApp</ion-button>
+            <ion-button expand="block" fill="clear" (click)="closeCta()">Seguir explorando</ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>
+
+<ion-footer>
+  <ion-tab-bar [selectedTab]="section">
+    <ion-tab-button tab="inicio" (click)="go('inicio')">
+      <ion-icon name="grid-outline"></ion-icon><ion-label>Inicio</ion-label>
+    </ion-tab-button>
+    <ion-tab-button tab="pagos" (click)="go('pagos')">
+      <ion-icon name="wallet-outline"></ion-icon><ion-label>Pagos</ion-label>
+      <ion-badge color="danger" *ngIf="store.pendingPayments">{{ store.pendingPayments }}</ion-badge>
+    </ion-tab-button>
+    <ion-tab-button tab="reclamos" (click)="go('reclamos')">
+      <ion-icon name="chatbubble-ellipses-outline"></ion-icon><ion-label>Reclamos</ion-label>
+      <ion-badge color="danger" *ngIf="store.pendingClaims">{{ store.pendingClaims }}</ion-badge>
+    </ion-tab-button>
+    <ion-tab-button tab="reservas" (click)="go('reservas')">
+      <ion-icon name="calendar-outline"></ion-icon><ion-label>Reservas</ion-label>
+      <ion-badge color="danger" *ngIf="store.pendingReservations">{{ store.pendingReservations }}</ion-badge>
+    </ion-tab-button>
+    <ion-tab-button tab="mas" (click)="go('mas')">
+      <ion-icon name="ellipsis-horizontal-outline"></ion-icon><ion-label>Más</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-footer>

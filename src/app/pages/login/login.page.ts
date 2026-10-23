@@ -53,6 +53,10 @@ export class LoginPage {
     });
   }
 
+  goDemo(): void {
+    this.router.navigateByUrl('/demo');
+  }
+
   goForgotPassword(): void {
     this.router.navigateByUrl('/forgot-password');
   }

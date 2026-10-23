@@ -1,0 +1,106 @@
+// Estilos propios de la demo del Encargado (las tarjetas, filas y etiquetas vienen de manager.shared.scss).
+
+.demo-banner {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.4rem 1rem; font-size: 0.74rem; font-weight: 700;
+  background: rgba(26, 183, 175, 0.14); color: #0f8a84;
+}
+
+.demo-want { --color: var(--brand-c1); font-weight: 800; }
+.demo-pad { height: 1rem; }
+
+button.mgr-row {
+  width: calc(100% - 2rem); text-align: left; font: inherit; color: inherit;
+}
+
+.demo-progress {
+  .demo-progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; font-size: 0.92rem; color: var(--brand-ink);
+    span { font-size: 0.78rem; font-weight: 700; color: var(--brand-muted); } }
+}
+
+.demo-bar {
+  height: 7px; border-radius: 999px; background: rgba(19, 133, 182, 0.12); overflow: hidden; margin-bottom: 0.6rem;
+  i { display: block; height: 100%; background: linear-gradient(90deg, var(--brand-c1), var(--brand-c3)); transition: width 0.4s ease; }
+  &.thick { margin: 0.6rem 0 0; height: 9px; }
+}
+
+.demo-task {
+  width: 100%; display: flex; align-items: center; gap: 0.7rem; text-align: left;
+  background: none; border: 0; border-top: 1px solid rgba(19, 133, 182, 0.1); padding: 0.7rem 0; font: inherit; cursor: pointer; color: var(--brand-ink);
+  > ion-icon:first-child { font-size: 1.5rem; color: var(--brand-c2); flex-shrink: 0; }
+  .demo-task-text { flex: 1; display: flex; flex-direction: column; min-width: 0;
+    b { font-size: 0.9rem; }
+    small { font-size: 0.74rem; color: var(--brand-muted); line-height: 1.35; margin-top: 0.1rem; } }
+  .demo-caret { color: var(--brand-muted); font-size: 1rem; }
+  &.done > ion-icon:first-child { color: #3d7d2d; }
+  &.done b { text-decoration: line-through; opacity: 0.7; }
+}
+
+.demo-card-btn {
+  width: calc(100% - 2rem); display: flex; align-items: center; gap: 0.8rem; text-align: left; font: inherit; color: var(--brand-ink); cursor: pointer;
+  .demo-card-ico { font-size: 1.6rem; color: var(--brand-c2); }
+  .demo-card-text { flex: 1; display: flex; flex-direction: column; b { font-size: 0.92rem; } small { font-size: 0.76rem; color: var(--brand-muted); margin-top: 0.1rem; } }
+  .demo-caret { color: var(--brand-muted); }
+}
+
+.mgr-kv .v.danger { color: #c94d3f; }
+
+// Reservas
+.res-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.6rem; margin-bottom: 0.4rem; }
+.res-title { margin: 0; font-size: 0.98rem; font-weight: 800; color: var(--brand-ink); }
+.res-sub { margin: 0.12rem 0 0; font-size: 0.78rem; color: var(--brand-muted); }
+.res-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; ion-button { flex: 1; } }
+
+// Detalles (modales)
+.det { padding: 1.25rem 1rem 2rem; }
+.det-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
+.det-title { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--brand-ink); }
+.det-sub { margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--brand-muted); }
+.det-pad { padding-left: 0; padding-right: 0; }
+.det-actions { margin: 0.75rem 0 0; }
+.claim-desc {
+  margin: 0 0 1rem; font-size: 0.92rem; line-height: 1.5; color: var(--brand-ink);
+  background: var(--brand-surface); border-radius: 12px; padding: 0.8rem;
+}
+
+.receipt {
+  display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 1.2rem 1rem; border-radius: 14px;
+  border: 1.5px dashed var(--brand-border); background: var(--brand-surface); color: var(--brand-ink); text-align: center;
+  ion-icon { font-size: 2rem; color: var(--brand-c2); }
+  span { font-size: 1.3rem; font-weight: 800; }
+  small { color: var(--brand-muted); }
+}
+
+.reason {
+  display: block; width: 100%; text-align: left; margin-bottom: 0.5rem; padding: 0.7rem 0.9rem; border-radius: 12px; cursor: pointer;
+  font: inherit; font-size: 0.88rem; color: var(--brand-ink); background: #fff; border: 1.5px solid var(--brand-border);
+  &.on { border-color: #c94d3f; background: rgba(201, 77, 63, 0.08); font-weight: 700; }
+}
+
+// Pestaña «Más»
+.more-hero { text-align: center; padding: 1.5rem 1rem 0.5rem; color: var(--brand-ink);
+  .more-avatar { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 0.6rem; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 1.2rem; background: var(--brand-gradient); }
+  h2 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+  p { margin: 0.2rem 0 0; font-size: 0.82rem; color: var(--brand-muted); } }
+.more-list { margin: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.more-item {
+  display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.85rem 0.9rem; border-radius: 16px; cursor: pointer; text-align: left;
+  background: #fff; border: 1px solid var(--brand-border); font: inherit; font-size: 0.9rem; font-weight: 600; color: var(--brand-ink);
+  ion-icon:first-child { font-size: 1.3rem; color: var(--brand-c2); }
+  span { flex: 1; }
+  .more-caret { color: var(--brand-muted); font-size: 1rem; }
+}
+.demo-want-card { text-align: center; b { color: var(--brand-ink); } p { margin: 0.3rem 0 0.8rem; font-size: 0.84rem; color: var(--brand-muted); } }
+
+// Cierre comercial
+.cta { padding: 1.5rem 1.1rem 2rem; text-align: center; color: var(--brand-ink);
+  .cta-ico { width: 56px; height: 56px; border-radius: 18px; margin: 0 auto 0.7rem; display: grid; place-items: center; font-size: 1.8rem; background: rgba(26, 183, 175, 0.14); color: #0f8a84; }
+  h2 { margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 800; }
+  .cta-lead { margin: 0 0 1rem; font-size: 0.9rem; line-height: 1.5; color: var(--brand-muted); } }
+.diag { text-align: left; display: grid; gap: 0.9rem; padding: 0.9rem; border-radius: 14px; background: var(--brand-surface); border: 1px solid var(--brand-border); }
+.diag-q > span { display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; }
+.diag-opts { display: flex; flex-wrap: wrap; gap: 0.4rem;
+  button { font: inherit; font-size: 0.8rem; padding: 0.38rem 0.75rem; border-radius: 999px; cursor: pointer; border: 1px solid var(--brand-border); background: #fff; color: var(--brand-ink);
+    &.on { background: var(--brand-c1); border-color: var(--brand-c1); color: #fff; font-weight: 700; } } }
+.diag-reco { display: flex; gap: 0.5rem; margin: 0; padding: 0.7rem 0.8rem; border-radius: 12px; background: rgba(106, 198, 74, 0.16); font-size: 0.84rem; line-height: 1.45; color: #2f6a22; ion-icon { margin-top: 0.15rem; flex-shrink: 0; } }
+.cta-btns { display: flex; flex-direction: column; gap: 0.2rem; margin-top: 1rem; }

@@ -34,6 +34,11 @@ const routes: Routes = [
     loadChildren: () => import('./pages/area-comun/area-comun.module').then(m => m.AreaComunPageModule)
   },
   {
+    // Demo pública del Encargado: sin guard, datos ficticios, aislada del resto de la app.
+    path: 'demo',
+    loadChildren: () => import('./pages/demo/demo.module').then(m => m.DemoPageModule)
+  },
+  {
     path: 'manager',
     canActivate: [ManagerGuard],
     loadChildren: () => import('./pages/manager/manager.module').then(m => m.ManagerPageModule)

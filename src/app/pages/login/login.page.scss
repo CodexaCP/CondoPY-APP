@@ -123,3 +123,34 @@
   height: 50px;
   margin-top: 0.5rem;
 }
+
+// Acceso a la demo del Encargado (debajo de la tarjeta de ingreso, sobre el fondo de color).
+.demo-entry {
+  width: 100%;
+  max-width: 400px;
+  margin-top: 1.25rem;
+  text-align: center;
+  color: #fff;
+
+  p {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .demo-btn {
+    --border-color: #fff;
+    --border-width: 2px;
+    --color: #fff;
+    --border-radius: 14px;
+    --background: rgba(255, 255, 255, 0.14);
+    font-weight: 700;
+  }
+
+  small {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.74rem;
+    opacity: 0.85;
+  }
+}
