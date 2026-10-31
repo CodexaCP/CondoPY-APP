@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { formatGs, fmtDate, fmtDateTime } from '../manager/manager.util';
-import {
-  DEMO_BUILDING_NAME, DEMO_DIAGNOSIS, DEMO_LOCKED, REJECT_REASONS, demoPeriodName,
-  DemoClaim, DemoClaimStatus, DemoPayment, DemoReservation
-} from './demo.data';
-import { DEMO_TASKS, DemoContactKind, DemoStore } from './demo.store';
+import { LangService } from '../../core/lang.service';
+import { formatGs } from '../manager/manager.util';
+import { DEMO_LOCKED_ICONS, REJECT_REASON_IDS, DemoClaim, DemoClaimStatus, DemoPayment, DemoReservation } from './demo.data';
+import { DEMO_TX, LockedId, RejectReasonId } from './demo.i18n';
+import { DemoContactKind, DemoStore } from './demo.store';
 
 type Section = 'inicio' | 'pagos' | 'reclamos' | 'reservas' | 'mas';
 
 // Demo del Encargado: recorre lo que hace desde el celular (pagos, reclamos, reservas) con datos ficticios.
-// Es independiente del resto de la app: no usa la sesión ni llama al servidor.
+// Es independiente del resto de la app: no usa la sesión ni llama al servidor. Los textos están en demo.i18n.ts
+// (español, portugués e inglés) y siguen el idioma elegido con el selector.
 @Component({
   selector: 'app-demo',
   templateUrl: './demo.page.html',
@@ -18,11 +18,7 @@ type Section = 'inicio' | 'pagos' | 'reclamos' | 'reservas' | 'mas';
   standalone: false,
 })
 export class DemoPage implements OnInit {
-  readonly tasks = DEMO_TASKS;
-  readonly questions = DEMO_DIAGNOSIS;
-  readonly rejectReasons = REJECT_REASONS;
-  readonly buildingName = DEMO_BUILDING_NAME;
-  readonly periodName = demoPeriodName();
+  readonly rejectReasons = REJECT_REASON_IDS;
 
   section: Section = 'inicio';
   paySegment: 'pending' | 'review' | 'done' = 'pending';
@@ -30,30 +26,55 @@ export class DemoPage implements OnInit {
 
   payment: DemoPayment | null = null;
   rejecting = false;
-  rejectReason = '';
+  rejectReason: RejectReasonId | '' = '';
   claim: DemoClaim | null = null;
 
   ctaOpen = false;
-  ctaFeature = 'general';
+  ctaFeature: LockedId = 'general';
   private autoShown = false;
 
-  constructor(public store: DemoStore, private router: Router) {}
+  constructor(public store: DemoStore, private router: Router, private lang: LangService) {}
 
   ngOnInit(): void {
     this.store.reset();
     this.store.track('demo_start');
   }
 
-  get lockedInfo() { return DEMO_LOCKED[this.ctaFeature] ?? DEMO_LOCKED['general']; }
+  get t() { return DEMO_TX[this.lang.lang]; }
+  get tasks() { return this.store.tasks; }
+  get questions() { return (['units', 'method', 'pain'] as const).map(key => ({ key, ...this.t.diagnosis[key] })); }
+  get buildingName(): string { return this.t.buildingName; }
+  get periodName(): string {
+    const now = new Date();
+    return this.t.periodName(this.t.months[now.getMonth()], now.getFullYear());
+  }
+  get lockedInfo() { return { ...this.t.locked[this.ctaFeature], icon: DEMO_LOCKED_ICONS[this.ctaFeature] }; }
 
   gs(v: number | null | undefined): string { return formatGs(v); }
-  date(v: string): string { return fmtDate(v); }
-  dateTime(v: string): string { return fmtDateTime(v); }
+
+  // Fechas en el formato del idioma elegido (en inglés con el mes abreviado, para que día y mes no se confundan).
+  date(v: string): string {
+    const opts: Intl.DateTimeFormatOptions = this.lang.lang === 'en' ? { day: '2-digit', month: 'short', year: 'numeric' } : { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return new Date(v).toLocaleDateString(this.lang.locale, opts);
+  }
+
+  dateTime(v: string): string {
+    const opts: Intl.DateTimeFormatOptions = this.lang.lang === 'en'
+      ? { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+      : { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return new Date(v).toLocaleString(this.lang.locale, opts);
+  }
+
+  dayLabel(offset: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d.toLocaleDateString(this.lang.locale, { weekday: 'long', day: '2-digit', month: this.lang.lang === 'en' ? 'short' : '2-digit' });
+  }
 
   go(s: Section): void { this.section = s; }
   exit(): void { void this.router.navigateByUrl('/login'); }
 
-  openCta(feature = 'general'): void {
+  openCta(feature: LockedId = 'general'): void {
     this.ctaFeature = feature;
     this.ctaOpen = true;
     if (feature !== 'general') this.store.track('locked_click', feature);
@@ -85,9 +106,7 @@ export class DemoPage implements OnInit {
     return this.store.payments.filter(by);
   }
 
-  payLabel(s: string): string {
-    return ({ Pending: 'Por revisar', UnderReview: 'En revisión', Approved: 'Aprobado', Rejected: 'Rechazado' } as Record<string, string>)[s] ?? s;
-  }
+  payLabel(s: DemoPayment['status']): string { return this.t.payStatus[s] ?? s; }
 
   payClass(s: string): string {
     return ({ Pending: 'warn', UnderReview: 'info', Approved: 'ok', Rejected: 'danger' } as Record<string, string>)[s] ?? 'muted';
@@ -114,9 +133,7 @@ export class DemoPage implements OnInit {
   // ── Reclamos ───────────────────────────────────────────────────────────
   get claims(): DemoClaim[] { return this.store.claims.filter(c => c.status === this.claimSegment); }
 
-  claimLabel(s: string): string {
-    return ({ Pendiente: 'Pendiente', EnProceso: 'En proceso', Resuelto: 'Resuelto' } as Record<string, string>)[s] ?? s;
-  }
+  claimLabel(s: DemoClaimStatus): string { return this.t.claimStatus[s] ?? s; }
 
   claimClass(s: string): string {
     return ({ Pendiente: 'warn', EnProceso: 'info', Resuelto: 'ok' } as Record<string, string>)[s] ?? 'muted';
@@ -132,9 +149,7 @@ export class DemoPage implements OnInit {
   }
 
   // ── Reservas ───────────────────────────────────────────────────────────
-  reservationLabel(s: string): string {
-    return ({ Pending: 'Por revisar', Approved: 'Aprobada', Rejected: 'Rechazada' } as Record<string, string>)[s] ?? s;
-  }
+  reservationLabel(s: DemoReservation['status']): string { return this.t.reservationStatus[s] ?? s; }
 
   reservationClass(s: string): string {
     return ({ Pending: 'warn', Approved: 'ok', Rejected: 'danger' } as Record<string, string>)[s] ?? 'muted';

@@ -4,6 +4,8 @@
   display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   padding: 0.4rem 1rem; font-size: 0.74rem; font-weight: 700;
   background: rgba(26, 183, 175, 0.14); color: #0f8a84;
+  .demo-banner-text { flex: 1; min-width: 0; text-align: center; }
+  .demo-lang { --ls-on: #fff; flex: none; }
 }
 
 .demo-want { --color: var(--brand-c1); font-weight: 800; }

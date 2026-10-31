@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { PushService } from '../../core/push.service';
 import { NotificationAlertService } from '../../core/notification-alert.service';
+import { LangService } from '../../core/lang.service';
+import { LOGIN_TX } from './login.i18n';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +20,10 @@ export class LoginPage {
   showPass = false;
   errorMsg = '';
 
-  constructor(private auth: AuthService, private router: Router, private pushSvc: PushService, private alerts: NotificationAlertService) {}
+  constructor(private auth: AuthService, private router: Router, private pushSvc: PushService, private alerts: NotificationAlertService, private lang: LangService) {}
+
+  // Textos en el idioma elegido (selector de la esquina) o, si nunca eligió, el del teléfono.
+  get t() { return LOGIN_TX[this.lang.lang].login; }
 
   submit(): void {
     this.submitted = true;
@@ -43,11 +48,11 @@ export class LoginPage {
         this.loading = false;
         const body = err?.error;
         if (body?.error === 'duplicate_username') {
-          this.errorMsg = body.message ?? 'Usuario con múltiples empresas. Usa usuario@empresa.';
+          this.errorMsg = body.message ?? this.t.errMultiCompany;
         } else if (err.status === 401) {
-          this.errorMsg = 'Usuario o contraseña incorrectos.';
+          this.errorMsg = this.t.errWrong;
         } else {
-          this.errorMsg = 'No se pudo conectar. Verifica tu conexión.';
+          this.errorMsg = this.t.errOffline;
         }
       }
     });

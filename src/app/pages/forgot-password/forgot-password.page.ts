@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { AuthService } from '../../core/auth.service';
+import { LangService } from '../../core/lang.service';
+import { LOGIN_TX } from '../login/login.i18n';
 
 @Component({
   selector: 'app-forgot-password',
@@ -14,11 +16,13 @@ export class ForgotPasswordPage {
   errorMsg = '';
   sent = false;
 
-  constructor(private auth: AuthService, private navCtrl: NavController) {}
+  constructor(private auth: AuthService, private navCtrl: NavController, private lang: LangService) {}
+
+  get t() { return LOGIN_TX[this.lang.lang].forgot; }
 
   submit(): void {
     if (!this.identifier.trim()) {
-      this.errorMsg = 'Ingresá tu correo o nombre de usuario.';
+      this.errorMsg = this.t.errEmpty;
       return;
     }
 

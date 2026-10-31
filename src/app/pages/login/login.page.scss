@@ -3,12 +3,22 @@
 }
 
 .login-wrap {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100%;
   padding: 2rem 1.5rem;
+}
+
+// Selector de idioma en la esquina superior derecha, sobre el fondo de color.
+.login-lang {
+  position: absolute;
+  top: calc(0.8rem + env(safe-area-inset-top));
+  right: 1rem;
+  color: #fff;
+  --ls-on: #1385b6;
 }
 
 .login-logo {

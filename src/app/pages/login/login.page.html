@@ -1,13 +1,15 @@
 <ion-content class="login-content">
   <div class="login-wrap">
 
+    <app-lang-switcher class="login-lang"></app-lang-switcher>
+
     <!-- Logo -->
     <div class="login-logo">
       <div class="logo-icon">
         <img src="assets/brand/expenses-icon.svg" alt="Expenses" />
       </div>
       <h1>Expenses</h1>
-      <p>Portal de propietarios y residentes</p>
+      <p>{{ t.tagline }}</p>
     </div>
 
     <!-- Form -->
@@ -15,12 +17,12 @@
       <form (ngSubmit)="submit()" #f="ngForm">
 
         <div class="field">
-          <ion-label>Usuario o correo</ion-label>
+          <ion-label>{{ t.userLabel }}</ion-label>
           <ion-input
             [(ngModel)]="form.email"
             name="email"
             type="text"
-            placeholder="usuario o email"
+            [placeholder]="t.userPlaceholder"
             autocomplete="username"
             required
             fill="outline"
@@ -29,7 +31,7 @@
         </div>
 
         <div class="field">
-          <ion-label>Contraseña</ion-label>
+          <ion-label>{{ t.passLabel }}</ion-label>
           <ion-input
             [(ngModel)]="form.password"
             name="password"
@@ -45,9 +47,9 @@
         <div class="remember-row">
           <label class="remember-label">
             <ion-checkbox [(ngModel)]="rememberMe" name="rememberMe" color="primary"></ion-checkbox>
-            Recordarme
+            {{ t.remember }}
           </label>
-          <a class="forgot-link" (click)="goForgotPassword()">¿Olvidaste tu contraseña?</a>
+          <a class="forgot-link" (click)="goForgotPassword()">{{ t.forgot }}</a>
         </div>
 
         <div class="error-msg" *ngIf="errorMsg">
@@ -57,7 +59,7 @@
 
         <ion-button expand="block" type="submit" [disabled]="loading" class="login-btn">
           <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
-          {{ loading ? 'Ingresando...' : 'Ingresar' }}
+          {{ loading ? t.submitting : t.submit }}
         </ion-button>
 
       </form>
@@ -65,12 +67,12 @@
 
     <!-- Acceso a la demo del Encargado: se prueba sin cuenta y con datos ficticios -->
     <div class="demo-entry">
-      <p>¿Administrás un edificio?</p>
+      <p>{{ t.demoQuestion }}</p>
       <ion-button expand="block" fill="outline" class="demo-btn" (click)="goDemo()">
         <ion-icon name="play-circle-outline" slot="start"></ion-icon>
-        Probá la demo del Encargado
+        {{ t.demoButton }}
       </ion-button>
-      <small>Sin registrarte · datos ficticios · 2 minutos</small>
+      <small>{{ t.demoNote }}</small>
     </div>
 
   </div>
