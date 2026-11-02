@@ -4,6 +4,7 @@ import { AlertController, NavController, ToastController } from '@ionic/angular'
 import { AuthService } from '../../core/auth.service';
 import { SettlementReviewService } from '../../core/settlement-review.service';
 import { PresidentSettlementExpenseItem, PresidentSettlementReview } from '../../core/models';
+import { formatMoney } from '../../core/locale.util';
 
 const CATEGORY_LABEL: Record<string, string> = {
   Utilities: 'Servicios',
@@ -147,7 +148,7 @@ export class SettlementReviewPage {
 
   fmt(value: number | null | undefined): string {
     if (value == null) return '—';
-    return 'Gs. ' + new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(value);
+    return formatMoney(value);
   }
 
   dateLabel(value: string | null | undefined): string {

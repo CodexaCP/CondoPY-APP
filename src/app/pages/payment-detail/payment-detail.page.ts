@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
 import { OwnerPayment, OwnerPaymentApplication, OwnerPaymentInvoice } from '../../core/models';
 import { resolveUploadUrl } from '../../core/file-url.util';
+import { formatMoney } from '../../core/locale.util';
 
 type ApplicationItem =
   | { kind: 'row'; app: OwnerPaymentApplication }
@@ -93,7 +94,7 @@ export class PaymentDetailPage {
       }
       group.apps.push(app);
       group.total += app.amount;
-      const units: Record<string, string[]> = { diario: ['día', 'días'], semanal: ['semana', 'semanas'], quincenal: ['quincena', 'quincenas'] };
+      const units: Record<string, string[]> = { diario: ['día', 'días'], semanal: ['semana', 'semanas'], quincenal: ['quincena', 'quincenas'], mensual: ['mes', 'meses'] };
       const unit = units[match[2].trim().toLowerCase()] ?? ['intervalo', 'intervalos'];
       group.label = `Mora ${match[1]} (${match[2].trim()}) por un total de ${group.apps.length} ${group.apps.length === 1 ? unit[0] : unit[1]}`;
     }
@@ -126,7 +127,7 @@ export class PaymentDetailPage {
 
   fmt(value: number | null | undefined): string {
     if (value == null) return '—';
-    return 'Gs. ' + new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(value);
+    return formatMoney(value);
   }
 
   dateLabel(value: string | null | undefined): string {

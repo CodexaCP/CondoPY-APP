@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
 import { UploadService } from '../../core/upload.service';
 import { MyUnit, OwnerDebtUnit } from '../../core/models';
+import { currencySymbol, currentLocale, formatMoney, formatMoneyNumber, parseAmountInput, roundMoney } from '../../core/locale.util';
 
 interface ComprobanteLine {
   concept: string;
@@ -199,7 +200,7 @@ export class SubmitPaymentPage {
       }
     }
 
-    const units: Record<string, string[]> = { diario: ['día', 'días'], semanal: ['semana', 'semanas'], quincenal: ['quincena', 'quincenas'] };
+    const units: Record<string, string[]> = { diario: ['día', 'días'], semanal: ['semana', 'semanas'], quincenal: ['quincena', 'quincenas'], mensual: ['mes', 'meses'] };
     groups.forEach(g => {
       const unit = units[g.freq.toLowerCase()] ?? ['intervalo', 'intervalos'];
       g.line.concept = `Mora ${g.rate} (${g.freq}) por un total de ${g.count} ${g.count === 1 ? unit[0] : unit[1]}`;
@@ -227,8 +228,8 @@ export class SubmitPaymentPage {
   // Completa el monto con lo que hay que transferir hasta este comprobante (ya con el saldo a
   // favor descontado, si hay — el propietario nunca elige aplicarlo, ya viene restado).
   payUpTo(row: ComprobanteRow): void {
-    this.declaredAmount = Math.round(row.netCumulative);
-    this.amountDisplay = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(this.declaredAmount);
+    this.declaredAmount = roundMoney(row.netCumulative);
+    this.amountDisplay = formatMoneyNumber(this.declaredAmount);
     this.error = '';
   }
 
@@ -251,18 +252,11 @@ export class SubmitPaymentPage {
   }
 
   onAmountInput(event: any): void {
-    const raw = (event.target.value as string).replace(/\D/g, '');
-    if (!raw) {
-      this.declaredAmount = null;
-      this.amountDisplay = '';
-      event.target.value = '';
-      return;
-    }
-    const num = parseInt(raw, 10);
-    this.declaredAmount = num;
-    const formatted = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(num);
-    this.amountDisplay = formatted;
-    event.target.value = formatted;
+    // Separador de miles y decimales de la moneda de la empresa (guaraníes: solo enteros).
+    const { value, display } = parseAmountInput(event.target.value as string);
+    this.declaredAmount = value;
+    this.amountDisplay = display;
+    event.target.value = display;
   }
 
   removeComprobante(): void {
@@ -310,7 +304,10 @@ export class SubmitPaymentPage {
     });
   }
 
+  get currencySymbol(): string { return currencySymbol(); }
+  get inputMode(): string { return currentLocale().currencyDecimals > 0 ? 'decimal' : 'numeric'; }
+
   fmt(value: number): string {
-    return 'Gs. ' + new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(value);
+    return formatMoney(value);
   }
 }

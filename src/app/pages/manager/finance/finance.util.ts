@@ -1,4 +1,5 @@
 import { ReconciliationMovement } from '../../../core/reconciliation.models';
+import { formatMoneyNumber } from '../../../core/locale.util';
 
 // "2026-10-20" -> "20/10/2026". Las fechas del libro son solo día: no pasan por Date para que la zona horaria no las corra.
 export function fmtDay(value: string | null | undefined): string {
@@ -16,7 +17,7 @@ export function fmtDayShort(value: string): string {
 
 // Importe con signo y separador de miles: +350.000 / −120.000.
 export function signedGs(value: number): string {
-  const abs = String(Math.round(Math.abs(value))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const abs = formatMoneyNumber(Math.abs(value));
   return `${value < 0 ? '−' : '+'} ${abs}`;
 }
 

@@ -9,6 +9,7 @@ import { AnnouncementsService } from '../../../core/announcements.service';
 import { AccountService } from '../../../core/account.service';
 import { MarketplaceService } from '../../../core/marketplace.service';
 import { AdsService, DEFAULT_ROTATION_SECONDS } from '../../../core/ads.service';
+import { currencySymbol, formatMoneyNumber } from '../../../core/locale.util';
 import { resolveUploadUrl } from '../../../core/file-url.util';
 import { LoginResponse, MyUnit, AccountStatementPeriod, Announcement, AdSlot } from '../../../core/models';
 
@@ -189,8 +190,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   formatAmount(amount: number): string {
-    return new Intl.NumberFormat('es-PY').format(Math.abs(Math.round(amount)));
+    return formatMoneyNumber(Math.abs(amount));
   }
+
+  get currencySymbol(): string { return currencySymbol(); }
 
   catIcon(cat: string): string  { return CAT_ICON[cat] ?? 'megaphone-outline'; }
   catClass(cat: string): string {

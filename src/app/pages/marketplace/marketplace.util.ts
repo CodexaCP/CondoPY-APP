@@ -1,9 +1,10 @@
+import { formatMoney } from '../../core/locale.util';
 import { MarketplaceExploreItem, MarketplaceReservationStatus } from '../../core/marketplace.models';
 
 // Utilidades de fecha, importe y mensajes del marketplace.
 
 export function formatCurrency(value: number): string {
-  return `Gs. ${Math.round(value).toLocaleString('es-PY')}`;
+  return formatMoney(value);
 }
 
 export function formatTime(iso: string): string {

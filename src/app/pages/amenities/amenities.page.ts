@@ -3,6 +3,7 @@ import { NavController, AlertController, ToastController } from '@ionic/angular'
 import { finalize } from 'rxjs/operators';
 import { AmenitiesService } from '../../core/amenities.service';
 import { UploadService } from '../../core/upload.service';
+import { formatMoney } from '../../core/locale.util';
 import { Amenity, AmenityReservation, AmenityReservationStatus, AmenityScheduleSlot } from '../../core/models';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -195,7 +196,7 @@ export class AmenitiesPage implements OnInit {
   statusLabel(status: AmenityReservationStatus): string { return STATUS_LABEL[status] ?? status; }
   statusColor(status: AmenityReservationStatus): string { return STATUS_COLOR[status] ?? '#64748b'; }
 
-  formatCurrency(value: number): string { return `Gs. ${Math.round(value).toLocaleString('es-PY')}`; }
+  formatCurrency(value: number): string { return formatMoney(value); }
 
   formatRange(startsAt: string, endsAt: string): string {
     const s = new Date(startsAt);

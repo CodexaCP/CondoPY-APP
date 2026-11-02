@@ -7,6 +7,7 @@ import { OnlinePaymentsService } from '../../core/online-payments.service';
 import {
   OnlinePayment, OnlinePaymentBuildingOption, OnlinePaymentComprobante, OnlinePaymentConnectionOption, OnlinePaymentOptions
 } from '../../core/online-payments.models';
+import { formatMoney } from '../../core/locale.util';
 
 // choose: elegir hasta qué comprobante pagar. waiting: el propietario está pagando en la página del proveedor. result: terminó (pagado, cerrado o en revisión).
 type View = 'loading' | 'choose' | 'waiting' | 'result';
@@ -243,7 +244,7 @@ export class PayOnlinePage implements OnDestroy {
   }
 
   fmt(value: number): string {
-    return 'Gs. ' + new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(value ?? 0);
+    return formatMoney(value ?? 0);
   }
 
   period(month: number, year: number): string {

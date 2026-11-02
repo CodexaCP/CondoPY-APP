@@ -11,6 +11,7 @@ import {
   AccountStatementPayment,
   OwnerPaymentInvoice
 } from '../../core/models';
+import { formatMoney } from '../../core/locale.util';
 
 type AccountView = 'periods' | 'payments';
 
@@ -264,7 +265,7 @@ export class AccountPage {
   }
 
   fmt(value: number): string {
-    return 'Gs. ' + new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(value ?? 0);
+    return formatMoney(value ?? 0);
   }
 
   monthLabel(month: number): string {

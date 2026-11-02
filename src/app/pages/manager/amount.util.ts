@@ -1,23 +1,17 @@
 import { AlertController, IonicSafeString } from '@ionic/angular';
+import { formatMoneyNumber, parseAmountInput } from '../../core/locale.util';
 import { formatGs } from './manager.util';
 
-// Máximo de dígitos de un importe tipeado (el backend acepta hasta 9.999.999.999.999).
-const MAX_DIGITS = 13;
-
-// 1250000 -> "1.250.000" (con signo si es negativo).
+// 1250000 -> "1.250.000" (con signo si es negativo; con decimales solo si la moneda los usa y el importe los tiene).
 export function formatMiles(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '';
-  const abs = Math.abs(Math.trunc(value));
-  return (value < 0 ? '-' : '') + String(abs).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return formatMoneyNumber(value);
 }
 
-// Lo que escribió la persona -> número entero: ignora puntos, espacios y letras. Con allowNegative acepta un "-" al inicio.
+// Lo que escribió la persona -> número: ignora separadores de miles y letras. En guaraníes es entero; en una moneda con
+// centavos acepta el separador decimal de la moneda. Con allowNegative acepta un "-" al inicio.
 export function parseMiles(raw: string | null | undefined, allowNegative = false): number | null {
-  const text = (raw ?? '').trim();
-  const digits = text.replace(/\D/g, '').slice(0, MAX_DIGITS);
-  if (!digits) return null;
-  const n = parseInt(digits, 10);
-  return allowNegative && text.startsWith('-') ? -n : n;
+  return parseAmountInput(raw, allowNegative).value;
 }
 
 // Confirmación adicional de un importe tipeado: muestra el número grande, con separador de miles, antes de guardar.

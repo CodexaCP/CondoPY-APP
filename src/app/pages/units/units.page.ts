@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../core/auth.service';
 import { AccountService } from '../../core/account.service';
 import { AccountStatementPeriod, MyUnit } from '../../core/models';
+import { formatMoney } from '../../core/locale.util';
 
 export interface UnitDebtInfo {
   totalDebt: number;
@@ -124,7 +125,7 @@ export class UnitsPage {
   }
 
   fmt(value: number): string {
-    return 'Gs. ' + new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(value ?? 0);
+    return formatMoney(value ?? 0);
   }
 
   private monthLabel(month: number): string {

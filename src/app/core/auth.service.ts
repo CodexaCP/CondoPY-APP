@@ -7,6 +7,7 @@ import { LoginRequest, LoginResponse, MyUnit } from './models';
 import { BuildingContextService } from './building-context.service';
 import { ManagerStateService } from './manager-state.service';
 import { MarketplaceService } from './marketplace.service';
+import { resetLocaleCache } from './locale.util';
 
 const TOKEN_KEY = 'condopy_token';
 const USER_KEY  = 'condopy_user';
@@ -32,6 +33,7 @@ export class AuthService {
         other.removeItem(USER_KEY);
         storage.setItem(TOKEN_KEY, res.token);
         storage.setItem(USER_KEY, JSON.stringify(res));
+        resetLocaleCache();
       })
     );
   }
@@ -65,6 +67,7 @@ export class AuthService {
     localStorage.removeItem(USER_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
+    resetLocaleCache();
     // Datos de la sección del Encargado: no deben pasar a la próxima sesión.
     this.buildingContext.clear();
     this.managerState.clear();

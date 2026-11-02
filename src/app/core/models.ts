@@ -3,6 +3,8 @@ export interface LoginRequest {
   password: string;
 }
 
+import { CompanyLocale } from './locale.models';
+
 export interface LoginResponse {
   token: string;
   mustChangePassword: boolean;
@@ -10,6 +12,8 @@ export interface LoginResponse {
   fullName: string;
   email: string;
   role: string;
+  // País, moneda, impuesto, vocabulario y capacidades de la empresa (Paraguay si no tiene empresa).
+  locale?: CompanyLocale;
 }
 
 export interface MyUnit {
@@ -314,6 +318,8 @@ export interface SettlementCategoryTotal {
 
 export interface ExpenseSettlementSummary {
   id: string | null;
+  // false = el edificio publica sin revisión del presidente del consorcio (no hay paso del presidente).
+  requiresPresidentReview?: boolean;
   expensePeriodId: string;
   buildingId: string;
   expensePeriodName: string;

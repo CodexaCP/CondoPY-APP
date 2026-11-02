@@ -69,10 +69,10 @@
 
     <ion-list class="form-list" lines="none">
       <ion-item class="form-item">
-        <ion-label position="stacked">Monto declarado (Gs.) <span class="required">*</span></ion-label>
+        <ion-label position="stacked">Monto declarado ({{ currencySymbol }}) <span class="required">*</span></ion-label>
         <ion-input
           type="text"
-          inputmode="numeric"
+          [attr.inputmode]="inputMode"
           [value]="amountDisplay"
           (ionInput)="onAmountInput($event)"
           placeholder="0"

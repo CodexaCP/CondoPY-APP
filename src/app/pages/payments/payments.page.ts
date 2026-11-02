@@ -3,8 +3,10 @@ import { NavController } from '@ionic/angular';
 import { AuthService } from '../../core/auth.service';
 import { OwnerPaymentsService } from '../../core/owner-payments.service';
 import { OnlinePaymentsService } from '../../core/online-payments.service';
+import { hasCapability } from '../../core/locale.util';
 import { catchError, of } from 'rxjs';
 import { OwnerPayment, OwnerPaymentStatus } from '../../core/models';
+import { formatMoney } from '../../core/locale.util';
 
 type FilterKey = '' | OwnerPaymentStatus;
 
@@ -50,6 +52,13 @@ export class PaymentsPage {
   }
 
   private loadOnline(): void {
+    // El cobro online solo existe en los países que lo tienen habilitado (hoy Paraguay): en los demás el pago es por transferencia y comprobante.
+    if (!hasCapability('onlinePayments')) {
+      this.onlineAvailable = false;
+      this.onlineInProgress = false;
+      return;
+    }
+
     this.onlineSvc.getOptions().pipe(catchError(() => of(null))).subscribe(options => {
       this.onlineAvailable = !!options?.collectionEnabled && options.buildings.length > 0;
       this.onlineInProgress = !!options?.buildings.some(b => b.openPaymentId);
@@ -133,7 +142,7 @@ export class PaymentsPage {
   }
 
   fmt(value: number): string {
-    return 'Gs. ' + new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(value ?? 0);
+    return formatMoney(value ?? 0);
   }
 
   dateLabel(value: string): string {

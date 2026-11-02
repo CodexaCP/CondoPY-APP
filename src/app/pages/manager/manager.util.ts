@@ -1,9 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { formatMoney } from '../../core/locale.util';
 
-// Monto en guaraníes con separador de miles: 1250000 -> "Gs. 1.250.000".
+// Importe en la moneda de la empresa con separador de miles: 1250000 -> "Gs. 1.250.000" (guaraníes) o "$ 1.250,50" (pesos).
+// El nombre se conserva porque lo usan muchas pantallas.
 export function formatGs(value: number | null | undefined): string {
-  const n = Math.round(value ?? 0);
-  return 'Gs. ' + new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 }).format(n);
+  return formatMoney(value);
 }
 
 export function fmtDate(value: string | null | undefined): string {
